@@ -1,0 +1,96 @@
+# Node.js
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+jspm_packages/
+dist/
+
+# TypeScript
+*.tsbuildinfo
+*.d.ts
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Optional stylelint cache
+.stylelintcache
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+
+# MacOS
+.DS_Store
+
+# Linux
+*.un~
+
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Typescript compiled output
+out/
+build/
+
+# Parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Ziro
+.ziro/
+
+# Optional VS Code cache
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+
+# Local env files
+.env.local
+.env.*.local
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dependency directories
+jspm_packages/
+
+# Config log files
+.npmrc
+
+# JetBrains IDEs
+.idea/

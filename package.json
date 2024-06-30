@@ -1,0 +1,20 @@
+{
+  "name": "ziro",
+  "version": "0.0.1",
+  "description": "",
+  "private": true,
+  "keywords": [],
+  "author": "Nariman Movafaghi",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "ziro",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "main": "dist/index.js",
+  "License": "MIT",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.14.1",
+    "@typescript-eslint/parser": "^7.14.1",
+    "eslint": "^9.6.0",
+    "eslint-plugin-react": "^7.34.3",
+    "eslint-plugin-react-hooks": "^4.6.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.3.0"
+  },
+  "files": [
+    "dist/",
+    "router.js",
+    "router.d.ts"
+  ],
+  "dependencies": {
+    "defu": "^6.1.4",
+    "fast-glob": "^3.3.2",
+    "ufo": "^1.5.3",
+    "unimport": "^3.7.2"
+  }
+}
