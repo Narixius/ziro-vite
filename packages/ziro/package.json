@@ -3,17 +3,30 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "build": "tsup ./index.ts --dts --format cjs,esm",
+    "dev": "nr build --watch"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./router": {
+      "types": "./router.d.ts",
+      "import": "./router.js"
+    }
   },
   "main": "dist/index.js",
   "License": "MIT",
   "devDependencies": {
+    "@antfu/ni": "^0.21.12",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.14.1",
     "eslint": "^9.6.0",
     "eslint-plugin-react": "^7.34.3",
-    "eslint-plugin-react-hooks": "^4.6.2"
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "tsup": "^8.1.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0",
@@ -25,8 +38,11 @@
     "router.d.ts"
   ],
   "dependencies": {
+    "@types/lodash-es": "^4.17.12",
     "defu": "^6.1.4",
+    "es-module-lexer": "^1.5.4",
     "fast-glob": "^3.3.2",
+    "lodash-es": "^4.17.21",
     "ufo": "^1.5.3",
     "unimport": "^3.7.2"
   }

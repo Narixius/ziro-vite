@@ -13,7 +13,6 @@ dist/
 
 # TypeScript
 *.tsbuildinfo
-*.d.ts
 
 # Optional npm cache directory
 .npm

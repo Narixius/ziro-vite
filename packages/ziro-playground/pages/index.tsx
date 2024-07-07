@@ -1,3 +1,3 @@
 export default function HomePage() {
-  return <h1>Hello from Z۰ro</h1>
+  return <h1 className="text-xl font-bold">Welcome to Z۰ro</h1>
 }
