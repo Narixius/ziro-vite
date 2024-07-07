@@ -1,4 +1,3 @@
-import { init } from 'es-module-lexer'
 import fg from 'fast-glob'
 import { groupBy } from 'lodash-es'
 import fs from 'node:fs'
@@ -11,7 +10,7 @@ import { findParentDir, generateImportName, generateRouterPath, getImportPath, i
 
 export type GenerateRouterFunction = (options: { rootDir: string; pagesDirPath: string; dotZiroDirPath: string; server: ViteDevServer }) => Promise<void>
 
-export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDirPath, dotZiroDirPath, server }) => {
+export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDirPath, dotZiroDirPath }) => {
   let routeFiles = fg.sync([joinURL(pagesDirPath, '/**/*.{js,jsx,ts,tsx}')])
   let routerContent = ``
 
@@ -104,7 +103,6 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
   component: ${generateImportName(importPath)}.default,
 })
 `
-  await init
   for (const imp of pagesImports) {
     // const exports = await server.ssrLoadModule(imp.meta!.filePath)
     const importName = generateImportName(imp.from)
@@ -113,10 +111,10 @@ const ${importName}Route = createRoute({
   path: '${imp.meta!.path}',
   component: ${importName}.default,
   getParentRoute: () => ${imp.meta!.parentLayout}Route,
-  ${true ? `loader: ${importName}.loader,` : ''}
-  ${true ? `beforeLoad: ${importName}.beforeLoad,` : ''}
-})
-`
+  loader: ${importName}.loader,
+  beforeLoad: ${importName}.beforeLoad,
+  staleTime: ${importName}.staleTime,
+})`
   }
 
   routerContent += '\n// generate route tree \n'

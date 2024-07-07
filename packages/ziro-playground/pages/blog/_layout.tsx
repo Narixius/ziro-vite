@@ -1,5 +1,6 @@
 import { Outlet, useRouteContext } from '@tanstack/react-router'
 
+export const staleTime = 10_000
 export const beforeLoad = async () => {
   return {
     user: (await fetch('https://jsonplaceholder.typicode.com/users').then(r => r.json()))[0] as { id: number; name: string; email: string },

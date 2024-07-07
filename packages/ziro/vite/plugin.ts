@@ -31,11 +31,13 @@ export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
         }
       },
       async configureServer(server) {
+        generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server })
         server.middlewares.use(function (req, res, next) {
-          if (req.headers['content-type'] && ['application/json', 'multipart/form-data'].includes(req.headers['content-type']?.toLowerCase())) return res.end('from backend')
+          if (req.headers['content-type'] && ['application/json', 'multipart/form-data'].includes(req.headers['content-type']?.toLowerCase())) {
+            return res.end('from backend')
+          }
           next()
         })
-        generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server })
         server.watcher.on('all', async (eventName, filepath) => {
           let isRouteFileChanged = eventName === 'add' || (eventName === 'unlink' && normalizePath(filepath).startsWith(normalizePath(joinURL(server.config.root, config.pagesDir))))
           if (isRouteFileChanged) generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server })

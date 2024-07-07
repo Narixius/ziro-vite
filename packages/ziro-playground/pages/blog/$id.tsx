@@ -1,5 +1,6 @@
 import { LoaderContext, useLoaderData } from 'ziro/router'
 
+export const staleTime = 10_000
 export const loader = async (ctx: LoaderContext<'/blog/$id'>) => {
   return (await fetch(`https://jsonplaceholder.typicode.com/posts/${ctx.params.id}`).then(r => r.json())) as { userId: number; id: number; title: string; body: string }
 }
