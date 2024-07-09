@@ -1,3 +1,5 @@
+import { AnyRoute, AnyRouter, createRootRouteWithContext, createRoute, createRouter } from '@tanstack/react-router'
+import { Ref } from '@vue/reactivity'
 import fg from 'fast-glob'
 import { groupBy } from 'lodash-es'
 import fs from 'node:fs'
@@ -5,13 +7,14 @@ import path from 'node:path'
 import { joinURL, withTrailingSlash } from 'ufo'
 import { createUnimport, Import } from 'unimport'
 import { ViteDevServer } from 'vite'
-import { rootRouteImportName } from './constants'
-import { findParentDir, generateImportName, generateRouterPath, getImportPath, isLayoutFile, normalizePathFromLayout } from './utils'
+import { rootRouteImportName } from './constants.js'
+import { findParentDir, generateImportName, generateRouterPath, getImportPath, isLayoutFile, normalizePathFromLayout } from './utils.js'
 
-export type GenerateRouterFunction = (options: { rootDir: string; pagesDirPath: string; dotZiroDirPath: string; server: ViteDevServer }) => Promise<void>
+export type GenerateRouterFunction = (options: { rootDir: string; pagesDirPath: string; dotZiroDirPath: string; server: ViteDevServer; router: Ref<AnyRouter | undefined> }) => Promise<void>
 
-export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDirPath, dotZiroDirPath }) => {
+export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDirPath, dotZiroDirPath, server, router: serverRouter }) => {
   let routeFiles = fg.sync([joinURL(pagesDirPath, '/**/*.{js,jsx,ts,tsx}')])
+
   let routerContent = ``
 
   const rootImports: Import[] = []
@@ -26,7 +29,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
       from: '@tanstack/react-router',
     },
     {
-      name: 'createRootRoute',
+      name: 'createRootRouteWithContext',
       from: '@tanstack/react-router',
     },
     {
@@ -35,6 +38,8 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     },
   )
 
+  let router = createRouter({})
+  const flatRoutes: Record<string, AnyRoute> = {}
   // import root if exists
   const rootPath = routeFiles.find(path => path.startsWith(joinURL(pagesDirPath, '_root.')))
   if (rootPath) {
@@ -45,6 +50,15 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
       as: generateImportName(importPath),
       from: importPath,
     })
+    const rootModule = await server.ssrLoadModule(rootPath)
+    const rootRoute = createRootRouteWithContext()({
+      component: rootModule.default,
+      loader: rootModule.loader,
+      beforeLoad: rootModule.beforeLoad,
+      notFoundComponent: () => 'not found!',
+      meta: rootModule.meta,
+    })
+    flatRoutes['pagesRootRoute'] = rootRoute
   }
 
   // import route files
@@ -99,8 +113,9 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
 
   const importPath = getImportPath(dotZiroDirPath, rootPath!)
 
-  routerContent += `const ${generateImportName(importPath)}Route = createRootRoute({
+  routerContent += `const ${generateImportName(importPath)}Route = createRootRouteWithContext()({
   component: ${generateImportName(importPath)}.default,
+  notFoundComponent: () => 'not found!',
 })
 `
   for (const imp of pagesImports) {
@@ -114,20 +129,49 @@ const ${importName}Route = createRoute({
   loader: ${importName}.loader,
   beforeLoad: ${importName}.beforeLoad,
   staleTime: ${importName}.staleTime,
+  meta: ${importName}.meta,
 })`
+    const routeModule = await server.ssrLoadModule(imp.meta!.filePath)
+    flatRoutes[`${importName}Route`] = createRoute({
+      path: imp.meta!.path,
+      component: routeModule.default,
+      getParentRoute: () => flatRoutes[`${imp.meta!.parentLayout}Route`],
+      loader: routeModule.loader,
+      beforeLoad: routeModule.beforeLoad,
+      staleTime: routeModule.staleTime,
+      meta: routeModule.meta,
+    })
   }
 
   routerContent += '\n// generate route tree \n'
   const roots = groupBy(pagesImports, 'meta.parentLayout')
+
   const addChildrenRoutes = (key: string): string => {
-    return `${key}Route.addChildren({${roots[key]
+    const children: [string, AnyRoute][] = []
+    const childCode = `${key}Route.addChildren({${roots[key]
       .map(imp => {
-        if (!isLayoutFile(imp.from)) return imp.as + 'Route,'
-        else return `${imp.as!}Route: ${addChildrenRoutes(imp.as!)},`
+        if (!imp.meta!.isLayout) {
+          children.push([imp.as + 'Route', flatRoutes[imp.as + 'Route']])
+          return imp.as + 'Route,'
+        } else {
+          children.push([imp.as + 'Route', flatRoutes[imp.as + 'Route']])
+          return `${imp.as!}Route: ${addChildrenRoutes(imp.as!)},`
+        }
       })
       .join(' ')}})`
+    if (children.length) {
+      flatRoutes[key + 'Route'] = flatRoutes[key + 'Route'].addChildren(Object.fromEntries(children))
+    }
+    return childCode
   }
+
   routerContent += `const routeTree = ${addChildrenRoutes('pagesRoot')}`
+
+  router.update({
+    routeTree: flatRoutes['pagesRootRoute'],
+  })
+
+  serverRouter.value = router
 
   routerContent += '\n\n// generate and export create router function \n'
   routerContent += `export function createRouter() {

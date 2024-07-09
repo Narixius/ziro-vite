@@ -3,14 +3,13 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "build": "tsup ./index.ts --dts --format cjs,esm",
+    "build": "tsc",
     "dev": "nr build --watch"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     },
     "./router": {
       "types": "./router.d.ts",
@@ -39,10 +38,14 @@
   ],
   "dependencies": {
     "@types/lodash-es": "^4.17.12",
+    "@vue/reactivity": "^3.4.31",
     "defu": "^6.1.4",
     "es-module-lexer": "^1.5.4",
     "fast-glob": "^3.3.2",
+    "html-react-parser": "^5.1.10",
     "lodash-es": "^4.17.21",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "ufo": "^1.5.3",
     "unimport": "^3.7.2"
   }

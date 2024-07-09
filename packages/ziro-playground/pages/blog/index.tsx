@@ -1,6 +1,13 @@
-import { Link, useLoaderData } from 'ziro/router'
+import { Link, MetaFunction, useLoaderData } from 'ziro/router'
 
-export const staleTime = 10_000
+export const meta: MetaFunction<'/blog/'> = () => {
+  return [
+    {
+      title: 'Z۰ro Blog',
+    },
+  ]
+}
+
 export const loader = async () => {
   return (await fetch('https://jsonplaceholder.typicode.com/posts').then(r => r.json())) as { userId: number; id: number; title: string; body: string }[]
 }

@@ -1,6 +1,17 @@
-import { Body, Head, Html, Link, Meta, Outlet } from 'ziro/router'
+import { Body, Head, Html, Link, Meta, MetaFunction, Outlet } from 'ziro/router'
 import '../styles.css'
 
+export const meta: MetaFunction<'/'> = () => {
+  return [
+    {
+      charSet: 'utf-8',
+    },
+    {
+      name: 'viewport',
+      content: 'width=device-width, initial-scale=1',
+    },
+  ]
+}
 export default function RootComponent() {
   return (
     <Html lang="en">
