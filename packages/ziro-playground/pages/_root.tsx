@@ -1,5 +1,5 @@
 import { Body, Head, Html, Link, Meta, MetaFunction, Outlet } from 'ziro/router'
-import '../styles.css'
+import './styles.css'
 
 export const meta: MetaFunction<'/'> = () => {
   return [

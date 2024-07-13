@@ -1,4 +1,5 @@
-import { Outlet, useRouteContext } from '@tanstack/react-router'
+import { Outlet, useLoaderData } from '@tanstack/react-router'
+import { LoaderFn } from 'ziro/router'
 
 export const staleTime = 10_000
 export const beforeLoad = async () => {
@@ -7,14 +8,20 @@ export const beforeLoad = async () => {
   }
 }
 
+export const loader: LoaderFn<'/blog/'> = async ({ context }) => {
+  return {
+    user: context.user,
+  }
+}
+
 export default function BlogLayout() {
-  const authUser = useRouteContext({
+  const { user } = useLoaderData({
     from: '/blog',
   })
 
   return (
     <div className="flex flex-col">
-      <span>Welcome {authUser.user.email}</span>
+      <span>Welcome {user.email}</span>
       <Outlet />
     </div>
   )

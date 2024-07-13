@@ -8,12 +8,19 @@ import { joinURL, withTrailingSlash } from 'ufo'
 import { createUnimport, Import } from 'unimport'
 import { ViteDevServer } from 'vite'
 import { rootRouteImportName } from './constants.js'
-import { findParentDir, generateImportName, generateRouterPath, getImportPath, isLayoutFile, normalizePathFromLayout } from './utils.js'
+import { findParentDir, generateImportName, generateRouterPath, getImportPath, isLayoutFile, isRouteRelatedFile, normalizePathFromLayout } from './utils.js'
 
-export type GenerateRouterFunction = (options: { rootDir: string; pagesDirPath: string; dotZiroDirPath: string; server: ViteDevServer; router: Ref<AnyRouter | undefined> }) => Promise<void>
+export type GenerateRouterFunction = (options: {
+  rootDir: string
+  pagesDirPath: string
+  dotZiroDirPath: string
+  server: ViteDevServer
+  router: Ref<AnyRouter | undefined>
+  generateRouteFile?: boolean
+}) => Promise<void>
 
-export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDirPath, dotZiroDirPath, server, router: serverRouter }) => {
-  let routeFiles = fg.sync([joinURL(pagesDirPath, '/**/*.{js,jsx,ts,tsx}')])
+export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDirPath, dotZiroDirPath, server, router: serverRouter, generateRouteFile = true }) => {
+  let routeFiles = fg.sync([joinURL(pagesDirPath, '/**/*.{js,jsx,ts,tsx}')]).filter(file => isRouteRelatedFile(pagesDirPath, file))
 
   let routerContent = ``
 
@@ -177,9 +184,6 @@ const ${importName}Route = createRoute({
   routerContent += `export function createRouter() {
   return createReactRouter({
     routeTree,
-    context: {
-      head: '',
-    },
     defaultPreload: 'intent',
   })
 }`
@@ -209,13 +213,14 @@ const ${importName}Route = createRoute({
   const { injectImports } = createUnimport({ imports: [...rootImports, ...pagesImports] })
 
   routerContent = (await injectImports(routerContent)).code
-  fs.writeFileSync(
-    joinURL(dotZiroDirPath, 'routes.ts'),
-    `/* prettier-ignore-start */
+  if (generateRouteFile)
+    fs.writeFileSync(
+      joinURL(dotZiroDirPath, 'routes.d.ts'),
+      `/* prettier-ignore-start */
 /* eslint-disable */
 // @ts-nocheck
 // noinspection JSUnusedGlobalSymbols
 ${routerContent}`,
-    'utf8',
-  )
+      'utf8',
+    )
 }

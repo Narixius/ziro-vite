@@ -50,3 +50,15 @@ export const normalizePathFromLayout = (path: string) => {
 }
 
 export const isLayoutFile = (path: string) => getFilename(path) === '_layout'
+
+export const isRouteRelatedFile = (pagesDirPath: string, path: string) => {
+  if (path.startsWith(pagesDirPath)) {
+    let filename = getFilename(path)!
+    // remove file extension
+    filename = filename.replace(/\.\w+$/, '')
+    if (filename === 'index' || filename === '_layout' || filename === '_root' || filename?.startsWith('$')) {
+      return true
+    }
+  }
+  return false
+}

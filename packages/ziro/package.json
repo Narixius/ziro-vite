@@ -14,6 +14,9 @@
     "./router": {
       "types": "./router.d.ts",
       "import": "./router.js"
+    },
+    "./polyfill": {
+      "import": "./polyfill.js"
     }
   },
   "main": "dist/index.js",
@@ -39,6 +42,7 @@
   "dependencies": {
     "@types/lodash-es": "^4.17.12",
     "@vue/reactivity": "^3.4.31",
+    "buffer": "^6.0.3",
     "defu": "^6.1.4",
     "es-module-lexer": "^1.5.4",
     "fast-glob": "^3.3.2",
