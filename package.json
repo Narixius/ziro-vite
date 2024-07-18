@@ -7,7 +7,8 @@
   "author": "Nariman Movafaghi",
   "license": "MIT",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ],
   "module": "index.ts",
   "type": "module",
@@ -16,5 +17,8 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "lucide-react": "^0.408.0"
   }
 }
