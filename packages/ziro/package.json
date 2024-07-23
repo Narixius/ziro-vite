@@ -40,6 +40,8 @@
     "router.d.ts"
   ],
   "dependencies": {
+    "@tanstack/react-router": "^1.45.8",
+    "@tanstack/start": "^1.45.8",
     "@types/lodash-es": "^4.17.12",
     "@vue/reactivity": "^3.4.31",
     "buffer": "^6.0.3",
@@ -50,6 +52,7 @@
     "lodash-es": "^4.17.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "superjson": "^2.2.1",
     "ufo": "^1.5.3",
     "unimport": "^3.7.2"
   }

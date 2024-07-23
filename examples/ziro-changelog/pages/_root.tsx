@@ -1,5 +1,5 @@
 import { CopyIcon, Github } from 'lucide-react'
-import { Body, Head, Html, Meta, MetaFunction } from 'ziro/router'
+import { Body, Head, Html, Meta, MetaFunction, Outlet } from 'ziro/router'
 import './styles.css'
 
 export const meta: MetaFunction<'/'> = () => {
@@ -25,13 +25,13 @@ export default function RootComponent() {
             <svg className="absolute -bottom-48 left-[-40%] h-[80rem] w-[180%] lg:-right-40 lg:bottom-auto lg:left-auto lg:top-[-40%] lg:h-[180%] lg:w-[80rem]" aria-hidden="true">
               <defs>
                 <radialGradient id=":S1:-desktop" cx="100%">
-                  <stop offset="0%" stopColor="rgba(209, 218, 222, 0.3)" />
-                  <stop offset="53.95%" stopColor="rgba(78, 80, 87, 0.09)" />
+                  <stop offset="0%" stopColor="rgba(63, 67, 69, 0.3)" />
+                  <stop offset="53.95%" stopColor="rgba(46, 47, 51, 0.09)" />
                   <stop offset="100%" stopColor="rgba(21, 22, 23, 0)" />
                 </radialGradient>
                 <radialGradient id=":S1:-mobile" cy="100%">
-                  <stop offset="0%" stopColor="rgba(209, 218, 222, 0.3)" />
-                  <stop offset="53.95%" stopColor="rgba(78, 80, 87, 0.09)" />
+                  <stop offset="0%" stopColor="rgba(63, 67, 69, 0.3)" />
+                  <stop offset="53.95%" stopColor="rgba(46, 47, 51, 0.09)" />
                   <stop offset="100%" stopColor="rgba(21, 22, 23, 0)" />
                 </radialGradient>
               </defs>
@@ -101,63 +101,7 @@ export default function RootComponent() {
               <rect width="100%" height="100%" fill="url(#:S4:)" />
             </svg>
           </div>
-          <main className="space-y-20 py-20 sm:space-y-32 sm:py-32">
-            <article id="commit-message-suggestions" className="scroll-mt-16" style={{ paddingBottom: 0 }}>
-              <div>
-                <header className="relative mb-10 xl:mb-0">
-                  <div className="pointer-events-none absolute left-[max(-0.5rem,calc(50%-18.625rem))] top-0 z-50 flex h-4 items-center justify-end gap-x-2 lg:left-0 lg:right-[calc(max(2rem,50%-38rem)+40rem)] lg:min-w-[32rem] xl:h-8">
-                    <a className="inline-flex" href="#commit-message-suggestions">
-                      <time dateTime="2023-04-06T00:00:00.000Z" className="hidden xl:pointer-events-auto xl:block xl:text-xs xl:font-medium xl:text-white/50">
-                        Apr 6, 2023
-                      </time>
-                    </a>
-                    <div className="h-[0.0625rem] w-3.5 bg-gray-400 lg:-mr-3.5 xl:mr-0 xl:bg-gray-300" />
-                  </div>
-                  <div className="mx-auto max-w-7xl px-6 lg:flex lg:px-8">
-                    <div className="lg:ml-96 lg:flex lg:w-full lg:justify-end lg:pl-32">
-                      <div className="mx-auto max-w-lg lg:mx-0 lg:w-0 lg:max-w-xl lg:flex-auto">
-                        <div className="flex">
-                          <a className="inline-flex" href="#commit-message-suggestions">
-                            <time dateTime="2023-04-06T00:00:00.000Z" className="text-xs font-medium text-gray-500 xl:hidden dark:text-white/50">
-                              Apr 6, 2023
-                            </time>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </header>
-                <div className="mx-auto max-w-7xl px-6 lg:flex lg:px-8">
-                  <div className="lg:ml-96 lg:flex lg:w-full lg:justify-end lg:pl-32">
-                    <div className="mx-auto max-w-lg lg:mx-0 lg:w-0 lg:max-w-xl lg:flex-auto typography dark:typography-invert text-gray-200" data-mdx-content="true">
-                      <div className="relative mt-8 overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-900 [&+*]:mt-8">
-                        <img alt="" loading="lazy" decoding="async" />
-                        <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10 dark:ring-white/10" />
-                      </div>
-                      <h2>
-                        <a className="no-underline">Commit message suggestions</a>
-                      </h2>
-                      <p>
-                        In the latest release, I've added support for commit message and description suggestions via an integration with OpenAI. Commit looks at all of your changes, and feeds that
-                        into the machine with a bit of prompt-tuning to get back a commit message that does a surprisingly good job at describing the intent of your changes.
-                      </p>
-                      <p>
-                        It's also been a pretty helpful way to remind myself what the hell I was working on at the end of the day yesterday when I get back to my computer and realize I didn't commit
-                        any of my work.
-                      </p>
-                      <h3 id="-improvements">Improvements</h3>
-                      <ul>
-                        <li>Added commit message and description suggestions powered by OpenAI</li>
-                        <li>Fixed race condition that could sometimes leave you in a broken rebase state</li>
-                        <li>Improved active project detection to try and ignore file changes triggered by the system instead of the user</li>
-                        <li>Fixed bug that sometimes reported the wrong number of changed files</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </main>
+          <Outlet />
         </div>
       </Body>
     </Html>

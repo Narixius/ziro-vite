@@ -4,6 +4,7 @@ import fg from 'fast-glob'
 import { groupBy } from 'lodash-es'
 import fs from 'node:fs'
 import path from 'node:path'
+import SuperJSON from 'superjson'
 import { joinURL, withTrailingSlash } from 'ufo'
 import { createUnimport, Import } from 'unimport'
 import { ViteDevServer } from 'vite'
@@ -31,6 +32,11 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
 
   rootImports.push(
     {
+      name: 'default',
+      as: 'SuperJSON',
+      from: 'superjson',
+    },
+    {
       name: 'createRouter',
       as: 'createReactRouter',
       from: '@tanstack/react-router',
@@ -45,7 +51,9 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     },
   )
 
-  let router = createRouter({})
+  let router = createRouter({
+    transformer: SuperJSON,
+  })
   const flatRoutes: Record<string, AnyRoute> = {}
   // import root if exists
   const rootPath = routeFiles.find(path => path.startsWith(joinURL(pagesDirPath, '_root.')))
@@ -177,6 +185,7 @@ const ${importName}Route = createRoute({
   router.update({
     routeTree: flatRoutes['pagesRootRoute'],
   })
+  router.options.transformer
 
   serverRouter.value = router
 
@@ -185,6 +194,7 @@ const ${importName}Route = createRoute({
   return createReactRouter({
     routeTree,
     defaultPreload: 'intent',
+	transformer: SuperJSON,
   })
 }`
 
