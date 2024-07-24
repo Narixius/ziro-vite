@@ -1,18 +1,27 @@
-import { MetaFunction } from 'ziro/router'
-
-export const meta: MetaFunction = ({ loaderData }) => {
-  return [
-    {
-      title: 'Welcome to Z۰ro',
+export const handler = (context: any, request: any) => {
+  // the ssr method that would be called
+  return {
+    errors: [],
+    meta: [
+      {
+        title: 'Ziro Changelog',
+      },
+    ],
+    context: {
+      ok: true,
     },
-  ]
+  }
 }
 
-// export const loader = () => {
-//   return fetch('https://api.github.com/repos/facebook/react/releases').then(r => r.json())
-// }
+export const allowedMethods = ['GET']
 
-export default function HomePage() {
+export const Error = ({ data }) => {
+  return <div>Something went wrong!</div>
+}
+
+export default function HomePage({ data }) {
+  const { dispatch, isLoading } = useHandler()
+
   return (
     <main className="space-y-20 py-20 sm:space-y-32 sm:py-32">
       <article id="commit-message-suggestions" className="scroll-mt-16" style={{ paddingBottom: 0 }}>

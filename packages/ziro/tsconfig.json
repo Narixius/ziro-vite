@@ -1,6 +1,7 @@
 {
 	"include": [
 		"**/*.ts",
+		"**/*.tsx",
 		"package.json"
 	],
 	"exclude": [
@@ -25,5 +26,6 @@
 		"emitDeclarationOnly": false,
 		"rootDir": ".",
 		"outDir": "dist",
+		"jsx": "react-jsx"
 	}
 }
