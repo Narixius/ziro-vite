@@ -1,4 +1,4 @@
-import { createContext, createElement, FC, HTMLAttributes, MouseEvent, useContext, useEffect, useState } from 'react'
+import { createContext, createElement, FC, HTMLAttributes, MouseEvent, Suspense, useContext, useEffect, useState } from 'react'
 import { ZiroRoute, ZiroRouter } from './core.js'
 
 type RouterProviderType = { router: ZiroRouter }
@@ -37,7 +37,9 @@ const RouterEntryPoint: FC<{ routeTree: ZiroRoute[] }> = ({ routeTree }) => {
           children,
         }}
       >
-        <Component />
+        <Suspense>
+          <Component />
+        </Suspense>
       </OutletRouteContext.Provider>
     )
   }

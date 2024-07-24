@@ -1,7 +1,6 @@
 import { Link, Outlet } from 'ziro/router/client'
 
 export default function RootPage() {
-  console.log('root rendered')
   return (
     <div>
       <div className="flex gap-2">

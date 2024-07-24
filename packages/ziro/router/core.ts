@@ -1,10 +1,11 @@
 import { createHooks } from 'hookable'
+import { ComponentType, memo } from 'react'
 import { addRoute as addRou3Route, createRouter as createRou3Router, findRoute as findRou3Route, RouterContext } from 'rou3'
 
 export type ZiroRoute = {
   path: string
   parent: ZiroRoute | null
-  component: () => JSX.Element
+  component: ComponentType
   meta?: Record<string, unknown>
 }
 
@@ -86,5 +87,8 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
 }
 
 export const createRoute = (options: ZiroRoute): ZiroRoute => {
-  return options
+  return {
+    ...options,
+    component: memo(options.component),
+  }
 }
