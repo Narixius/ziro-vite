@@ -49,6 +49,7 @@
     "hookable": "^5.5.3",
     "html-react-parser": "^5.1.10",
     "lodash-es": "^4.17.21",
+    "react-error-boundary": "^4.0.13",
     "rou3": "^0.4.0",
     "ufo": "^1.5.3",
     "unimport": "^3.7.2"
