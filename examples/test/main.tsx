@@ -12,41 +12,39 @@ const router = createRouter({
 
 export const rootRoute = createRootRoute({
   component: root,
-  loader: async () => ({ root: true }),
+  loader: async () => ({ x: true }),
 })
 
 export const blogPageRoute = createRoute({
   parent: rootRoute,
-  path: '/blog',
+  path: '/blog/$category',
   component: blog,
   loadingComponent: () => <TwoSeventyRing />,
-  loader: async options => {
-    return { time: 1234 }
+  loader: async ({ params, dataContext }) => {
+    return { xy: 1234 }
   },
 })
 
 export const singleBlogRoute = createRoute({
   parent: blogPageRoute,
-  path: '/blog/:slug',
+  path: '/blog/$category/$slug',
   component: singleBlog,
   loadingComponent: () => <TwoSeventyRing />,
   errorComponent: () => 'something went wrong loading this post!',
-  loader: async options => {
-    options.dataContext
-    return {
-      ok: true,
-    }
-  },
+  // loader: async ({ params, dataContext }) => {
+  //   return {
+  //     ok: true,
+  //   }
+  // },
 })
 
 export const singleBlogEditRoute = createRoute({
   parent: singleBlogRoute,
-  path: '/blog/:slug/edit',
+  path: '/blog/$category/$slug/edit',
   component: singleBlog,
   loadingComponent: () => <TwoSeventyRing />,
   errorComponent: () => 'something went wrong loading this post!',
-  loader: async options => {
-    options.dataContext.
+  loader: async ({ params, dataContext }) => {
     return {
       ok: true,
     }

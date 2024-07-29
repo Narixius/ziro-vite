@@ -2,13 +2,13 @@ import { blogPageRoute, rootRoute, singleBlogRoute } from './main'
 
 declare module 'ziro/router' {
   interface FileRoutesByPath {
-    '/blog': {
+    '/blog/$category': {
       parent: typeof rootRoute
     }
-    '/blog/:slug': {
+    '/blog/$category/$slug': {
       parent: typeof blogPageRoute
     }
-    '/blog/:slug/edit': {
+    '/blog/$category/$slug/edit': {
       parent: typeof singleBlogRoute
     }
   }

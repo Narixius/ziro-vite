@@ -20,25 +20,37 @@ export interface FileRoutesByPath {
 
 type RouteData<Route> = Route extends ZiroRoute<infer TParentFilePath, infer TParentLoaderData, infer TParentRoute> ? TParentLoaderData : any
 
-export type LoaderArgs<TParent> = {
-  params: Record<string, string>
-  dataContext: TParent extends ZiroRoute<infer TParentFilePath, infer TParentLoaderData, infer TParentRoute> ? TParentLoaderData & RouteData<TParentRoute> : any
+export type ParsePathParams<T extends string, TAcc = never> = T extends `${string}$${infer TPossiblyParam}`
+  ? TPossiblyParam extends `${infer TParam}/${infer TRest}`
+    ? ParsePathParams<TRest, TParam extends '' ? '_splat' : TParam | TAcc>
+    : TPossiblyParam extends ''
+      ? '_splat'
+      : TPossiblyParam | TAcc
+  : TAcc
+
+export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
+export type RouteDataContext<TRoute> = (TRoute extends ZiroRoute<any, any, infer TParentLoaderData> ? TParentLoaderData : {}) &
+  (TRoute extends ZiroRoute<any, infer TParentRoute, any> ? RouteDataContext<TParentRoute> : {})
+
+export type LoaderArgs<TPath extends string, TParent> = {
+  params: RouteParams<TPath> & (TParent extends ZiroRoute<infer TParentFilePath, any, any> ? RouteParams<TParentFilePath> : {})
+  dataContext: RouteDataContext<TParent>
 }
 
-export type LoaderType<TLoaderData, TParent> = (args: LoaderArgs<TParent>) => Promise<TLoaderData>
+export type LoaderType<TPath extends string, TLoaderData, TParent> = (args: LoaderArgs<TPath, TParent>) => Promise<TLoaderData>
 
-export type ZiroRouteProps<T = any> = { params?: Record<string, string>; loaderData: T }
-export type ZiroRouteComponent<T> = ComponentType<ZiroRouteProps<T>>
+export type ZiroRouteProps<TPath extends string, T = any> = { params?: RouteParams<TPath>; loaderData: T }
+export type ZiroRouteComponent<TPath extends string, TLoaderData> = ComponentType<ZiroRouteProps<TPath, TLoaderData>>
 export type AnyRoute<TParent extends AnyRoute = any> = ZiroRoute<any, any, TParent>
 
-export class ZiroRoute<TPath extends keyof FileRoutesByPath, TLoaderData, TParentRoute> {
+export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoaderData> {
   private hooks = createHooks<ZeroRouteHooks<TLoaderData>>()
 
   constructor(
-    public component: ZiroRouteComponent<TLoaderData>,
+    public component: ZiroRouteComponent<TPath, TLoaderData>,
     public path: TPath,
     public parent?: TParentRoute,
-    public loader?: LoaderType<TLoaderData, TParentRoute>,
+    public loader?: LoaderType<TPath, TLoaderData, TParentRoute>,
     public loadingComponent?: ComponentType,
     public errorComponent?: ComponentType,
     public meta?: Record<string, unknown>,
@@ -173,12 +185,12 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
   }
 }
 
-export const createRoute = <TFilePath extends keyof FileRoutesByPath, TLoaderData = any, TParentRoute extends AnyRoute = FileRoutesByPath[TFilePath]['parent']>(
-  options: Pick<ZiroRoute<TFilePath, TLoaderData, TParentRoute>, 'path' | 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>,
+export const createRoute = <TFilePath extends keyof FileRoutesByPath, TParentRoute extends AnyRoute = FileRoutesByPath[TFilePath]['parent'], TLoaderData = {}>(
+  options: Pick<ZiroRoute<TFilePath, TParentRoute, TLoaderData>, 'path' | 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>,
 ) => {
   return new ZiroRoute(memo(options.component), options.path, options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta)
 }
 
-export const createRootRoute = <TLoaderData>(options: Pick<ZiroRoute<'__root__', TLoaderData, undefined>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>) => {
+export const createRootRoute = <TLoaderData>(options: Pick<ZiroRoute<'__root__', undefined, TLoaderData>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>) => {
   return new ZiroRoute(memo(options.component), '__root__', undefined, options.loader, options.loadingComponent, options.errorComponent, options.meta)
 }
