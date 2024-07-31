@@ -12,41 +12,29 @@ const router = createRouter({
 
 export const rootRoute = createRootRoute({
   component: root,
-  loader: async () => ({ x: true }),
 })
 
 export const blogPageRoute = createRoute({
   parent: rootRoute,
-  path: '/blog/$category',
+  path: '/blog',
   component: blog,
-  loadingComponent: () => <TwoSeventyRing />,
-  loader: async ({ params, dataContext }) => {
-    return { xy: 1234 }
-  },
 })
 
 export const singleBlogRoute = createRoute({
   parent: blogPageRoute,
-  path: '/blog/$category/$slug',
+  path: '/blog/$slug',
   component: singleBlog,
   loadingComponent: () => <TwoSeventyRing />,
   errorComponent: () => 'something went wrong loading this post!',
-  // loader: async ({ params, dataContext }) => {
-  //   return {
-  //     ok: true,
-  //   }
-  // },
-})
-
-export const singleBlogEditRoute = createRoute({
-  parent: singleBlogRoute,
-  path: '/blog/$category/$slug/edit',
-  component: singleBlog,
-  loadingComponent: () => <TwoSeventyRing />,
-  errorComponent: () => 'something went wrong loading this post!',
-  loader: async ({ params, dataContext }) => {
+  loader: async () => {
+    await new Promise(r => setTimeout(r, 2000))
     return {
       ok: true,
+    }
+  },
+  async meta({ params }) {
+    return {
+      title: params.slug,
     }
   },
 })
@@ -60,14 +48,13 @@ node.render(<Router router={router} />)
 
 declare module 'ziro/router' {
   interface FileRoutesByPath {
-    '/': {
-      parent: typeof rootRoute
-    }
     '/blog': {
       parent: typeof rootRoute
+      route: typeof blogPageRoute
     }
-    '/blog/:slug': {
+    '/blog/$slug': {
       parent: typeof blogPageRoute
+      route: typeof singleBlogRoute
     }
   }
 }

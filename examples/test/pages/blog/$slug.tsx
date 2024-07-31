@@ -1,10 +1,11 @@
 import { ZiroRouteProps } from 'ziro/router'
 
-export default function SingleBlogPage({ params, loaderData }: ZiroRouteProps) {
+export default function SingleBlogPage({ params, loaderData }: ZiroRouteProps<'/blog/$slug'>) {
   return (
     <div>
       <p>Single Blog</p>
-      <span>{params!.slug}</span>
+      <span>{loaderData.ok}</span>
+      <span>{params.slug}</span>
     </div>
   )
 }

@@ -1,6 +1,9 @@
 import { createContext, createElement, FC, HTMLAttributes, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
+import { createHead, useHead } from 'unhead'
 import { AnyRoute, FileRoutesByPath, ZiroRoute, ZiroRouter } from './core.js'
+
+createHead()
 
 type RouterProviderType = { router: ZiroRouter }
 const RouterContext = createContext<ZiroRouter | null>(null)
@@ -9,7 +12,7 @@ export const useRouter = () => useContext(RouterContext)
 
 export const Router: FC<RouterProviderType> = ({ router }) => {
   const [url, setUrl] = useState(router.url)
-  const routeTree = router?.lookupRoute(url)
+  const routeTree = router.lookupRoute(url)
 
   useEffect(() => {
     const callback = (router: ZiroRouter) => {
@@ -26,44 +29,20 @@ export const Router: FC<RouterProviderType> = ({ router }) => {
   )
 }
 
-const suspenderMap: Record<string, { status: string; result: any }> = {}
 const createRouteSuspender = <TPath extends keyof FileRoutesByPath, TLoaderData, TParentRoute extends AnyRoute = FileRoutesByPath[TPath]['parent']>(
-  path: string,
-  route: ZiroRoute<TPath, TLoaderData, TParentRoute>,
+  route: ZiroRoute<TPath, TParentRoute, TLoaderData>,
 ) => {
-  const fn = route.loader
-  if (!fn) return { read() {} }
-  if (!suspenderMap[path])
-    suspenderMap[path] = {
-      status: 'pending',
-      result: null,
-    }
-  // @ts-ignore
-  const suspender = fn().then(
-    data => {
-      suspenderMap[path] = {
-        status: 'success',
-        result: data,
-      }
-    },
-    error => {
-      suspenderMap[path] = {
-        status: 'error',
-        result: error,
-      }
-    },
-  )
+  const suspender = route.load()
+
   return {
     read() {
-      const { status, result } = suspenderMap[path]
-      if (status === 'pending') {
+      const routeStatus = route.getLoaderStatus()
+      if (routeStatus.status === 'pending') {
         throw suspender
-      } else if (status === 'error') {
-        route.call('error', result)
-        throw result
-      } else if (status === 'success') {
-        route.setData(result)
-        return result
+      } else if (routeStatus.status === 'error') {
+        throw routeStatus.data
+      } else if (routeStatus.status === 'success') {
+        return routeStatus.data
       }
     },
   }
@@ -112,8 +91,26 @@ const RouteSuspenseFallback: FC<PropsWithChildren> = ({ children }) => {
 
 const RouteComponentSuspense: FC = () => {
   const route = useRoute()
-  if (route.loader) createRouteSuspender(route.getMatchedUrl()!, route).read()
-  return <route.component params={route.getParams()} loaderData={route.getData()} />
+  if (route.loader) createRouteSuspender(route).read()
+  return (
+    <RouteMetaTags route={route}>
+      <route.component params={route.getParams()} loaderData={route.getData()} />
+    </RouteMetaTags>
+  )
+}
+
+const RouteMetaTags: FC<PropsWithChildren<{ route: AnyRoute }>> = ({ route, children }) => {
+  useEffect(() => {
+    if (route.meta) {
+      route
+        .meta({
+          dataContext: route.getDataContext()!,
+          params: route.getParams()!,
+        })
+        .then(useHead)
+    }
+  })
+  return <>{children}</>
 }
 
 export const useLoaderData = () => useRoute().getData()
