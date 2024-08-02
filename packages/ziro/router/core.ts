@@ -1,7 +1,9 @@
 import { createHooks } from 'hookable'
 import { ComponentType, memo } from 'react'
+import { FallbackProps } from 'react-error-boundary'
 import { RouterContext, addRoute as addRou3Route, createRouter as createRou3Router, findRoute as findRou3Route } from 'rou3'
 import { useHead } from 'unhead'
+import { RedirectError, isRedirectError } from './redirect'
 
 type ZeroRouteHooks<T, TParent> = {
   error: (error: Error) => void
@@ -40,6 +42,8 @@ export type LoaderArgs<TPath extends string, TParent> = {
   dataContext: RouteDataContext<TParent>
 }
 
+export type ZiroLoaderProps<TPath extends keyof FileRoutesByPath> = LoaderArgs<TPath, FileRoutesByPath[TPath]['parent']>
+
 type LdJsonObject = { [Key in string]: LdJsonValue } & {
   [Key in string]?: LdJsonValue | undefined
 }
@@ -50,14 +54,17 @@ type LdJsonValue = LdJsonPrimitive | LdJsonObject | LdJsonArray
 export type LoaderType<TPath extends string, TLoaderData, TParent> = (args: LoaderArgs<TPath, TParent>) => Promise<TLoaderData>
 export type MetaType<TPath extends string, TParent> = (args: LoaderArgs<TPath, TParent>) => Promise<Parameters<typeof useHead>[0]>
 
+export type ZiroMetaProps<TPath extends keyof FileRoutesByPath> = LoaderArgs<TPath, FileRoutesByPath[TPath]['parent']>
+
 export type ZiroRouteProps<TPath extends keyof FileRoutesByPath> = {
   params: RouteParams<TPath>
   loaderData: FileRoutesByPath[TPath]['route'] extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
+  //   dataContext: FileRoutesByPath[TPath]['parent'] extends AnyRoute ? RouteDataContext<FileRoutesByPath[TPath]['parent']> : {}
 }
 
 export type ZiroRouteComponent<TPath extends keyof FileRoutesByPath> = ComponentType<ZiroRouteProps<TPath>>
 export type AnyRoute<TParent extends AnyRoute = any> = ZiroRoute<any, any, TParent>
-
+export type ZiroRouteErrorComponent = ComponentType<FallbackProps>
 export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoaderData> {
   private hooks = createHooks<ZeroRouteHooks<TLoaderData, TParentRoute>>()
 
@@ -67,7 +74,7 @@ export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoad
     public parent?: TParentRoute,
     public loader?: LoaderType<TPath, TLoaderData, TParentRoute>,
     public loadingComponent?: ComponentType,
-    public errorComponent?: ComponentType,
+    public errorComponent?: ZiroRouteErrorComponent,
     public meta?: MetaType<TPath, TParentRoute>,
   ) {
     if (parent) {
@@ -132,10 +139,14 @@ export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoad
     return loaderCache[this.getRouteUniqueKey()]
   }
 
+  private router?: ZiroRouter
+  public setRouter(router: ZiroRouter) {
+    this.router = router
+  }
+
   public async load() {
     if (this.loader) {
       if (!this.getLoaderStatus()) {
-        console.log(this.path, 'loading...')
         loaderCache[this.getRouteUniqueKey()] = {
           status: 'pending',
           data: null,
@@ -157,7 +168,9 @@ export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoad
               status: 'error',
               data,
             }
-            throw data
+            if (data instanceof Error && isRedirectError(data)) {
+              this.router!.replace((data as RedirectError).getPath())
+            } else throw data
           })
       }
     }
@@ -222,6 +235,7 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
     addRoute(route) {
       const serializedPath = route.path.replaceAll('$', ':')
       addRou3Route(this.tree, 'GET', serializedPath, route)
+      route.setRouter(this)
       this.routes.push(route)
     },
     findRoute(url: string) {

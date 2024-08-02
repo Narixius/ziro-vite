@@ -18,6 +18,14 @@
     "./router/client": {
       "types": "./dist/router/client.d.ts",
       "import": "./dist/router/client.js"
+    },
+    "./router/redirect": {
+      "types": "./dist/router/redirect.d.ts",
+      "import": "./dist/router/redirect.js"
+    },
+    "./router/abort": {
+      "types": "./dist/router/abort.d.ts",
+      "import": "./dist/router/abort.js"
     }
   },
   "main": "dist/index.js",

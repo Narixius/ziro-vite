@@ -1,5 +1,5 @@
-import { createContext, createElement, FC, HTMLAttributes, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
-import { ErrorBoundary } from 'react-error-boundary'
+import { ComponentType, createContext, createElement, FC, HTMLAttributes, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
+import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { createHead, useHead } from 'unhead'
 import { AnyRoute, FileRoutesByPath, ZiroRoute, ZiroRouter } from './core.js'
 
@@ -77,7 +77,7 @@ const RouteComponentRenderer: FC<{ route: AnyRoute }> = ({ route }) => {
   return (
     <RouteContext.Provider value={route}>
       <RouteSuspenseFallback>
-        <ErrorBoundary fallback={route.errorComponent ? <route.errorComponent /> : <></>}>
+        <ErrorBoundary FallbackComponent={route.errorComponent as ComponentType<FallbackProps>}>
           <RouteComponentSuspense />
         </ErrorBoundary>
       </RouteSuspenseFallback>
