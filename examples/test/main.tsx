@@ -1,10 +1,9 @@
 import { createRoot } from 'react-dom/client'
-import { TwoSeventyRing } from 'react-svg-spinners'
 import { createRootRoute, createRoute, createRouter } from 'ziro/router'
 import { Router } from 'ziro/router/client'
 import root from './pages/_root'
-import blog from './pages/blog'
-import * as singleBlog from './pages/blog/$slug'
+import blog from './pages/pokes'
+import * as singleBlog from './pages/pokes/$pokemon'
 
 const router = createRouter({
   initialUrl: window.location.pathname,
@@ -12,6 +11,7 @@ const router = createRouter({
 
 export const rootRoute = createRootRoute({
   component: root,
+  loadingComponent: () => 'root is loading...',
   async loader() {
     return {
       user: {
@@ -24,20 +24,16 @@ export const rootRoute = createRootRoute({
 
 export const blogPageRoute = createRoute({
   parent: rootRoute,
-  path: '/blog',
+  path: '/blog/$cat',
+  loadingComponent: () => 'pokemons page is loading...',
   component: blog,
-  async loader() {
-    return {
-      latestBlogVersion: 1.2,
-    }
-  },
 })
 
 export const singleBlogRoute = createRoute({
   parent: blogPageRoute,
-  path: '/blog/$slug',
+  path: '/blog/$cat/$pokemon',
   component: singleBlog.default,
-  loadingComponent: () => <TwoSeventyRing />,
+  loadingComponent: () => 'pokemon is loading...',
   errorComponent: singleBlog.ErrorComponent,
   loader: singleBlog.loader,
   meta: singleBlog.meta,
@@ -52,11 +48,11 @@ node.render(<Router router={router} />)
 
 declare module 'ziro/router' {
   interface FileRoutesByPath {
-    '/blog': {
+    '/blog/$cat': {
       parent: typeof rootRoute
       route: typeof blogPageRoute
     }
-    '/blog/$slug': {
+    '/blog/$cat/$pokemon': {
       parent: typeof blogPageRoute
       route: typeof singleBlogRoute
     }

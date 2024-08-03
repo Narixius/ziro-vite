@@ -1,7 +1,7 @@
 import { createHooks } from 'hookable'
-import { ComponentType, memo } from 'react'
+import { ComponentType } from 'react'
 import { FallbackProps } from 'react-error-boundary'
-import { RouterContext, addRoute as addRou3Route, createRouter as createRou3Router, findRoute as findRou3Route } from 'rou3'
+import { RouterContext, addRoute as addRou3Route, createRouter as createRou3Router, findRoute } from 'rou3'
 import { useHead } from 'unhead'
 import { RedirectError, isRedirectError } from './redirect'
 
@@ -59,7 +59,6 @@ export type ZiroMetaProps<TPath extends keyof FileRoutesByPath> = LoaderArgs<TPa
 export type ZiroRouteProps<TPath extends keyof FileRoutesByPath> = {
   params: RouteParams<TPath>
   loaderData: FileRoutesByPath[TPath]['route'] extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
-  //   dataContext: FileRoutesByPath[TPath]['parent'] extends AnyRoute ? RouteDataContext<FileRoutesByPath[TPath]['parent']> : {}
 }
 
 export type ZiroRouteComponent<TPath extends keyof FileRoutesByPath> = ComponentType<ZiroRouteProps<TPath>>
@@ -115,10 +114,21 @@ export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoad
   public getFullUrl() {
     return this.fullUrl
   }
+  public matchedUrl?: string
+  public generateMatchedUrlFromParams(params: Record<string, string>) {
+    if (params && Object.keys(params).length) {
+      this.matchedUrl = this.path
+      Object.keys(params).map(key => {
+        // @ts-ignore
+        this.matchedUrl = this.matchedUrl.replace(`$${key}`, params[key])
+      })
+    }
+  }
 
   private params?: LoaderArgs<TPath, TParentRoute>['params']
   public setParams(params: LoaderArgs<TPath, TParentRoute>['params']) {
     this.params = params
+    this.generateMatchedUrlFromParams(this.params)
   }
   public getParams() {
     return this.params
@@ -132,7 +142,7 @@ export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoad
   }
 
   private getRouteUniqueKey() {
-    return `${this.path}-${this.fullUrl}`
+    return `${this.path}-${this.matchedUrl || this.path}`
   }
 
   public getLoaderStatus() {
@@ -146,7 +156,8 @@ export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoad
 
   public async load() {
     if (this.loader) {
-      if (!this.getLoaderStatus()) {
+      const cachedData = this.getLoaderStatus()
+      if (!cachedData) {
         loaderCache[this.getRouteUniqueKey()] = {
           status: 'pending',
           data: null,
@@ -156,11 +167,11 @@ export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoad
           dataContext: this.dataContext!,
         })
           .then(data => {
-            this.setData(data)
             loaderCache[this.getRouteUniqueKey()] = {
               status: 'success',
               data,
             }
+            this.setData(data)
             return data
           })
           .catch(data => {
@@ -172,6 +183,9 @@ export class ZiroRoute<TPath extends keyof FileRoutesByPath, TParentRoute, TLoad
               this.router!.replace((data as RedirectError).getPath())
             } else throw data
           })
+      } else {
+        this.setData(cachedData.data)
+        return cachedData
       }
     }
   }
@@ -186,6 +200,8 @@ const hooks = createHooks<Record<ZiroRouterHooks, (router: ZiroRouter) => void>>
 
 export type ZiroRouterHooks = 'change-url'
 
+type RouteWithChildren = { route: AnyRoute; child?: RouteWithChildren }
+
 export type ZiroRouter = {
   url: string
   setUrl: (url: string) => void
@@ -193,8 +209,8 @@ export type ZiroRouter = {
   routes: AnyRoute[]
   addRoute: (this: ZiroRouter, route: AnyRoute) => void
   findRoute: (this: ZiroRouter, url: string) => AnyRoute | undefined
-  _lookupRoute: (this: ZiroRouter, path: string, fullUrl: string) => AnyRoute[]
-  lookupRoute: (this: ZiroRouter, path: string) => AnyRoute[]
+  _flatLookup: (this: ZiroRouter, path: string, fullUrl: string) => any
+  flatLookup: (this: ZiroRouter, path: string) => AnyRoute[]
   hook: (hook: ZiroRouterHooks, callback: (router: ZiroRouter) => void) => void
   removeHook: (hook: ZiroRouterHooks, callback: (router: ZiroRouter) => void) => void
   push: (url: string, options?: ZiroRouterPushOptions) => void
@@ -234,32 +250,37 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
     },
     addRoute(route) {
       const serializedPath = route.path.replaceAll('$', ':')
-      addRou3Route(this.tree, 'GET', serializedPath, route)
+      addRou3Route(this.tree, '', serializedPath, route)
       route.setRouter(this)
       this.routes.push(route)
     },
     findRoute(url: string) {
-      const route = findRou3Route(this.tree, 'GET', url)
-      if (route) {
-        if (route[0].params) route[0].data.setParams(route[0].params)
-        return route[0].data
+      const routes = findRoute(this.tree, '', url)
+      if (routes && routes.length) {
+        routes.forEach(route => {
+          if (route.params) route.data.setParams(route.params)
+        })
+        return routes[0].data
       }
       return undefined
     },
-    _lookupRoute(path, fullUrl: string) {
-      const route = this.findRoute(path)
+    _flatLookup(path) {
+      let route = this.findRoute(path)
+      let params: any = {}
+      const tree = []
       if (route) {
-        route.setFullUrl(fullUrl)
+        tree.push(route)
+        params = route.getParams()
       }
-      if (route?.parent) {
-        const parentRoute = this._lookupRoute(route.parent.path, fullUrl)
-        return [route, ...(parentRoute ? parentRoute : [])]
+      while (route?.parent) {
+        tree.push(route.parent)
+        route = route.parent
+        route?.setParams(params)
       }
-      if (route) return [route]
-      return []
+      return tree
     },
-    lookupRoute(path) {
-      return this._lookupRoute(path, path).reverse()
+    flatLookup(path) {
+      return this._flatLookup(path, path).reverse()
     },
   }
   if (typeof window !== 'undefined')
@@ -272,9 +293,9 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
 export const createRoute = <TFilePath extends keyof FileRoutesByPath, TParentRoute extends AnyRoute = FileRoutesByPath[TFilePath]['parent'], TLoaderData = {}>(
   options: Pick<ZiroRoute<TFilePath, TParentRoute, TLoaderData>, 'path' | 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>,
 ) => {
-  return new ZiroRoute(memo(options.component), options.path, options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta)
+  return new ZiroRoute(options.component, options.path, options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta)
 }
 
 export const createRootRoute = <TLoaderData>(options: Pick<ZiroRoute<'__root__', undefined, TLoaderData>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>) => {
-  return new ZiroRoute(memo(options.component), '__root__', undefined, options.loader, options.loadingComponent, options.errorComponent, options.meta)
+  return new ZiroRoute(options.component, '__root__', undefined, options.loader, options.loadingComponent, options.errorComponent, options.meta)
 }

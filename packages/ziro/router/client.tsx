@@ -1,5 +1,5 @@
-import { ComponentType, createContext, createElement, FC, HTMLAttributes, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
-import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
+import { createContext, createElement, FC, HTMLAttributes, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 import { createHead, useHead } from 'unhead'
 import { AnyRoute, FileRoutesByPath, ZiroRoute, ZiroRouter } from './core.js'
 
@@ -11,12 +11,11 @@ const RouterContext = createContext<ZiroRouter | null>(null)
 export const useRouter = () => useContext(RouterContext)
 
 export const Router: FC<RouterProviderType> = ({ router }) => {
-  const [url, setUrl] = useState(router.url)
-  const routeTree = router.lookupRoute(url)
+  const [routeTree, setRouteTree] = useState(router.flatLookup(router.url))
 
   useEffect(() => {
     const callback = (router: ZiroRouter) => {
-      setUrl(router.url)
+      setRouteTree(router.flatLookup(router.url))
     }
     router.hook('change-url', callback)
     return () => router.removeHook('change-url', callback)
@@ -77,7 +76,14 @@ const RouteComponentRenderer: FC<{ route: AnyRoute }> = ({ route }) => {
   return (
     <RouteContext.Provider value={route}>
       <RouteSuspenseFallback>
-        <ErrorBoundary FallbackComponent={route.errorComponent as ComponentType<FallbackProps>}>
+        <ErrorBoundary
+          FallbackComponent={function FC({ error, resetErrorBoundary }) {
+            const router = useRouter()
+            router?.hook('change-url', resetErrorBoundary)
+            if (route.errorComponent) return <route.errorComponent error={error} resetErrorBoundary={resetErrorBoundary} />
+            return <></>
+          }}
+        >
           <RouteComponentSuspense />
         </ErrorBoundary>
       </RouteSuspenseFallback>
@@ -86,7 +92,7 @@ const RouteComponentRenderer: FC<{ route: AnyRoute }> = ({ route }) => {
 }
 const RouteSuspenseFallback: FC<PropsWithChildren> = ({ children }) => {
   const route = useRoute()
-  return <Suspense fallback={route.loadingComponent ? createElement(route.loadingComponent) : ''}>{children}</Suspense>
+  return <Suspense fallback={route.loadingComponent ? createElement(route.loadingComponent) : '...'}>{children}</Suspense>
 }
 
 const RouteComponentSuspense: FC = () => {
@@ -110,7 +116,7 @@ const RouteMetaTags: FC<PropsWithChildren<{ route: AnyRoute }>> = ({ route, chil
         .then(useHead)
     }
   })
-  return <>{children}</>
+  return children
 }
 
 export const useLoaderData = () => useRoute().getData()
