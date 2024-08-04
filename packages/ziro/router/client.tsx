@@ -97,10 +97,10 @@ const RouteSuspenseFallback: FC<PropsWithChildren> = ({ children }) => {
 
 const RouteComponentSuspense: FC = () => {
   const route = useRoute()
-  if (route.loader) createRouteSuspender(route).read()
+  createRouteSuspender(route).read()
   return (
     <RouteMetaTags route={route}>
-      <route.component params={route.getParams()} loaderData={route.getData()} />
+      <route.component params={route.getParams()} loaderData={route.getData()} dataContext={route.getDataContext()} />
     </RouteMetaTags>
   )
 }
@@ -112,6 +112,7 @@ const RouteMetaTags: FC<PropsWithChildren<{ route: AnyRoute }>> = ({ route, chil
         .meta({
           dataContext: route.getDataContext()!,
           params: route.getParams()!,
+          loaderData: route.getData()!,
         })
         .then(useHead)
     }

@@ -1,14 +1,7 @@
-import { ZiroLoaderProps, ZiroMetaProps, ZiroRouteErrorComponent, ZiroRouteProps } from 'ziro/router'
+import { LoaderProps, MetaFn, RouteProps, ZiroRouteErrorComponent } from 'ziro/router'
 import { abort } from 'ziro/router/abort'
 
-export const loader = async ({
-  params,
-}: ZiroLoaderProps<'/blog/$cat/$pokemon'>): Promise<{
-  sprites: {
-    front_default: string
-  }
-  name: string
-}> => {
+export const loader = async ({ params }: LoaderProps<'/blog/$cat/$pokemon'>) => {
   return new Promise(async (resolve, reject) => {
     await fetch(`https://pokeapi.co/api/v2/pokemon/${params.pokemon}`)
       .then(response => {
@@ -26,17 +19,24 @@ export const loader = async ({
         },
         reject,
       )
-  })
+  }) as Promise<{
+    sprites: {
+      front_default: string
+    }
+    name: string
+  }>
 }
 
-export const meta = async ({ params }: ZiroMetaProps<'/blog/$cat/$pokemon'>) => {
+export const meta: MetaFn<'/blog/$cat/$pokemon'> = async ({ params, loaderData, dataContext }) => {
   return {
-    title: params.pokemon,
+    title: loaderData.name,
+    titleTemplate(title) {
+      return `${title} | ${dataContext.version}`
+    },
   }
 }
 
-export default function SingleBlogPage({ params, loaderData }: ZiroRouteProps<'/blog/$cat/$pokemon'>) {
-  console.log('pokemon rendered')
+export default function SingleBlogPage({ params, loaderData, dataContext }: RouteProps<'/blog/$cat/$pokemon'>) {
   return (
     <div>
       <p>{params.cat}</p>

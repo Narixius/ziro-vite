@@ -12,11 +12,6 @@ export class AbortError<TMeta = any> extends Error {
     super(`${options?.message || ABORT_ERROR_KEY}`)
   }
 
-  public get message() {
-    console.log('asdf')
-    return this.options?.message || ''
-  }
-
   public getOptions() {
     return this.options
   }

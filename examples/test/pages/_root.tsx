@@ -4,7 +4,6 @@ import './styles.css'
 
 const RootPage = memo(
   () => {
-    console.log('root rendered')
     return (
       <div>
         <div className="flex gap-2">

@@ -12,13 +12,8 @@ const router = createRouter({
 export const rootRoute = createRootRoute({
   component: root,
   loadingComponent: () => 'root is loading...',
-  async loader() {
-    return {
-      user: {
-        name: 'alireza',
-        id: 10,
-      },
-    }
+  loader: async () => {
+    return { version: 1.1 }
   },
 })
 
@@ -50,11 +45,11 @@ declare module 'ziro/router' {
   interface FileRoutesByPath {
     '/blog/$cat': {
       parent: typeof rootRoute
-      route: typeof blogPageRoute
+      loaderData: typeof blogPageRoute.loader extends (...any: any) => Promise<infer TLoaderData> ? TLoaderData : {}
     }
     '/blog/$cat/$pokemon': {
       parent: typeof blogPageRoute
-      route: typeof singleBlogRoute
+      loaderData: typeof singleBlog.loader extends (...any: any) => Promise<infer TLoaderData> ? TLoaderData : {}
     }
   }
 }

@@ -1,11 +1,10 @@
 import { RouteProps } from 'ziro/router'
 import { Outlet } from 'ziro/router/client'
 
-export default function BlogPage(props: RouteProps<'/blog/$cat'>) {
+export default function PoksLayout(props: RouteProps<'/blog/$cat'>) {
   return (
     <div>
-      <p>Blogs</p>
-      <p>{props.params.cat}</p>
+      <p>Pokes Layout</p>
       <Outlet />
     </div>
   )
