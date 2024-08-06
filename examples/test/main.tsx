@@ -1,8 +1,10 @@
 import { createRoot } from 'react-dom/client'
-import { createRootRoute, createRoute, createRouter } from 'ziro/router'
+import { ZiroRoute, createLayoutRoute, createRootRoute, createRoute, createRouter } from 'ziro/router'
+import { abort } from 'ziro/router/abort'
 import { Router } from 'ziro/router/client'
-import root from './pages/_root'
-import blog from './pages/pokes'
+import * as rootLayout from './pages/_layout'
+import * as root from './pages/_root'
+import * as blog from './pages/pokes'
 import * as singleBlog from './pages/pokes/$pokemon'
 
 const router = createRouter({
@@ -10,23 +12,31 @@ const router = createRouter({
 })
 
 export const rootRoute = createRootRoute({
-  component: root,
+  component: root.default,
   loadingComponent: () => 'root is loading...',
-  loader: async () => {
-    return { version: 1.1 }
-  },
+  meta: root.meta,
+})
+
+export const layoutRoute = createLayoutRoute({
+  parent: rootRoute,
+  component: rootLayout.default,
+  errorComponent: rootLayout.ErrorComponent,
 })
 
 export const blogPageRoute = createRoute({
-  parent: rootRoute,
-  path: '/blog/$cat',
-  loadingComponent: () => 'pokemons page is loading...',
-  component: blog,
+  parent: layoutRoute,
+  path: '/blog',
+  loadingComponent: () => 'blog page is loading...',
+  component: blog.default,
+  meta: blog.meta,
+  loader: async () => {
+    abort(404, 'blog page not found')
+  },
 })
 
 export const singleBlogRoute = createRoute({
   parent: blogPageRoute,
-  path: '/blog/$cat/$pokemon',
+  path: '/blog/$pokemon',
   component: singleBlog.default,
   loadingComponent: () => 'pokemon is loading...',
   errorComponent: singleBlog.ErrorComponent,
@@ -34,7 +44,6 @@ export const singleBlogRoute = createRoute({
   meta: singleBlog.meta,
 })
 
-router.addRoute(rootRoute)
 router.addRoute(blogPageRoute)
 router.addRoute(singleBlogRoute)
 
@@ -43,13 +52,17 @@ node.render(<Router router={router} />)
 
 declare module 'ziro/router' {
   interface FileRoutesByPath {
-    '/blog/$cat': {
-      parent: typeof rootRoute
-      loaderData: typeof blogPageRoute.loader extends (...any: any) => Promise<infer TLoaderData> ? TLoaderData : {}
+    _root: {
+      parent: undefined
+      loaderData: typeof rootRoute extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
     }
-    '/blog/$cat/$pokemon': {
+    '/blog': {
+      parent: typeof rootRoute
+      loaderData: typeof blogPageRoute extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
+    }
+    '/blog/$pokemon': {
       parent: typeof blogPageRoute
-      loaderData: typeof singleBlog.loader extends (...any: any) => Promise<infer TLoaderData> ? TLoaderData : {}
+      loaderData: typeof singleBlogRoute extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
     }
   }
 }

@@ -1,7 +1,7 @@
 import { LoaderProps, MetaFn, RouteProps, ZiroRouteErrorComponent } from 'ziro/router'
 import { abort } from 'ziro/router/abort'
 
-export const loader = async ({ params }: LoaderProps<'/blog/$cat/$pokemon'>) => {
+export const loader = async ({ params }: LoaderProps<'/blog/$pokemon'>) => {
   return new Promise(async (resolve, reject) => {
     await fetch(`https://pokeapi.co/api/v2/pokemon/${params.pokemon}`)
       .then(response => {
@@ -27,19 +27,15 @@ export const loader = async ({ params }: LoaderProps<'/blog/$cat/$pokemon'>) => 
   }>
 }
 
-export const meta: MetaFn<'/blog/$cat/$pokemon'> = async ({ params, loaderData, dataContext }) => {
+export const meta: MetaFn<'/blog/$pokemon'> = async ({ loaderData, dataContext }) => {
   return {
     title: loaderData.name,
-    titleTemplate(title) {
-      return `${title} | ${dataContext.version}`
-    },
   }
 }
 
-export default function SingleBlogPage({ params, loaderData, dataContext }: RouteProps<'/blog/$cat/$pokemon'>) {
+export default function SingleBlogPage({ params, loaderData, dataContext }: RouteProps<'/blog/$pokemon'>) {
   return (
     <div>
-      <p>{params.cat}</p>
       <p>{loaderData.name}</p>
       <img src={loaderData.sprites.front_default} alt={loaderData.name} />
     </div>
@@ -49,7 +45,7 @@ export default function SingleBlogPage({ params, loaderData, dataContext }: Rout
 export const ErrorComponent: ZiroRouteErrorComponent = ({ error, resetErrorBoundary }) => {
   return (
     <div>
-      <span className="text-red-800">{error.message}</span>
+      <span className="text-red-800">{error.message} asdf</span>
     </div>
   )
 }

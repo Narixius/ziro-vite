@@ -1,7 +1,9 @@
-import { createContext, createElement, FC, HTMLAttributes, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
+/// <reference types="vite/client" />
+
+import { createContext, createElement, FC, HTMLAttributes, HTMLProps, MouseEvent, PropsWithChildren, Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { createHead, useHead } from 'unhead'
-import { AnyRoute, FileRoutesByPath, ZiroRoute, ZiroRouter } from './core.js'
+import { AnyRoute, ZiroRoute, ZiroRouter } from './core.js'
 
 createHead()
 
@@ -20,30 +22,25 @@ export const Router: FC<RouterProviderType> = ({ router }) => {
     router.hook('change-url', callback)
     return () => router.removeHook('change-url', callback)
   }, [])
-
   return (
     <RouterContext.Provider value={router}>
-      <RouterEntryPoint routeTree={routeTree} />
+      <ErrorBoundary fallback={<span>error</span>}>
+        <RouterEntryPoint routeTree={routeTree} />
+      </ErrorBoundary>
     </RouterContext.Provider>
   )
 }
 
-const createRouteSuspender = <TPath extends keyof FileRoutesByPath, TLoaderData, TParentRoute extends AnyRoute = FileRoutesByPath[TPath]['parent']>(
-  route: ZiroRoute<TPath, TParentRoute, TLoaderData>,
-) => {
+const createRouteSuspender = <TPath extends string, TLoaderData, TParentRoute extends AnyRoute>(route: ZiroRoute<TPath, TParentRoute, TLoaderData>) => {
   const suspender = route.load()
 
-  return {
-    read() {
-      const routeStatus = route.getLoaderStatus()
-      if (routeStatus.status === 'pending') {
-        throw suspender
-      } else if (routeStatus.status === 'error') {
-        throw routeStatus.data
-      } else if (routeStatus.status === 'success') {
-        return routeStatus.data
-      }
-    },
+  const routeStatus = route.getLoaderStatus()
+  if (routeStatus.status === 'pending') {
+    throw suspender
+  } else if (routeStatus.status === 'error') {
+    throw routeStatus.data
+  } else if (routeStatus.status === 'success') {
+    return routeStatus
   }
 }
 
@@ -62,11 +59,12 @@ const RouterEntryPoint: FC<{ routeTree: AnyRoute[] }> = ({ routeTree }) => {
       </OutletRouteContext.Provider>
     )
   }
+  // TODO: show default error page here
 }
 
 export const Outlet: FC = () => {
   const outletContext = useContext(OutletRouteContext)
-  if (outletContext) return <RouterEntryPoint routeTree={outletContext?.children} />
+  if (outletContext && outletContext?.children.length) return <RouterEntryPoint routeTree={outletContext?.children} />
 }
 
 const RouteContext = createContext<AnyRoute | null>(null)
@@ -75,39 +73,54 @@ export const useRoute = () => useContext(RouteContext)!
 const RouteComponentRenderer: FC<{ route: AnyRoute }> = ({ route }) => {
   return (
     <RouteContext.Provider value={route}>
-      <RouteSuspenseFallback>
-        <ErrorBoundary
-          FallbackComponent={function FC({ error, resetErrorBoundary }) {
-            const router = useRouter()
-            router?.hook('change-url', resetErrorBoundary)
-            if (route.errorComponent) return <route.errorComponent error={error} resetErrorBoundary={resetErrorBoundary} />
-            return <></>
-          }}
-        >
+      <RouteErrorBoundary>
+        <RouteSuspenseFallback>
           <RouteComponentSuspense />
-        </ErrorBoundary>
-      </RouteSuspenseFallback>
+        </RouteSuspenseFallback>
+      </RouteErrorBoundary>
     </RouteContext.Provider>
+  )
+}
+
+const RouteErrorBoundary: FC<PropsWithChildren> = ({ children }) => {
+  const route = useRoute()
+  if (!route.errorComponent) return children
+  return (
+    <ErrorBoundary
+      FallbackComponent={function FC({ error, resetErrorBoundary }) {
+        const router = useRouter()
+        useEffect(() => {
+          return router?.hook('change-url', resetErrorBoundary)
+        }, [])
+        if (route.errorComponent) {
+          return <route.errorComponent error={error} resetErrorBoundary={resetErrorBoundary} />
+        }
+        // throw error
+      }}
+    >
+      {children}
+    </ErrorBoundary>
   )
 }
 const RouteSuspenseFallback: FC<PropsWithChildren> = ({ children }) => {
   const route = useRoute()
-  return <Suspense fallback={route.loadingComponent ? createElement(route.loadingComponent) : '...'}>{children}</Suspense>
+  return <Suspense fallback={route.loadingComponent ? createElement(route.loadingComponent) : ''}>{children}</Suspense>
 }
 
 const RouteComponentSuspense: FC = () => {
   const route = useRoute()
-  createRouteSuspender(route).read()
+  createRouteSuspender(route)
   return (
-    <RouteMetaTags route={route}>
+    <>
+      <RouteMetaTags route={route} />
       <route.component params={route.getParams()} loaderData={route.getData()} dataContext={route.getDataContext()} />
-    </RouteMetaTags>
+    </>
   )
 }
 
 const RouteMetaTags: FC<PropsWithChildren<{ route: AnyRoute }>> = ({ route, children }) => {
-  useEffect(() => {
-    if (route.meta) {
+  const onLoad = useCallback(() => {
+    if (route.meta)
       route
         .meta({
           dataContext: route.getDataContext()!,
@@ -115,9 +128,14 @@ const RouteMetaTags: FC<PropsWithChildren<{ route: AnyRoute }>> = ({ route, chil
           loaderData: route.getData()!,
         })
         .then(useHead)
-    }
-  })
-  return children
+  }, [route])
+
+  useEffect(() => {
+    onLoad()
+    return route.on('load', onLoad)
+  }, [])
+
+  return null
 }
 
 export const useLoaderData = () => useRoute().getData()
@@ -131,4 +149,19 @@ export const Link: FC<HTMLAttributes<HTMLAnchorElement> & { href: string }> = pr
     if (router) router.push(props.href)
   }
   return createElement('a', { ...props, onClick })
+}
+
+export const Html: FC<PropsWithChildren<HTMLProps<HTMLHtmlElement>>> = ({ children }) => {
+  if (!import.meta.env.SSR) return <>{children}</>
+  return <html>{children}</html>
+}
+
+export const Body: FC<PropsWithChildren> = ({ children }) => {
+  if (!import.meta.env.SSR) return <>{children}</>
+  return <body>{children}</body>
+}
+
+export const Head: FC<PropsWithChildren> = ({ children }) => {
+  if (!import.meta.env.SSR) return <>{children}</>
+  return <head>{children}</head>
 }

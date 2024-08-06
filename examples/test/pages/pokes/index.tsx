@@ -1,11 +1,16 @@
-import { RouteProps } from 'ziro/router'
+import { MetaFn, RouteProps } from 'ziro/router'
 import { Outlet } from 'ziro/router/client'
 
-export default function BlogPage(props: RouteProps<'/blog/$cat'>) {
+export const meta: MetaFn<'/blog'> = async () => {
+  return {
+    title: 'poks',
+  }
+}
+
+export default function BlogPage(props: RouteProps<'/blog'>) {
   return (
     <div>
       <p>Blogs</p>
-      <p>{props.params.cat}</p>
       <Outlet />
     </div>
   )
