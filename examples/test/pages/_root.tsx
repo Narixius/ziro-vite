@@ -6,12 +6,12 @@ export const meta: MetaFn<'_root'> = async ctx => {
   return {
     title: 'root',
     titleTemplate(title) {
-      return `${title}`
+      return `${title} | ${ctx.loaderData.version}`
     },
   }
 }
 
-export const loader = async (any: any) => {
+export const loader = async () => {
   return { version: 1.1 }
 }
 

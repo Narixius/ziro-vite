@@ -1,6 +1,5 @@
 import { createRoot } from 'react-dom/client'
 import { ZiroRoute, createLayoutRoute, createRootRoute, createRoute, createRouter } from 'ziro/router'
-import { abort } from 'ziro/router/abort'
 import { Router } from 'ziro/router/client'
 import * as rootLayout from './pages/_layout'
 import * as root from './pages/_root'
@@ -11,16 +10,23 @@ const router = createRouter({
   initialUrl: window.location.pathname,
 })
 
+const baseRoute = createRoute({
+  path: '',
+  component: () => '',
+})
+
 export const rootRoute = createRootRoute({
   component: root.default,
   loadingComponent: () => 'root is loading...',
   meta: root.meta,
+  loader: root.loader,
 })
 
 export const layoutRoute = createLayoutRoute({
   parent: rootRoute,
   component: rootLayout.default,
   errorComponent: rootLayout.ErrorComponent,
+  loader: rootLayout.loader,
 })
 
 export const blogPageRoute = createRoute({
@@ -29,9 +35,7 @@ export const blogPageRoute = createRoute({
   loadingComponent: () => 'blog page is loading...',
   component: blog.default,
   meta: blog.meta,
-  loader: async () => {
-    abort(404, 'blog page not found')
-  },
+  loader: blog.loader,
 })
 
 export const singleBlogRoute = createRoute({
@@ -53,11 +57,15 @@ node.render(<Router router={router} />)
 declare module 'ziro/router' {
   interface FileRoutesByPath {
     _root: {
-      parent: undefined
+      parent: typeof baseRoute
       loaderData: typeof rootRoute extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
     }
-    '/blog': {
+    'layout:/pokes': {
       parent: typeof rootRoute
+      loaderData: typeof layoutRoute extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
+    }
+    '/blog': {
+      parent: typeof layoutRoute
       loaderData: typeof blogPageRoute extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
     }
     '/blog/$pokemon': {

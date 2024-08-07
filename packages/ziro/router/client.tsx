@@ -20,7 +20,6 @@ export const Router: FC<RouterProviderType> = ({ router }) => {
       setRouteTree(router.flatLookup(router.url))
     }
     router.hook('change-url', callback)
-    return () => router.removeHook('change-url', callback)
   }, [])
   return (
     <RouterContext.Provider value={router}>
@@ -93,9 +92,9 @@ const RouteErrorBoundary: FC<PropsWithChildren> = ({ children }) => {
           return router?.hook('change-url', resetErrorBoundary)
         }, [])
         if (route.errorComponent) {
-          return <route.errorComponent error={error} resetErrorBoundary={resetErrorBoundary} />
+          return <route.errorComponent error={error} resetErrorBoundary={resetErrorBoundary} status={error.getStatus && error.getStatus()} />
         }
-        // throw error
+        throw error
       }}
     >
       {children}
