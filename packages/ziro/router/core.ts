@@ -199,8 +199,6 @@ const hooks = createHooks<Record<ZiroRouterHooks, (router: ZiroRouter) => void>>
 
 export type ZiroRouterHooks = 'change-url'
 
-type RouteWithChildren = { route: AnyRoute; child?: RouteWithChildren }
-
 export type ZiroRouter = {
   url: string
   setUrl: (url: string) => void
@@ -309,7 +307,7 @@ export const createRoute = <TFilePath extends string, TParentRoute extends AnyRo
   return new ZiroRoute(options.component, options.path, options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta)
 }
 
-export const createRootRoute = <TLoaderData = {}>(options: Pick<ZiroRoute<'_root', AnyRoute, TLoaderData>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>) => {
+export const createRootRoute = <TLoaderData = {}>(options: Pick<ZiroRoute<'_root', undefined, TLoaderData>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>) => {
   return new ZiroRoute(options.component, '_root', undefined, options.loader, options.loadingComponent, options.errorComponent, options.meta)
 }
 

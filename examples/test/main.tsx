@@ -10,11 +10,6 @@ const router = createRouter({
   initialUrl: window.location.pathname,
 })
 
-const baseRoute = createRoute({
-  path: '',
-  component: () => '',
-})
-
 export const rootRoute = createRootRoute({
   component: root.default,
   loadingComponent: () => 'root is loading...',
@@ -57,7 +52,7 @@ node.render(<Router router={router} />)
 declare module 'ziro/router' {
   interface FileRoutesByPath {
     _root: {
-      parent: typeof baseRoute
+      parent: undefined
       loaderData: typeof rootRoute extends ZiroRoute<any, any, infer TLoaderData> ? TLoaderData : {}
     }
     'layout:/pokes': {
