@@ -5,6 +5,7 @@ import { RouterContext, addRoute as addRou3Route, createRouter as createRou3Rout
 import { joinURL } from 'ufo'
 import { useHead } from 'unhead'
 import { abort } from './abort'
+import { Outlet } from './client'
 import { RedirectError, isRedirectError } from './redirect'
 export { ErrorComponentProps }
 
@@ -216,6 +217,7 @@ export type ZiroRouter = {
   createRoute: typeof createRoute
   createRootRoute: typeof createRootRoute
   createLayoutRoute: typeof createLayoutRoute
+  createMiddleware: typeof createMiddleware
 }
 
 type ZiroRouterPushOptions = {
@@ -313,6 +315,11 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
       route.setRouter(this)
       return route
     },
+    createMiddleware(options) {
+      const route = createMiddleware(options)
+      route.setRouter(this)
+      return route
+    },
   }
   if (typeof window !== 'undefined')
     window.addEventListener('popstate', e => {
@@ -335,4 +342,12 @@ const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}>(
   options: Pick<ZiroRoute<'', TParentRoute, TLoaderData>, 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>,
 ) => {
   return new ZiroRoute(options.component, '', options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta)
+}
+
+const createMiddleware = <TParentRoute extends AnyRoute, TLoaderData = {}>(
+  options: Pick<ZiroRoute<'', TParentRoute, TLoaderData>, 'parent'> & {
+    handler: ZiroRoute<'', TParentRoute, TLoaderData>['loader']
+  },
+) => {
+  return new ZiroRoute(() => createElement(Outlet), '', options.parent, options.handler)
 }

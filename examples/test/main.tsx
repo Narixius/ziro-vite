@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ZiroRoute, createRouter } from 'ziro/router'
-import { Outlet, Router } from 'ziro/router/client'
+import { Router } from 'ziro/router/client'
 import { redirect } from 'ziro/router/redirect'
 import * as rootLayout from './pages/_layout'
 import * as root from './pages/_root'
@@ -51,10 +51,9 @@ export const authRoute = router.createRoute({
   component: lazy(() => import('./pages/auth')),
 })
 
-const authMiddleware = router.createLayoutRoute({
+const authMiddleware = router.createMiddleware({
   parent: rootRoute,
-  component: () => <Outlet />,
-  loader: async () => {
+  handler: async () => {
     if (localStorage.getItem('loggedIn') === 'true') {
       return {
         user: {
