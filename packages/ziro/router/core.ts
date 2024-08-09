@@ -181,8 +181,10 @@ export class ZiroRoute<TPath extends string, TParentRoute, TLoaderData> {
         status: 'error',
         data,
       }
+
       if (data instanceof Error && isRedirectError(data)) {
         this.router!.replace((data as RedirectError).getPath())
+        console.log('route replaced with', (data as RedirectError).getPath())
       } else {
         throw data
       }
@@ -211,6 +213,9 @@ export type ZiroRouter = {
   removeHook: (hook: ZiroRouterHooks, callback: (router: ZiroRouter) => void) => void
   push: (url: string, options?: ZiroRouterPushOptions) => void
   replace: (url: string, options?: Omit<ZiroRouterPushOptions, 'replace'>) => void
+  createRoute: typeof createRoute
+  createRootRoute: typeof createRootRoute
+  createLayoutRoute: typeof createLayoutRoute
 }
 
 type ZiroRouterPushOptions = {
@@ -293,6 +298,21 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
     flatLookup(path) {
       return this._flatLookup(path, path).reverse()
     },
+    createRoute(options) {
+      const route = createRoute(options)
+      this.addRoute(route)
+      return route
+    },
+    createLayoutRoute(options) {
+      const route = createLayoutRoute(options)
+      route.setRouter(this)
+      return route
+    },
+    createRootRoute(options) {
+      const route = createRootRoute(options)
+      route.setRouter(this)
+      return route
+    },
   }
   if (typeof window !== 'undefined')
     window.addEventListener('popstate', e => {
@@ -301,17 +321,17 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
   return router
 }
 
-export const createRoute = <TFilePath extends string, TParentRoute extends AnyRoute, TLoaderData = {}>(
+const createRoute = <TFilePath extends string, TParentRoute extends AnyRoute, TLoaderData = {}>(
   options: Pick<ZiroRoute<TFilePath, TParentRoute, TLoaderData>, 'path' | 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>,
 ) => {
   return new ZiroRoute(options.component, options.path, options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta)
 }
 
-export const createRootRoute = <TLoaderData = {}>(options: Pick<ZiroRoute<'_root', undefined, TLoaderData>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>) => {
+const createRootRoute = <TLoaderData = {}>(options: Pick<ZiroRoute<'_root', undefined, TLoaderData>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>) => {
   return new ZiroRoute(options.component, '_root', undefined, options.loader, options.loadingComponent, options.errorComponent, options.meta)
 }
 
-export const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}>(
+const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}>(
   options: Pick<ZiroRoute<'', TParentRoute, TLoaderData>, 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta'>,
 ) => {
   return new ZiroRoute(options.component, '', options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta)
