@@ -1,10 +1,11 @@
-import { lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ZiroRoute, createRouter } from 'ziro/router'
 import { Router } from 'ziro/router/client'
 import { redirect } from 'ziro/router/redirect'
 import * as rootLayout from './pages/_layout'
 import * as root from './pages/_root'
+import * as Auth from './pages/auth'
+import * as Dashboard from './pages/dashboard'
 import * as blog from './pages/pokes'
 import * as singleBlog from './pages/pokes/$pokemon'
 
@@ -12,21 +13,21 @@ const router = createRouter({
   initialUrl: window.location.pathname,
 })
 
-export const rootRoute = router.createRootRoute({
+export const rootRoute = router.setRootRoute({
   component: root.default,
   loadingComponent: () => 'root is loading...',
   meta: root.meta,
   loader: root.loader,
 })
 
-export const layoutRoute = router.createLayoutRoute({
+export const layoutRoute = router.addLayoutRoute({
   parent: rootRoute,
   component: rootLayout.default,
   errorComponent: rootLayout.ErrorComponent,
   loader: rootLayout.loader,
 })
 
-export const blogPageRoute = router.createRoute({
+export const blogPageRoute = router.addRoute({
   parent: layoutRoute,
   path: '/blog',
   loadingComponent: () => 'blog page is loading...',
@@ -35,7 +36,7 @@ export const blogPageRoute = router.createRoute({
   loader: blog.loader,
 })
 
-export const singleBlogRoute = router.createRoute({
+export const singleBlogRoute = router.addRoute({
   parent: blogPageRoute,
   path: '/blog/$pokemon',
   component: singleBlog.default,
@@ -45,13 +46,14 @@ export const singleBlogRoute = router.createRoute({
   meta: singleBlog.meta,
 })
 
-export const authRoute = router.createRoute({
+export const authRoute = router.addRoute({
   parent: rootRoute,
   path: '/auth',
-  component: lazy(() => import('./pages/auth')),
+  component: Auth.default,
+  loadingComponent: () => 'loading...',
 })
 
-const authMiddleware = router.createMiddleware({
+const authMiddleware = router.addMiddleware({
   parent: rootRoute,
   handler: async () => {
     if (localStorage.getItem('loggedIn') === 'true') {
@@ -64,10 +66,10 @@ const authMiddleware = router.createMiddleware({
   },
 })
 
-const dashboardRoute = router.createRoute({
+const dashboardRoute = router.addRoute({
   parent: authMiddleware,
   path: '/dashboard',
-  component: lazy(() => import('./pages/dashboard')),
+  component: Dashboard.default,
 })
 
 const node = createRoot(document.getElementById('root')!)

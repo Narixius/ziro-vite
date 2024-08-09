@@ -206,7 +206,7 @@ export type ZiroRouter = {
   url: string
   setUrl: (url: string) => void
   tree: RouterContext<AnyRoute>
-  addRoute: (this: ZiroRouter, route: AnyRoute) => void
+  initializeRoute: (this: ZiroRouter, route: AnyRoute) => void
   findRoute: (this: ZiroRouter, url: string) => AnyRoute | undefined
   _flatLookup: (this: ZiroRouter, path: string, fullUrl: string) => any
   flatLookup: (this: ZiroRouter, path: string) => AnyRoute[]
@@ -214,10 +214,10 @@ export type ZiroRouter = {
   removeHook: (hook: ZiroRouterHooks, callback: (router: ZiroRouter) => void) => void
   push: (url: string, options?: ZiroRouterPushOptions) => void
   replace: (url: string, options?: Omit<ZiroRouterPushOptions, 'replace'>) => void
-  createRoute: typeof createRoute
-  createRootRoute: typeof createRootRoute
-  createLayoutRoute: typeof createLayoutRoute
-  createMiddleware: typeof createMiddleware
+  addRoute: typeof createRoute
+  setRootRoute: typeof createRootRoute
+  addLayoutRoute: typeof createLayoutRoute
+  addMiddleware: typeof createMiddleware
 }
 
 type ZiroRouterPushOptions = {
@@ -250,7 +250,7 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
       this.url = url
       hooks.callHook('change-url', this)
     },
-    addRoute(route) {
+    initializeRoute(route) {
       const serializedPath = route.path.replaceAll('$', ':')
       if (serializedPath !== DEFAULT_ROOT_PATH) {
         addRou3Route(this.tree, '', serializedPath, route)
@@ -300,22 +300,22 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
     flatLookup(path) {
       return this._flatLookup(path, path).reverse()
     },
-    createRoute(options) {
+    addRoute(options) {
       const route = createRoute(options)
-      this.addRoute(route)
+      this.initializeRoute(route)
       return route
     },
-    createLayoutRoute(options) {
+    addLayoutRoute(options) {
       const route = createLayoutRoute(options)
       route.setRouter(this)
       return route
     },
-    createRootRoute(options) {
+    setRootRoute(options) {
       const route = createRootRoute(options)
       route.setRouter(this)
       return route
     },
-    createMiddleware(options) {
+    addMiddleware(options) {
       const route = createMiddleware(options)
       route.setRouter(this)
       return route
