@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-
 import { createContext, createElement, FC, HTMLAttributes, HTMLProps, MouseEvent, PropsWithChildren, Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { createHead, useHead } from 'unhead'
@@ -7,20 +5,21 @@ import { AnyRoute, ZiroRoute, ZiroRouter } from './core.js'
 
 createHead()
 
-type RouterProviderType = { router: ZiroRouter }
+type RouterProviderType = { router: ZiroRouter; dehydrate?: boolean }
 const RouterContext = createContext<ZiroRouter | null>(null)
 
 export const useRouter = () => useContext(RouterContext)
 
 export const Router: FC<RouterProviderType> = ({ router }) => {
-  const [routeTree, setRouteTree] = useState(router.flatLookup(router.url))
+  const [routeTree, setRouteTree] = useState(router.url ? router.flatLookup(router.url) : [])
 
   useEffect(() => {
     const callback = (router: ZiroRouter) => {
-      setRouteTree(router.flatLookup(router.url))
+      setRouteTree(router.flatLookup(router.url!))
     }
     router.hook('change-url', callback)
   }, [])
+
   return (
     <RouterContext.Provider value={router}>
       <ErrorBoundary fallback={<span>error</span>}>
@@ -61,8 +60,10 @@ const RouterEntryPoint: FC<{ routeTree: AnyRoute[] }> = ({ routeTree }) => {
   // TODO: show default error page here
 }
 
+export const useOutlet = () => useContext(OutletRouteContext)
+
 export const Outlet: FC = () => {
-  const outletContext = useContext(OutletRouteContext)
+  const outletContext = useOutlet()
   if (outletContext && outletContext?.children.length) return <RouterEntryPoint routeTree={outletContext?.children} />
 }
 
@@ -112,7 +113,12 @@ const RouteComponentSuspense: FC = () => {
   return (
     <>
       <RouteMetaTags route={route} />
-      <route.component params={route.getParams()} loaderData={route.getData()} dataContext={route.getDataContext()} />
+      {createElement(route.component, {
+        params: route.getParams(),
+        loaderData: route.getData(),
+        dataContext: route.getDataContext(),
+      })}
+      {/* <route.component params={route.getParams()} loaderData={route.getData()} dataContext={route.getDataContext()} /> */}
     </>
   )
 }
@@ -150,17 +156,23 @@ export const Link: FC<HTMLAttributes<HTMLAnchorElement> & { href: string }> = pr
   return createElement('a', { ...props, onClick })
 }
 
-export const Html: FC<PropsWithChildren<HTMLProps<HTMLHtmlElement>>> = ({ children }) => {
-  if (!import.meta.env.SSR) return <>{children}</>
-  return <html>{children}</html>
+export const Html: FC<PropsWithChildren<HTMLProps<HTMLHtmlElement>>> = props => {
+  const router = useRouter()
+  const isSSR = router?.dehydrate
+  if (isSSR) return <>{props.children}</>
+  return <html>{props.children}</html>
 }
 
-export const Body: FC<PropsWithChildren> = ({ children }) => {
-  if (!import.meta.env.SSR) return <>{children}</>
-  return <body>{children}</body>
+export const Body: FC<PropsWithChildren> = props => {
+  const router = useRouter()
+  const isSSR = router?.dehydrate
+  if (isSSR) return <>{props.children}</>
+  return <body>{props.children}</body>
 }
 
-export const Head: FC<PropsWithChildren> = ({ children }) => {
-  if (!import.meta.env.SSR) return <>{children}</>
-  return <head>{children}</head>
+export const Head: FC<PropsWithChildren> = props => {
+  const router = useRouter()
+  const isSSR = router?.dehydrate
+  if (isSSR) return <>{props.children}</>
+  return <head>{props.children}</head>
 }

@@ -42,13 +42,15 @@
   "peerDependencies": {
     "typescript": "^5.4.5",
     "vite": "^5.3.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "files": [
     "dist/"
   ],
   "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "@types/lodash-es": "^4.17.12",
     "@vue/reactivity": "^3.4.35",
     "defu": "^6.1.4",

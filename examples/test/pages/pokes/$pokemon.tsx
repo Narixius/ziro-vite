@@ -2,19 +2,23 @@ import { LoaderProps, MetaFn, RouteProps, ZiroRouteErrorComponent } from 'ziro/r
 import { abort } from 'ziro/router/abort'
 
 export const loader = async ({ params, dataContext }: LoaderProps<'/blog/$pokemon'>) => {
-  return (await fetch(`https://pokeapi.co/api/v2/pokemon/${params.pokemon}`).then(response => {
-    if (response.ok) {
-      return response.json()
-    }
-    abort(response.status, {
-      message: "Couldn't load pokemon",
+  return await fetch(`https://pokeapi.co/api/v2/pokemon/${params.pokemon}`)
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      }
+      abort(response.status, {
+        message: "Couldn't load pokemon",
+      })
     })
-  })) as Promise<{
-    sprites: {
-      front_default: string
-    }
-    name: string
-  }>
+    .then(data => {
+      return {
+        sprites: {
+          front_default: data.sprites.front_default as string,
+        },
+        name: data.name as string,
+      }
+    })
 }
 
 export const meta: MetaFn<'/blog/$pokemon'> = async ({ loaderData, dataContext }) => {

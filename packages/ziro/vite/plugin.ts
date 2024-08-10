@@ -1,15 +1,17 @@
-import { AnyRouter, createMemoryHistory } from '@tanstack/react-router'
-import { StartServer } from '@tanstack/start/server'
-import { ref } from '@vue/reactivity'
+// import { AnyRouter } from '@tanstack/react-router'
 import { defu } from 'defu'
-import { createElement } from 'react'
-import { renderToString } from 'react-dom/server'
 import { joinURL } from 'ufo'
 import { normalizePath, type Plugin } from 'vite'
-import { generateRouter } from '../router/generator.js'
+// import { generateRouter } from '../router/generator.js'
+import { createElement } from 'react'
+import { renderToString } from 'react-dom/server'
+import { Router } from '../router/client.js'
+import { ZiroRouter } from '../router/core.js'
 import { isRouteRelatedFile } from '../router/utils.js'
 
-const router = ref<AnyRouter>()
+const generateRouter = (...any: any) => {}
+
+// const router = ref<AnyRouter>()
 
 export type ZiroConfig = Partial<{
   pagesDir: string
@@ -45,47 +47,26 @@ export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
           esbuild: {
             jsx: 'automatic',
           },
+          ssr: {
+            external: ['ziro'],
+          },
         }
       },
       async configureServer(server) {
         const dotZiroDirPath = joinURL(server.config.root, '.ziro')
         const pagesDirPath = joinURL(server.config.root, config.pagesDir)
-        generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server, router })
+        generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server, router: null })
         server.middlewares.use(async function (req, res, next) {
-          let serverRouter = router.value!
-          const routes = router.value?.matchRoutes(req.url!, {})
-          if (routes && routes.length > 1) {
-            serverRouter = router.value!
-            const memoryHistory = createMemoryHistory({
-              initialEntries: [req.url!],
-            })
-            const head = await server.transformIndexHtml(req.url!, '<html><head></head><body></body></html>')
-            const headContent = head.split('<head>')[1].split('</head>')[0]
-            const bodyContent = head.split('<body>')[1].split('</body>')[0]
-
-            serverRouter.update({
-              history: memoryHistory,
-              context: {
-                ...serverRouter.options.context,
-                head: headContent,
-                scripts: bodyContent,
-              },
-            })
-
-            await serverRouter.load()
-
-            if (req.headers['content-type'] && ['application/json', 'multipart/form-data'].includes(req.headers['content-type']?.toLowerCase())) {
-              const contextAndLoaderData = getCurrentRouteLoaderData(req.url!, serverRouter)
-              if (contextAndLoaderData) {
-                const [context, loaderData] = contextAndLoaderData
-                res.setHeader('content-type', 'application/json')
-                return res.end(JSON.stringify({ context, loaderData }))
-              }
-              return res.end()
-            } else {
-              const appHtml = renderToString(createElement(StartServer, { router: serverRouter }))
-              res.setHeader('content-type', 'text/html')
-              return res.end(`<!DOCTYPE html>${appHtml}`)
+          const routerContext = await server.ssrLoadModule(joinURL(server.config.root, 'router.ts'), {
+            fixStacktrace: true,
+          })
+          if (routerContext && req.url) {
+            if (req.url.includes('pikachu')) {
+              ;(routerContext.router as ZiroRouter).setUrl(req.url)
+              await routerContext.router.load()
+              //   console.log(JSON.stringify(routerContext.router.cache))
+              const html = renderToString(createElement(Router, { router: routerContext.router }))
+              return res.end(`<!DOCTYPE html>${html}`)
             }
           }
           next()
@@ -93,15 +74,16 @@ export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
 
         server.watcher.on('all', async (eventName, filepath) => {
           let isRouteFileChanged = eventName === 'add' || (eventName === 'unlink' && normalizePath(filepath).startsWith(normalizePath(joinURL(server.config.root, config.pagesDir))))
-          if (isRouteFileChanged) generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server, router })
+          if (isRouteFileChanged) generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server, router: null })
         })
       },
       handleHotUpdate({ server, file }) {
         const dotZiroDirPath = joinURL(server.config.root, '.ziro')
         const pagesDirPath = joinURL(server.config.root, config.pagesDir)
-        if (isRouteRelatedFile(pagesDirPath, file)) generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server, router, generateRouteFile: false })
+        if (isRouteRelatedFile(pagesDirPath, file)) generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server, router: null, generateRouteFile: false })
       },
       transformIndexHtml() {
+        return []
         return [
           {
             tag: 'script',

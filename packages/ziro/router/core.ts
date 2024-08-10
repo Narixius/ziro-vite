@@ -4,9 +4,9 @@ import { FallbackProps as ErrorComponentProps } from 'react-error-boundary'
 import { RouterContext, addRoute as addRou3Route, createRouter as createRou3Router, findRoute } from 'rou3'
 import { joinURL } from 'ufo'
 import { useHead } from 'unhead'
-import { abort } from './abort'
-import { Outlet } from './client'
-import { RedirectError, isRedirectError } from './redirect'
+import { abort } from './abort.js'
+import { Outlet } from './client.js'
+import { RedirectError, isRedirectError } from './redirect.js'
 export { ErrorComponentProps }
 
 type ZeroRouteHooks<T, TParent> = {
@@ -24,8 +24,8 @@ export type ParsePathParams<T extends string, TAcc = never> = T extends `${strin
   ? TPossiblyParam extends `${infer TParam}/${infer TRest}`
     ? ParsePathParams<TRest, TParam extends '' ? '_splat' : TParam | TAcc>
     : TPossiblyParam extends ''
-      ? '_splat'
-      : TPossiblyParam | TAcc
+    ? '_splat'
+    : TPossiblyParam | TAcc
   : TAcc
 
 export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
@@ -54,7 +54,7 @@ export type RouteProps<TPath extends keyof FileRoutesByPath> = {
 
 export type ZiroRouteComponent<TPath extends keyof FileRoutesByPath> = ComponentType<RouteProps<TPath>>
 export type AnyRoute<TPath extends string = any, TParent extends AnyRoute = any, TLoaderData = any> = ZiroRoute<TPath, TParent, TLoaderData>
-export type ZiroRouteErrorComponent = ComponentType<ErrorComponentProps>
+export type ZiroRouteErrorComponent = ComponentType<ErrorComponentProps & { status?: number | string }>
 
 export class ZiroRoute<TPath extends string, TParentRoute, TLoaderData> {
   private hooks = createHooks<ZeroRouteHooks<TLoaderData, TParentRoute>>()
@@ -138,7 +138,7 @@ export class ZiroRoute<TPath extends string, TParentRoute, TLoaderData> {
   }
 
   public getLoaderStatus() {
-    return loaderCache[this.getRouteUniqueKey()]
+    return this.router!.cache[this.getRouteUniqueKey()]
   }
 
   private router?: ZiroRouter
@@ -149,12 +149,12 @@ export class ZiroRoute<TPath extends string, TParentRoute, TLoaderData> {
   public async load() {
     const routeKey = this.getRouteUniqueKey()
     if (!this.loader) {
-      loaderCache[routeKey] = {
+      this.router!.cache[routeKey] = {
         status: 'success',
         data: {},
       }
       this.setData({})
-      return loaderCache[routeKey]
+      return this.router!.cache[routeKey]
     }
     const cachedData = this.getLoaderStatus()
     if (cachedData) {
@@ -162,7 +162,7 @@ export class ZiroRoute<TPath extends string, TParentRoute, TLoaderData> {
       return cachedData
     }
 
-    loaderCache[routeKey] = {
+    this.router!.cache[routeKey] = {
       status: 'pending',
       data: null,
     }
@@ -171,21 +171,20 @@ export class ZiroRoute<TPath extends string, TParentRoute, TLoaderData> {
         params: this.params!,
         dataContext: this.dataContext!,
       })
-      loaderCache[routeKey] = {
+      this.router!.cache[routeKey] = {
         status: 'success',
         data,
       }
       this.setData(data)
       return data
     } catch (data) {
-      loaderCache[routeKey] = {
+      this.router!.cache[routeKey] = {
         status: 'error',
         data,
       }
 
       if (data instanceof Error && isRedirectError(data)) {
         this.router!.replace((data as RedirectError).getPath())
-        console.log('route replaced with', (data as RedirectError).getPath())
       } else {
         throw data
       }
@@ -193,17 +192,18 @@ export class ZiroRoute<TPath extends string, TParentRoute, TLoaderData> {
   }
 }
 
-const loaderCache: Record<string, { status: 'error' | 'success' | 'pending'; data: any }> = {}
-
 type CreateRouterOptions = {
-  initialUrl: string
+  initialUrl?: string
 }
 const hooks = createHooks<Record<ZiroRouterHooks, (router: ZiroRouter) => void>>()
 
 export type ZiroRouterHooks = 'change-url'
 
 export type ZiroRouter = {
-  url: string
+  cache: Record<string, { status: 'error' | 'success' | 'pending'; data: any }>
+  dehydrate: boolean
+  setDehydration: (this: ZiroRouter, dehydrate: boolean) => void
+  url?: string
   setUrl: (url: string) => void
   tree: RouterContext<AnyRoute>
   initializeRoute: (this: ZiroRouter, route: AnyRoute) => void
@@ -218,6 +218,7 @@ export type ZiroRouter = {
   setRootRoute: typeof createRootRoute
   addLayoutRoute: typeof createLayoutRoute
   addMiddleware: typeof createMiddleware
+  load: () => Promise<void>
 }
 
 type ZiroRouterPushOptions = {
@@ -225,8 +226,14 @@ type ZiroRouterPushOptions = {
   state?: Record<string, unknown>
 }
 
-export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
+export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
+  if (typeof window !== 'undefined') opts.initialUrl = window.location.pathname
   const router: ZiroRouter = {
+    cache: {},
+    dehydrate: false,
+    setDehydration(dehydrate) {
+      this.dehydrate = dehydrate
+    },
     url: opts.initialUrl,
     tree: createRou3Router<AnyRoute>(),
     hook(hook, cb) {
@@ -319,6 +326,14 @@ export const createRouter = (opts: CreateRouterOptions): ZiroRouter => {
       const route = createMiddleware(options)
       route.setRouter(this)
       return route
+    },
+    async load() {
+      if (this.url) {
+        const tree = this.flatLookup(this.url)
+        for (const route of tree) {
+          await route.load()
+        }
+      }
     },
   }
   if (typeof window !== 'undefined')

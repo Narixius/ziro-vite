@@ -1,12 +1,15 @@
+// @ts-nocheck
+
 import { AnyRoute, AnyRouter, createRootRouteWithContext, createRoute, createRouter } from '@tanstack/react-router'
 import { Ref } from '@vue/reactivity'
 import fg from 'fast-glob'
 import { groupBy } from 'lodash-es'
 import fs from 'node:fs'
 import path from 'node:path'
+
 import SuperJSON from 'superjson'
 import { joinURL, withTrailingSlash } from 'ufo'
-import { createUnimport, Import } from 'unimport'
+import { Import, createUnimport } from 'unimport'
 import { ViteDevServer } from 'vite'
 import { rootRouteImportName } from './constants.js'
 import { findParentDir, generateImportName, generateRouterPath, getImportPath, isLayoutFile, isRouteRelatedFile, normalizePathFromLayout } from './utils.js'
