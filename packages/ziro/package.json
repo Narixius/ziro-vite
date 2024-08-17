@@ -49,9 +49,8 @@
     "dist/"
   ],
   "dependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
     "@types/lodash-es": "^4.17.12",
+    "@unhead/ssr": "^1.9.16",
     "@vue/reactivity": "^3.4.35",
     "defu": "^6.1.4",
     "es-module-lexer": "^1.5.4",
@@ -59,6 +58,8 @@
     "hookable": "^5.5.3",
     "html-react-parser": "^5.1.12",
     "lodash-es": "^4.17.21",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-error-boundary": "^4.0.13",
     "rou3": "^0.5.1",
     "ufo": "^1.5.4",

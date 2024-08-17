@@ -2,10 +2,7 @@ export type TRedirectStatus = 301 | 302 | 303 | 307 | 308
 export const REDIRECT_ERROR_KEY = 'ZIRO_REDIRECT'
 
 export class RedirectError extends Error {
-  constructor(
-    private redirectTo: string,
-    private status?: TRedirectStatus,
-  ) {
+  constructor(private redirectTo: string, private status?: TRedirectStatus) {
     super(`${REDIRECT_ERROR_KEY}`)
   }
 

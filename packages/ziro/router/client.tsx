@@ -1,11 +1,9 @@
-import { createContext, createElement, FC, HTMLAttributes, HTMLProps, MouseEvent, PropsWithChildren, Suspense, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, createElement, FC, HTMLAttributes, HTMLProps, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { createHead, useHead } from 'unhead'
-import { AnyRoute, ZiroRoute, ZiroRouter } from './core.js'
+import { AnyRoute, ZiroRouter } from './core.js'
+import { isRedirectError } from './redirect.js'
 
-createHead()
-
-type RouterProviderType = { router: ZiroRouter; dehydrate?: boolean }
+type RouterProviderType = { router: ZiroRouter }
 const RouterContext = createContext<ZiroRouter | null>(null)
 
 export const useRouter = () => useContext(RouterContext)
@@ -22,21 +20,21 @@ export const Router: FC<RouterProviderType> = ({ router }) => {
 
   return (
     <RouterContext.Provider value={router}>
-      <ErrorBoundary fallback={<span>error</span>}>
-        <RouterEntryPoint routeTree={routeTree} />
-      </ErrorBoundary>
+      {/* <ErrorBoundary fallback={<span>error</span>}> */}
+      <RouterEntryPoint routeTree={routeTree} />
+      {/* </ErrorBoundary> */}
     </RouterContext.Provider>
   )
 }
 
-const createRouteSuspender = <TPath extends string, TLoaderData, TParentRoute extends AnyRoute>(route: ZiroRoute<TPath, TParentRoute, TLoaderData>) => {
+const createRouteSuspender = <TPath extends string, TLoaderData, TParentRoute extends AnyRoute>(route: AnyRoute<TPath, TParentRoute, TLoaderData>, router: ZiroRouter) => {
   const suspender = route.load()
 
   const routeStatus = route.getLoaderStatus()
   if (routeStatus.status === 'pending') {
     throw suspender
   } else if (routeStatus.status === 'error') {
-    throw routeStatus.data
+    throw routeStatus
   } else if (routeStatus.status === 'success') {
     return routeStatus
   }
@@ -84,7 +82,28 @@ const RouteComponentRenderer: FC<{ route: AnyRoute }> = ({ route }) => {
 
 const RouteErrorBoundary: FC<PropsWithChildren> = ({ children }) => {
   const route = useRoute()
+  const router = useRouter()
+
+  try {
+    const data = createRouteSuspender(route, router!)
+    throw data
+  } catch (data: any) {
+    if (!(data instanceof Promise)) {
+      if (data?.status === 'error' && route.errorComponent) {
+        const error = JSON.parse(JSON.stringify(data.data))
+        if (!router?.dehydrate) {
+          delete router!.cache[route.getRouteUniqueKey()]
+        }
+        if (isRedirectError(data.data) && router?.dehydrate) {
+          throw data.data
+        }
+        if (route.errorComponent) return <route.errorComponent error={error} status={error.status} />
+      }
+    }
+  }
+
   if (!route.errorComponent) return children
+
   return (
     <ErrorBoundary
       FallbackComponent={function FC({ error, resetErrorBoundary }) {
@@ -93,7 +112,8 @@ const RouteErrorBoundary: FC<PropsWithChildren> = ({ children }) => {
           return router?.hook('change-url', resetErrorBoundary)
         }, [])
         if (route.errorComponent) {
-          return <route.errorComponent error={error} resetErrorBoundary={resetErrorBoundary} status={error.getStatus && error.getStatus()} />
+          let passedError: any = error.data
+          return <route.errorComponent error={passedError} resetErrorBoundary={resetErrorBoundary} status={passedError.status} />
         }
         throw error
       }}
@@ -109,38 +129,13 @@ const RouteSuspenseFallback: FC<PropsWithChildren> = ({ children }) => {
 
 const RouteComponentSuspense: FC = () => {
   const route = useRoute()
-  createRouteSuspender(route)
-  return (
-    <>
-      <RouteMetaTags route={route} />
-      {createElement(route.component, {
-        params: route.getParams(),
-        loaderData: route.getData(),
-        dataContext: route.getDataContext(),
-      })}
-      {/* <route.component params={route.getParams()} loaderData={route.getData()} dataContext={route.getDataContext()} /> */}
-    </>
-  )
-}
-
-const RouteMetaTags: FC<PropsWithChildren<{ route: AnyRoute }>> = ({ route, children }) => {
-  const onLoad = useCallback(() => {
-    if (route.meta)
-      route
-        .meta({
-          dataContext: route.getDataContext()!,
-          params: route.getParams()!,
-          loaderData: route.getData()!,
-        })
-        .then(useHead)
-  }, [route])
-
-  useEffect(() => {
-    onLoad()
-    return route.on('load', onLoad)
-  }, [])
-
-  return null
+  const router = useRouter()
+  createRouteSuspender(route, router!)
+  return createElement(route.component, {
+    params: route.getParams(),
+    loaderData: route.getData(),
+    dataContext: route.getDataContext(),
+  })
 }
 
 export const useLoaderData = () => useRoute().getData()
@@ -157,22 +152,17 @@ export const Link: FC<HTMLAttributes<HTMLAnchorElement> & { href: string }> = pr
 }
 
 export const Html: FC<PropsWithChildren<HTMLProps<HTMLHtmlElement>>> = props => {
-  const router = useRouter()
-  const isSSR = router?.dehydrate
-  if (isSSR) return <>{props.children}</>
   return <html>{props.children}</html>
 }
 
 export const Body: FC<PropsWithChildren> = props => {
-  const router = useRouter()
-  const isSSR = router?.dehydrate
-  if (isSSR) return <>{props.children}</>
-  return <body>{props.children}</body>
+  return (
+    <body>
+      <div id="root">{props.children}</div>
+    </body>
+  )
 }
 
 export const Head: FC<PropsWithChildren> = props => {
-  const router = useRouter()
-  const isSSR = router?.dehydrate
-  if (isSSR) return <>{props.children}</>
-  return <head>{props.children}</head>
+  return <head suppressHydrationWarning>{props.children}</head>
 }

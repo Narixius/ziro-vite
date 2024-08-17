@@ -14,6 +14,8 @@ export const generateImportName = (filePath: string) => {
     return group1.toUpperCase()
   })
 
+  fileName = fileName.replace(':', '_')
+
   return fileName
 }
 
@@ -32,6 +34,9 @@ export const generateRouterPath = (filePath: string) => {
   filePath = filePath.replace(/pages\/(.*)\/index$/, '/$1/')
   // Replace /pages/something with /something
   filePath = filePath.replace(/^pages\//, '/')
+
+  if (filePath.endsWith('/')) filePath = filePath.slice(0, -1)
+
   return filePath
 }
 
@@ -56,7 +61,7 @@ export const isRouteRelatedFile = (pagesDirPath: string, path: string) => {
     let filename = getFilename(path)!
     // remove file extension
     filename = filename.replace(/\.\w+$/, '')
-    if (filename === 'index' || filename === '_layout' || filename === '_root' || filename?.startsWith('$')) {
+    if (filename === 'index' || filename === '_layout' || filename === '_root' || filename?.startsWith(':')) {
       return true
     }
   }
