@@ -1,4 +1,4 @@
-import { ErrorComponentProps, RouteProps } from 'ziro/router'
+import { RouteProps } from 'ziro/router'
 import { Link, Outlet } from 'ziro/router/client'
 
 export default function MainLayout({ dataContext }: RouteProps<'/pokes/_layout'>) {
@@ -17,10 +17,10 @@ export default function MainLayout({ dataContext }: RouteProps<'/pokes/_layout'>
   )
 }
 
-export function ErrorComponent({ error, status }: ErrorComponentProps) {
-  return (
-    <span>
-      {status} {error.message}
-    </span>
-  )
-}
+// export function ErrorComponent({ error, status }: ErrorComponentProps) {
+//   return (
+//     <span>
+//       {status} {error.message}
+//     </span>
+//   )
+// }

@@ -77,7 +77,7 @@ const RouteErrorBoundary: FC<PropsWithChildren> = ({ children }) => {
     const data = router!.cache.getCacheManager().get(route.getRouteUniqueKey())
 
     if (data && data.isError && route.errorComponent) {
-      const error = JSON.parse(JSON.stringify(data.data))
+      const error = data.data
       //   if (isRedirectError(data.data) && router?.dehydrate) {
       //     throw data.data
       //   }

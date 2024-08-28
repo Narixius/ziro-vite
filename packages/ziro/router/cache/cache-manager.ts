@@ -1,3 +1,25 @@
+import SuperJSON from 'superjson'
+import { AbortError, isAbortError } from '../abort.js'
+import { isRedirectError, RedirectError } from '../redirect.js'
+
+SuperJSON.registerCustom<AbortError, string>(
+  {
+    isApplicable: (v): v is AbortError => isAbortError(v),
+    serialize: v => v.serialize(),
+    deserialize: v => AbortError.fromJson(v),
+  },
+  'AbortError',
+)
+
+SuperJSON.registerCustom<RedirectError, string>(
+  {
+    isApplicable: (v): v is RedirectError => isRedirectError(v),
+    serialize: v => v.serialize(),
+    deserialize: v => RedirectError.fromJson(v),
+  },
+  'RedirectError',
+)
+
 export interface RouteCacheEntry<T> {
   data: T | null | Error
   isError: boolean
@@ -54,12 +76,11 @@ export class CacheManager<T> {
         serializedCache.push([key, entry])
       }
     }
-
-    return JSON.stringify(serializedCache)
+    return SuperJSON.stringify(serializedCache)
   }
 
   deserialize(serializedData: string): void {
-    const entries = new Map<string, RouteCacheEntry<T>>(JSON.parse(serializedData))
+    const entries = new Map<string, RouteCacheEntry<T>>(SuperJSON.parse(serializedData))
     this.cache = entries
   }
 }

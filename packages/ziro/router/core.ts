@@ -25,7 +25,6 @@ export const clientLoader = () => {
     }).then(async r => {
       const data = await r.json()
       if (r.ok) return data
-      console.log(data.error ? data.error : data)
       throw new Error(data.error ? data.error : data)
     })
 }

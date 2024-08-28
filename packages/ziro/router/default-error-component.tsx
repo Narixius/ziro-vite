@@ -1,7 +1,9 @@
+import { Body, Head, Html } from './client.js'
+
 export default function ErrorHandler({ error, resetErrorBoundary, ...rest }: any) {
-  debugger
+  //   debugger
   //   console.log(rest.isRootRendered)
-  return (
+  const content = (
     <div
       style={{
         width: '100vw',
@@ -13,20 +15,19 @@ export default function ErrorHandler({ error, resetErrorBoundary, ...rest }: any
         flexDirection: 'column',
       }}
     >
-      <p>{(error || {}).name}</p>
+      <p>{error.name}</p>
       <p style={{ color: 'black' }}>
-        {(error || {}).status} {(error || {}).message}
+        {error.status} {error.message}
       </p>
-      <p>{(error || {}).stack}</p>
     </div>
   )
-  //   if (rest.isRootRendered) {
-  //   return content
-  //   }
-  //   return (
-  //     <Html>
-  //       <Head></Head>
-  //       <Body>{content}</Body>
-  //     </Html>
-  //   )
+  if (rest.isRootRendered) {
+    return content
+  }
+  return (
+    <Html>
+      <Head></Head>
+      <Body>{content}</Body>
+    </Html>
+  )
 }

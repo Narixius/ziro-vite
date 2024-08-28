@@ -67,6 +67,7 @@
     "react-dom": "18.3.1",
     "react-error-boundary": "^4.0.13",
     "rou3": "^0.5.1",
+    "superjson": "^2.2.1",
     "ufo": "^1.5.4",
     "unhead": "^1.9.16",
     "unimport": "^3.10.0"
