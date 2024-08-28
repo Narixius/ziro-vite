@@ -1,20 +1,24 @@
 import { FC } from 'react'
-import { ErrorComponentProps, LoaderProps, MetaFn, RouteProps } from 'ziro/router'
+import { ErrorComponentProps, LoaderProps, RouteProps } from 'ziro/router'
 import { Link, Outlet } from 'ziro/router/client'
 
-export const meta: MetaFn<'/pokes'> = async options => {
+export const meta = async () => {
   return {
     title: 'poks',
   }
 }
 
-export const loader = async (options: LoaderProps<'/pokes'>) => {
-  options.dataContext
-  return { blog: true }
+export const loader = async (options: LoaderProps<'/pokes/_layout'>) => {
+  const samplePokemons = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=4&offset=${Math.floor(Math.random() * 16)}`).then(r => r.json())
+  return { pokemons: (samplePokemons.results as { name: string }[]).map(r => r.name) } as { pokemons: string[] }
 }
 
 export const ErrorComponent: FC<ErrorComponentProps> = ({ error, status }) => {
   return `${error.message}`
+}
+
+export const Loading = () => {
+  return 'loading...'
 }
 
 export default function PokesLayout(props: RouteProps<'/pokes/_layout'>) {
@@ -22,12 +26,14 @@ export default function PokesLayout(props: RouteProps<'/pokes/_layout'>) {
     <div>
       <p>Pokemons</p>
       <div className="flex gap-2">
-        <Link href="/pokes/pikachu" className="text-blue-400 underline">
-          Pikachu
-        </Link>
-        <Link href="/pokes/ditto" className="text-blue-400 underline">
-          Ditto
-        </Link>
+        {props.loaderData.pokemons.map(pokemon => {
+          return (
+            <Link to="/pokes/:pokemon" key={pokemon} params={{ pokemon }} className="text-blue-400 underline">
+              {pokemon}
+            </Link>
+          )
+        })}
+
         <Link href="/pokes/not-found-pokemon" className="text-blue-400 underline">
           invalid pokemon
         </Link>

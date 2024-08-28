@@ -1,21 +1,45 @@
 import { Head, Unhead } from '@unhead/schema'
 import { createHooks } from 'hookable'
+import * as http from 'node:http'
 import { ComponentType } from 'react'
 import { FallbackProps as ReactErrorBoundaryComponentProps } from 'react-error-boundary'
 import { RouterContext, addRoute as addRou3Route, createRouter as createRou3Router, findRoute } from 'rou3'
 import { joinURL } from 'ufo'
 import { createHead } from 'unhead'
+import { Connect } from 'vite'
 import { abort } from './abort.js'
+import { RouteCacheEntry } from './cache/cache-manager.js'
+import { SWRCache } from './cache/swr.js'
+import DefaultErrorComponent from './default-error-component.js'
+import DefaultRootRoute from './default-root.js'
 import { RedirectError, isRedirectError } from './redirect.js'
+import { Cookies } from './storage/cookies.js'
 
-type ZeroRouteHooks<T, TParent> = {
+export const clientLoader = () => {
+  if (window)
+    return fetch(window.location.pathname, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    }).then(async r => {
+      const data = await r.json()
+      if (r.ok) return data
+      console.log(data.error ? data.error : data)
+      throw new Error(data.error ? data.error : data)
+    })
+}
+
+type ZeroRouteHooks<TLoaderData, TActionData, TParent> = {
   error: (error: Error) => void
-  load: (data: T | {}, dataContext?: RouteDataContext<TParent>) => void
+  load: (data: TLoaderData | TActionData | {}, dataContext?: RouteDataContext<TParent>) => void
   paramsChanged: (params: Record<string, string>) => void
   match: (url: string, fullUrl: string) => void
 }
 
-const DEFAULT_ROOT_PATH = '_root'
+type ZiroRouteMethod = 'POST' | 'GET'
+
+export const DEFAULT_ROOT_PATH = '_root'
 
 export interface FileRoutesByPath {}
 
@@ -27,42 +51,54 @@ export type ParsePathParams<T extends string, TAcc = never> = T extends `${strin
     : TPossiblyParam | TAcc
   : TAcc
 
+export type SafeRouteParams<TPath extends string> = keyof RouteParams<TPath> extends never ? undefined : RouteParams<TPath>
+
 export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
 
-export type RouteLoaderDataContext<TRoute> = (TRoute extends ZiroRoute<any, any, infer TParentLoaderData> ? TParentLoaderData : {}) &
-  (TRoute extends ZiroRoute<any, infer TParent, any> ? RouteLoaderDataContext<TParent> : {})
+export type RouteLoaderDataContext<TRoute> = (TRoute extends ZiroRoute<any, any, infer TParentLoaderData, any> ? TParentLoaderData : {}) &
+  (TRoute extends ZiroRoute<any, infer TParent, any, any> ? RouteLoaderDataContext<TParent> : {})
 
-export type RouteMiddlewareDataContext<TRoute> = (TRoute extends ZiroRoute<infer TPath, any, any>
+export type RouteMiddlewareDataContext<TRoute> = (TRoute extends ZiroRoute<infer TPath, any, any, any>
   ? TPath extends keyof FileRoutesByPath
     ? IntersectionOfMiddlewareReturns<FileRoutesByPath[TPath]['middlewares']>
     : {}
   : {}) &
-  (TRoute extends ZiroRoute<any, infer TParent, any> ? RouteMiddlewareDataContext<TParent> : {})
+  (TRoute extends ZiroRoute<any, infer TParent, any, any> ? RouteMiddlewareDataContext<TParent> : {})
 
 export type RouteDataContext<TRoute> = RouteLoaderDataContext<TRoute> & RouteMiddlewareDataContext<TRoute>
+
+export type ZiroUtils = {
+  storage: {
+    cookies?: Cookies
+  }
+}
 
 export type LoaderArgs<TPath extends RouteId, TParent> = {
   params: RouteParams<TPath>
   dataContext: RouteDataContext<TParent>
+  utils: ZiroUtils
+  serverContext?: ServerContext
 }
 
-type AlsoAllowString<T> = T | (string & {})
+export type AlsoAllowString<T> = T | (string & {})
 
 export type RouteId = AlsoAllowString<keyof FileRoutesByPath>
 
 export type LoaderProps<TPath extends RouteId> = LoaderArgs<TPath, TPath extends keyof FileRoutesByPath ? FileRoutesByPath[TPath]['parent'] : AnyRoute>
 
 export type MiddlewareProps<TPath extends RouteId> = LoaderProps<TPath>
-export type Middleware<TPath extends RouteId, ReturnType = unknown> = {
+export type Middleware<TPath extends RouteId = '_root', ReturnType = unknown> = {
   name: string
   handler: (props: LoaderProps<TPath>) => Promise<ReturnType>
 }
-export type Middlewares<TPath extends RouteId> = Middleware<TPath>[]
+export type Middlewares<TPath extends RouteId = '_root'> = Middleware<TPath>[]
 export const createMiddleware = <TPath extends RouteId, ReturnType = unknown>(options: { name: string; handler: (props: LoaderProps<TPath>) => Promise<ReturnType> }) => {
   return options
 }
 
 export type LoaderType<TPath extends RouteId, TLoaderData, TParent> = (args: LoaderArgs<TPath, TParent>) => Promise<TLoaderData>
+export type ActionType<TPath extends RouteId, TActionData, TParent> = (args: LoaderArgs<TPath, TParent>) => Promise<TActionData>
+
 export type MetaProps<TPath extends string> = TPath extends keyof FileRoutesByPath ? RouteProps<TPath> : {}
 export type MetaFn<TPath extends RouteId> = (args: MetaProps<TPath>) => Promise<Head>
 
@@ -80,17 +116,18 @@ export type RouteProps<TPath extends RouteId> = {
 
 export type ErrorComponentProps = Pick<ReactErrorBoundaryComponentProps, 'error'> & Partial<Pick<ReactErrorBoundaryComponentProps, 'resetErrorBoundary'>> & { status?: number | string }
 export type ZiroRouteComponent<TPath extends keyof FileRoutesByPath> = ComponentType<RouteProps<TPath>>
-export type AnyRoute<TPath extends string = any, TParent extends AnyRoute = any, TLoaderData = any> = ZiroRoute<TPath, TParent, TLoaderData>
+export type AnyRoute<TPath extends string = any, TParent extends AnyRoute = any, TLoaderData = any, TActionData = any> = ZiroRoute<TPath, TParent, TLoaderData, TActionData>
 export type ZiroRouteErrorComponent = ComponentType<ErrorComponentProps>
 
-export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData> {
-  private hooks = createHooks<ZeroRouteHooks<TLoaderData, TParentRoute>>()
+export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TActionData> {
+  private hooks = createHooks<ZeroRouteHooks<TLoaderData, TActionData, TParentRoute>>()
 
   constructor(
     public component: ComponentType<any>,
     public path: TPath,
     public parent?: TParentRoute,
     public loader?: LoaderType<TPath, TLoaderData, TParentRoute>,
+    public action?: ActionType<TPath, TActionData, TParentRoute>,
     public loadingComponent?: ComponentType,
     public errorComponent?: ZiroRouteErrorComponent,
     public meta?: (args: MetaProps<TPath>) => Promise<Head>,
@@ -112,15 +149,23 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData> {
     })
   }
 
-  private data?: TLoaderData | {}
+  public revalidate() {
+    this.router!.cache.revalidate(this.getRouteUniqueKey(), this.load.bind(this))
+  }
+  private data?: TLoaderData | TActionData | {}
   public getData() {
     return this.data
   }
-  public setData(data: TLoaderData | {}) {
+  public setData(data: TLoaderData | TActionData | {}) {
+    if (data instanceof Error) {
+      data = {
+        name: data.name,
+        message: data.message,
+        stack: data.stack,
+      }
+    }
+
     this.data = data
-    this.setLoaderStatus({
-      data,
-    })
     this.hooks.callHook('load', data, this.dataContext)
   }
 
@@ -172,29 +217,6 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData> {
   private router?: ZiroRouter
   public setRouter(router: ZiroRouter) {
     this.router = router
-    this.loadCachedData()
-  }
-
-  private loadCachedData() {
-    if (this.getLoaderStatus() && this.getLoaderStatus().status === 'success') {
-      //   if (typeof this.dataContext === 'undefined' || typeof this.data === 'undefined') {
-      if (this.middlewares && this.middlewares.length)
-        for (const middleware of this.middlewares) {
-          const middlewareData = this.router!.cache[this.getRouteUniqueKey() + '-middleware:' + middleware.name]
-          this.setDataContext({
-            ...this.dataContext,
-            ...middlewareData,
-          })
-        }
-
-      this.setDataContext({
-        ...this.dataContext,
-        ...{ ...(this.parent as AnyRoute)?.getData(), ...(this.parent as AnyRoute)?.getDataContext() },
-      })
-      this.setData(this.getLoaderStatus().data)
-      //   }
-      return
-    }
   }
 
   public async loadMeta() {
@@ -207,52 +229,16 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData> {
     }
   }
 
-  public getLoaderStatus() {
-    return this.router!.cache[this.getRouteUniqueKey()]
-  }
-  public setLoaderStatus(options: Partial<RouteCacheValue>) {
-    this.router!.cache[this.getRouteUniqueKey()] = {
-      ...this.router!.cache[this.getRouteUniqueKey()],
-      ...options,
-    }
-  }
-  public async load() {
-    if (this.getLoaderStatus() && (this.getLoaderStatus().status === 'success' || this.getLoaderStatus().status === 'error')) {
-      this.loadCachedData()
-      return
-    }
-    this.setLoaderStatus({
-      loaderStatus: 'pending',
-      middlewaresStatus: 'pending',
-      status: 'pending',
-    })
+  public async load(ignoreCache: boolean = false) {
     try {
-      await this.loadMiddlewares()
+      return await this.loadMiddlewares(ignoreCache)
+        .then(this.loadData.bind(this, ignoreCache))
+        .then(this.loadMeta.bind(this))
         .then(() => {
-          this.setLoaderStatus({
-            middlewaresStatus: 'success',
-          })
-        })
-        .then(() => this.loadData())
-        .then(() => {
-          this.setLoaderStatus({
-            loaderStatus: 'success',
-          })
-        })
-        .then(() => this.loadMeta())
-        .then(async () => {
-          this.setLoaderStatus({
-            status: 'success',
-          })
+          return this.data
         })
     } catch (data) {
-      this.setLoaderStatus({
-        loaderStatus: 'error',
-        middlewaresStatus: 'error',
-        status: 'error',
-      })
-
-      this.setData(data as TLoaderData)
+      this.setData(data as TLoaderData | TActionData | {})
       if (data instanceof Error && isRedirectError(data)) {
         if (this.router?.dehydrate) throw data
         this.router!.replace((data as RedirectError).getPath())
@@ -262,40 +248,91 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData> {
     }
   }
 
-  public async loadData() {
-    if (!this.loader) {
+  public async loadAction(loadAction?: boolean, ignoreCache: boolean = false) {
+    try {
+      return await this.loadMiddlewares(ignoreCache)
+        .then(async () => {
+          if (loadAction) await this.loadActionData(ignoreCache)
+        })
+        .then(() => {
+          return this.data
+        })
+    } catch (data) {
+      this.setData(data as RouteCacheEntry<TLoaderData | TActionData | {}>)
+      if (data instanceof Error && isRedirectError(data)) {
+        if (this.router?.dehydrate) throw data
+        this.router!.replace((data as RedirectError).getPath())
+      } else {
+        throw data
+      }
+    }
+  }
+
+  public async loadActionData(ignoreCache: boolean = false) {
+    if (!this.action) {
       this.setData({})
       return
     }
-    const cachedData = this.getLoaderStatus()
-    if (cachedData['loaderStatus'] !== 'pending') {
-      this.setData(cachedData.data)
-      return cachedData
+
+    const handler = async () => {
+      return this.action!({
+        params: this.params!,
+        dataContext: this.dataContext!,
+        utils: this.router!.context,
+        serverContext: this.router!.serverContext,
+      }).then(data => {
+        this.setData(data)
+        return data
+      })
     }
-    await this.loader({
-      params: this.params!,
-      dataContext: this.dataContext!,
-    }).then(data => {
-      this.setData(data)
-    })
+
+    if (!ignoreCache) return await this.router!.cache.getData(this.getRouteUniqueKey(), handler)
+    else await handler()
   }
 
-  public async loadMiddlewares() {
+  public async loadData(ignoreCache: boolean = false) {
+    if (!this.loader) {
+      this.setData({})
+      return await this.router!.cache.getCacheManager().fetchAndCache(this.getRouteUniqueKey(), async () => ({}))
+    }
+
+    const handler = async () => {
+      return await this.loader!({
+        params: this.params!,
+        dataContext: this.dataContext!,
+        utils: this.router!.context,
+        serverContext: this.router!.serverContext,
+      }).then(data => {
+        this.setData(data)
+        return data
+      })
+    }
+    if (!ignoreCache) return (await this.router!.cache.getData(this.getRouteUniqueKey(), handler)).data
+    else return await handler()
+  }
+
+  public async loadMiddlewares(ignoreCache: boolean = false) {
     const middlewaresResponse = {}
     const middlewares = this.middlewares || []
     if (middlewares.length) {
       for (const middleware of middlewares) {
-        await middleware
-          .handler({
-            dataContext: this.dataContext!,
-            params: this.params!,
-          })
-          .then(data => {
-            this.router!.cache[this.getRouteUniqueKey() + '-middleware:' + middleware.name] = data
-            if (data) {
-              Object.assign(middlewaresResponse, data)
-            }
-          })
+        const cacheKey = this.getRouteUniqueKey() + '-middleware:' + middleware.name
+        const handler = async () =>
+          await middleware
+            .handler({
+              dataContext: this.dataContext!,
+              params: this.params!,
+              utils: this.router!.context,
+              serverContext: this.router!.serverContext,
+            })
+            .then(data => {
+              if (data) {
+                Object.assign(middlewaresResponse, data)
+              }
+              return data
+            })
+        if (!ignoreCache) await this.router!.cache.getData(cacheKey, handler)
+        else await handler()
       }
 
       this.dataContext = {
@@ -308,35 +345,50 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData> {
 
 type CreateRouterOptions = {
   initialUrl?: string
+  storage?: ZiroContextStorage
 }
 const hooks = createHooks<Record<ZiroRouterHooks, (router: ZiroRouter) => void>>()
 
 export type ZiroRouterHooks = 'change-url'
 
 type LoadingStatus = 'error' | 'success' | 'pending'
-type RouteCacheValue = { data: any; middlewaresStatus: LoadingStatus; loaderStatus: LoadingStatus; status: LoadingStatus }
+
+export type ZiroContextStorage = {
+  [key: string]: Storage
+}
+
+export type ServerContext = {
+  req: Connect.IncomingMessage
+  res: http.ServerResponse
+}
 export type ZiroRouter = {
+  serverContext?: ServerContext
+  context: ZiroUtils
   statusCode: number
   statusMessage: string
   head: Unhead
-  cache: Record<string, RouteCacheValue> | Record<string, any>
+  cache: SWRCache
+  clearCache: () => void
   dehydrate: boolean
   setDehydration: (this: ZiroRouter, dehydrate: boolean) => void
   url?: string
   setUrl: (url: string) => void
   tree: RouterContext<AnyRoute>
   initializeRoute: (this: ZiroRouter, route: AnyRoute) => void
-  findRoute: (this: ZiroRouter, url: string) => AnyRoute | undefined
-  _flatLookup: (this: ZiroRouter, path: string, fullUrl: string) => any
-  flatLookup: (this: ZiroRouter, path: string) => AnyRoute[]
+  findRoute: (this: ZiroRouter, url: string, method?: ZiroRouteMethod) => AnyRoute | undefined
+  _flatLookup: (this: ZiroRouter, path: string, method?: ZiroRouteMethod) => any
+  flatLookup: (this: ZiroRouter, path: string, method?: ZiroRouteMethod) => AnyRoute[]
   hook: (hook: ZiroRouterHooks, callback: (router: ZiroRouter) => void) => void
   removeHook: (hook: ZiroRouterHooks, callback: (router: ZiroRouter) => void) => void
   push: (url: string, options?: ZiroRouterPushOptions) => void
   replace: (url: string, options?: Omit<ZiroRouterPushOptions, 'replace'>) => void
   addRoute: typeof createRoute
   setRootRoute: typeof createRootRoute
+  getRootRoute: () => AnyRoute
+  rootRoute: AnyRoute | null
   addLayoutRoute: typeof createLayoutRoute
-  load: () => Promise<void>
+  load: (serverContext?: ServerContext, ignoreCache?: boolean) => Promise<unknown>
+  loadAction: (serverContext?: ServerContext, ignoreCache?: boolean) => Promise<unknown>
 }
 
 type ZiroRouterPushOptions = {
@@ -345,12 +397,17 @@ type ZiroRouterPushOptions = {
 }
 
 export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
-  let cache = {}
+  let cache = new SWRCache()
   if (typeof window !== 'undefined') {
     opts.initialUrl = window.location.pathname
-    cache = (window as any).__ZIRO_DATA__ || {}
+    if ((window as any).__ZIRO_DATA__) cache.deserialize(JSON.stringify((window as any).__ZIRO_DATA__))
   }
+
   const router: ZiroRouter = {
+    context: {
+      storage: opts.storage || {},
+    },
+    rootRoute: null,
     statusCode: 200,
     statusMessage: 'success',
     cache,
@@ -363,6 +420,9 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
     tree: createRou3Router<AnyRoute>(),
     hook(hook, cb) {
       return hooks.hook(hook, cb)
+    },
+    clearCache() {
+      this.cache = new SWRCache()
     },
     removeHook(hook, cb) {
       return hooks.removeHook(hook, cb)
@@ -386,7 +446,10 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
       //   const serializedPath = route.path.replaceAll('$', ':')
       const serializedPath = route.path
       if (serializedPath !== DEFAULT_ROOT_PATH) {
-        addRou3Route(this.tree, '', serializedPath, route)
+        addRou3Route(this.tree, 'GET', serializedPath, route)
+        if (route.action) {
+          addRou3Route(this.tree, 'POST', serializedPath, route)
+        }
         route.setRouter(this)
       }
       // check parent to add wildcard
@@ -404,22 +467,22 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
             component: (route.parent as AnyRoute).errorComponent!,
             errorComponent: (route.parent as AnyRoute).errorComponent!,
           })
-          addRou3Route(this.tree, '', notFoundRoutePath, notFoundRoute)
+          addRou3Route(this.tree, 'GET', notFoundRoutePath, notFoundRoute)
           notFoundRoute.setRouter(this)
         }
       }
       //   }
     },
-    findRoute(url: string) {
-      const route = findRoute(this.tree, '', url)
+    findRoute(url: string, method = 'GET') {
+      const route = findRoute(this.tree, method, url)
       if (route) {
         if (route.params) route.data.setParams(route.params)
         return route.data
       }
       return undefined
     },
-    _flatLookup(path) {
-      let route = this.findRoute(path)
+    _flatLookup(path, method = 'GET') {
+      let route = this.findRoute(path, method)
       let params: any = {}
       const tree = []
       if (route) {
@@ -433,8 +496,8 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
       }
       return tree
     },
-    flatLookup(path) {
-      return this._flatLookup(path, path).reverse()
+    flatLookup(path, method = 'GET') {
+      return this._flatLookup(path, method).reverse()
     },
     addRoute(options) {
       const route = createRoute(options)
@@ -465,36 +528,85 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
       return route
     },
     setRootRoute(options) {
+      const currentRootRoute = this.rootRoute!
+      if (!options.errorComponent)
+        if (currentRootRoute.errorComponent) options.errorComponent = currentRootRoute.errorComponent
+        else options.errorComponent = DefaultErrorComponent
+
       const route = createRootRoute(options)
       route.setRouter(this)
+      this.rootRoute = route
       return route
     },
-    async load() {
+    getRootRoute() {
+      return this.rootRoute!
+    },
+    async loadAction(serverContext, ignoreCache) {
+      this.dehydrate = true
+      let actionData = null
+      try {
+        if (this.url) {
+          const tree = this.flatLookup(this.url, 'POST')
+          if (tree[tree.length - 1].action) {
+            this.serverContext = serverContext
+            for (const route of tree) {
+              const isTargetRoute = route === tree[tree.length - 1]
+              await route.loadAction(isTargetRoute, ignoreCache).then(data => {
+                if (isTargetRoute) actionData = data
+              })
+            }
+          } else {
+            abort(404, 'page not found')
+          }
+        }
+      } catch (e: any) {
+        if (router.dehydrate && isRedirectError(e)) throw e
+        if (e.message) this.statusMessage = e.message
+        if (e.status) this.statusCode = e.status
+        if (!e.status && e.message) this.statusCode = 500
+        throw e
+      }
+      return actionData
+    },
+    async load(serverContext, ignoreCache) {
+      let loaderData = null
       this.dehydrate = true
       if (this.url) {
         const tree = this.flatLookup(this.url)
         let errorHandlerRoute = null
+        this.serverContext = serverContext
         for (const route of tree) {
           try {
-            await route.load()
+            const isTargetRoute = route === tree[tree.length - 1]
+            await route.load(ignoreCache).then(data => {
+              if (isTargetRoute) loaderData = data
+            })
           } catch (e: any) {
+            // console.error(e)
             if (router.dehydrate && isRedirectError(e)) throw e
             if (errorHandlerRoute && !route.errorComponent) {
-              errorHandlerRoute.setLoaderStatus({
-                data: e,
-                loaderStatus: 'error',
-                middlewaresStatus: 'error',
-                status: 'error',
-              })
+              try {
+                await this.cache.getCacheManager().fetchAndCache(errorHandlerRoute.getRouteUniqueKey(), async () => {
+                  throw e
+                })
+              } catch (e) {}
             }
-            if (e.status) this.statusCode = e.status
             if (e.message) this.statusMessage = e.message
+            if (e.status) this.statusCode = e.status
+            if (!e.status && e.message) this.statusCode = 500
           }
           if (route.errorComponent) errorHandlerRoute = route
         }
       }
+      return loaderData
     },
   }
+
+  router.setRootRoute({
+    component: DefaultRootRoute,
+    errorComponent: DefaultErrorComponent,
+  })
+
   if (typeof window !== 'undefined')
     window.addEventListener('popstate', e => {
       router.setUrl(window.location.pathname)
@@ -502,18 +614,20 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
   return router
 }
 
-const createRoute = <TFilePath extends string, TParentRoute extends AnyRoute, TLoaderData = {}>(
-  options: Pick<ZiroRoute<TFilePath, TParentRoute, TLoaderData>, 'path' | 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares'>,
+const createRoute = <TFilePath extends string, TParentRoute extends AnyRoute, TLoaderData = {}, TActionData = {}>(
+  options: Pick<ZiroRoute<TFilePath, TParentRoute, TLoaderData, TActionData>, 'path' | 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares' | 'action'>,
 ) => {
-  return new ZiroRoute(options.component, options.path, options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
+  return new ZiroRoute(options.component, options.path, options.parent, options.loader, options.action, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
 }
 
-const createRootRoute = <TLoaderData = {}>(options: Pick<ZiroRoute<'_root', undefined, TLoaderData>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares'>) => {
-  return new ZiroRoute(options.component, '_root', undefined, options.loader, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
+const createRootRoute = <TLoaderData = {}>(options: Pick<ZiroRoute<'_root', undefined, TLoaderData, {}>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares'>) => {
+  return new ZiroRoute(options.component, '_root', undefined, options.loader, undefined, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
 }
 
-const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}>(
-  options: Pick<ZiroRoute<'', TParentRoute, TLoaderData>, 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares'>,
+const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}, TActionData = {}>(
+  options: Pick<ZiroRoute<string, TParentRoute, TLoaderData, TActionData>, 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares' | 'action'> & {
+    id: string
+  },
 ) => {
-  return new ZiroRoute(options.component, '', options.parent, options.loader, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
+  return new ZiroRoute(options.component, options.id, options.parent, options.loader, options.action, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
 }

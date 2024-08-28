@@ -1,8 +1,7 @@
-import { MetaFn } from 'ziro/router'
 import { Body, Head, Html, Outlet } from 'ziro/router/client'
 import './styles.css'
 
-export const meta: MetaFn<'_root'> = async ctx => {
+export const meta = async ctx => {
   return {
     title: 'root',
     titleTemplate(title) {

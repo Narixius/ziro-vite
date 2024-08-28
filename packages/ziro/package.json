@@ -40,7 +40,7 @@
     "tsup": "^8.2.4"
   },
   "peerDependencies": {
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.4",
     "vite": "^5.3.3",
     "react": "18.3.1",
     "react-dom": "18.3.1"
@@ -49,9 +49,14 @@
     "dist/"
   ],
   "dependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/node": "^7.25.0",
+    "@babel/preset-react": "^7.24.7",
+    "@babel/preset-typescript": "^7.24.7",
     "@types/lodash-es": "^4.17.12",
     "@unhead/ssr": "^1.9.16",
     "@vue/reactivity": "^3.4.35",
+    "cookie-es": "^1.2.2",
     "defu": "^6.1.4",
     "es-module-lexer": "^1.5.4",
     "fast-glob": "^3.3.2",

@@ -1,22 +1,14 @@
-import { createMiddleware, RouteProps } from 'ziro/router'
-import { redirect } from 'ziro/router/redirect'
+import { LoaderProps, RouteProps } from 'ziro/router'
+import { auth } from '../../middlewares/auth'
 
-const authMiddleware = createMiddleware({
-  name: 'auth',
-  handler: async () => {
-    redirect('/auth')
-    return {
-      user: {
-        name: 'nariman',
-      },
-    }
-  },
-})
+export const middlewares = [auth]
 
-export const middlewares = [authMiddleware]
+export const loader = async ({ dataContext }: LoaderProps<''>) => {
+  return dataContext
+}
 
 export default function Dashboard(props: RouteProps<'/dashboard'>) {
-  return <span>{props.dataContext.user.name}</span>
+  return <span>{props.loaderData.user.name}</span>
 }
 
 export const Loading = () => {

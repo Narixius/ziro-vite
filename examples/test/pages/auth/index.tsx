@@ -1,13 +1,59 @@
 import { useRef } from 'react'
+import { Connect } from 'vite'
+import { LoaderProps } from 'ziro/router'
+import { abort } from 'ziro/router/abort'
 import { useRouter } from 'ziro/router/client'
+
+export const loader = async ({ utils }: LoaderProps<''>) => {
+  return {
+    ok: utils.storage.cookies?.get('user'),
+  }
+}
+
+function getBody(request: Connect.IncomingMessage) {
+  return new Promise(resolve => {
+    const bodyParts: any = []
+    let body
+    request
+      .on('data', chunk => {
+        bodyParts.push(chunk)
+      })
+      .on('end', () => {
+        body = Buffer.concat(bodyParts).toString()
+        resolve(body)
+      })
+  })
+}
+
+export const action = async ({ utils, serverContext }: LoaderProps<''>) => {
+  if (serverContext) {
+    const data = JSON.parse((await getBody(serverContext.req)!) as string)
+    if (data.user) {
+      utils.storage.cookies?.set('user', data.user)
+      return {
+        ok: true,
+        message: 'signed in successfully',
+      }
+    }
+    abort(403, 'invalid request')
+  }
+}
 
 export default function AuthPage() {
   const router = useRouter()
   const nameInput = useRef<HTMLInputElement>(null)
+
   const onSignIn = () => {
-    localStorage.setItem('loggedIn', 'true')
-    localStorage.setItem('name', nameInput.current!.value)
-    router!.push('/dashboard')
+    fetch('/auth', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ user: nameInput.current!.value }),
+    }).then(r => {
+      if (r.ok) router!.push('/dashboard')
+    })
   }
 
   return (

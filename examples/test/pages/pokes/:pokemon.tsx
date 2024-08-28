@@ -1,7 +1,7 @@
 import { LoaderProps, MetaFn, RouteProps, ZiroRouteErrorComponent } from 'ziro/router'
 import { abort } from 'ziro/router/abort'
 
-export const loader = async ({ params, dataContext }: LoaderProps<'/pokes/:pokemon'>) => {
+export const loader = async ({ params }: LoaderProps<'/pokes/:pokemon'>) => {
   return await fetch(`https://pokeapi.co/api/v2/pokemon/${params.pokemon}`)
     .then(response => {
       if (response.ok) {
@@ -19,13 +19,17 @@ export const loader = async ({ params, dataContext }: LoaderProps<'/pokes/:pokem
     })
 }
 
-export const meta: MetaFn<'/pokes/:pokemon'> = async ({ loaderData, dataContext }) => {
+export const Loading = () => {
+  return 'loading...'
+}
+
+export const meta: MetaFn<'/pokes/:pokemon'> = async ({ loaderData }) => {
   return {
     title: loaderData.name,
   }
 }
 
-export default function SingleBlogPage({ params, loaderData, dataContext }: RouteProps<'/pokes/:pokemon'>) {
+export default function SingleBlogPage({ loaderData }: RouteProps<'/pokes/:pokemon'>) {
   return (
     <div>
       <p>{loaderData.name}</p>

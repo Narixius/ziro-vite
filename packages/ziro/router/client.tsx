@@ -1,7 +1,9 @@
 import { createContext, createElement, FC, HTMLAttributes, HTMLProps, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { AnyRoute, ZiroRouter } from './core.js'
-import { isRedirectError } from './redirect.js'
+import { SWRCacheProvider } from './cache/context.js'
+import { useSWRStore } from './cache/useSwr.js'
+import { AnyRoute, DEFAULT_ROOT_PATH, RouteId, SafeRouteParams, ZiroRouter } from './core.js'
+import DefaultErrorComponent from './default-error-component.js'
 
 type RouterProviderType = { router: ZiroRouter }
 const RouterContext = createContext<ZiroRouter | null>(null)
@@ -20,24 +22,11 @@ export const Router: FC<RouterProviderType> = ({ router }) => {
 
   return (
     <RouterContext.Provider value={router}>
-      {/* <ErrorBoundary fallback={<span>error</span>}> */}
-      <RouterEntryPoint routeTree={routeTree} />
-      {/* </ErrorBoundary> */}
+      <SWRCacheProvider cache={router.cache}>
+        <RouterEntryPoint routeTree={routeTree} />
+      </SWRCacheProvider>
     </RouterContext.Provider>
   )
-}
-
-const createRouteSuspender = <TPath extends string, TLoaderData, TParentRoute extends AnyRoute>(route: AnyRoute<TPath, TParentRoute, TLoaderData>, router: ZiroRouter) => {
-  const suspender = route.load()
-
-  const routeStatus = route.getLoaderStatus()
-  if (routeStatus.status === 'pending') {
-    throw suspender
-  } else if (routeStatus.status === 'error') {
-    throw routeStatus
-  } else if (routeStatus.status === 'success') {
-    return routeStatus
-  }
 }
 
 const RouterEntryPoint: FC<{ routeTree: AnyRoute[] }> = ({ routeTree }) => {
@@ -83,24 +72,25 @@ const RouteComponentRenderer: FC<{ route: AnyRoute }> = ({ route }) => {
 const RouteErrorBoundary: FC<PropsWithChildren> = ({ children }) => {
   const route = useRoute()
   const router = useRouter()
-
   try {
-    const data = createRouteSuspender(route, router!)
-    throw data
-  } catch (data: any) {
-    if (!(data instanceof Promise)) {
-      if (data?.status === 'error' && route.errorComponent) {
-        const error = JSON.parse(JSON.stringify(data.data))
-        if (!router?.dehydrate) {
-          delete router!.cache[route.getRouteUniqueKey()]
-        }
-        if (isRedirectError(data.data) && router?.dehydrate) {
-          throw data.data
-        }
-        if (route.errorComponent) return <route.errorComponent error={error} status={error.status} />
+    // if (router?.dehydrate) {
+    const data = router!.cache.getCacheManager().get(route.getRouteUniqueKey())
+
+    if (data && data.isError && route.errorComponent) {
+      const error = JSON.parse(JSON.stringify(data.data))
+      //   if (isRedirectError(data.data) && router?.dehydrate) {
+      //     throw data.data
+      //   }
+      const isRootRendered = route.path !== DEFAULT_ROOT_PATH
+      const props: any = {
+        error,
+        status: error.status,
       }
+      if (route.errorComponent === DefaultErrorComponent) props.isRootRendered = isRootRendered
+      if (route.errorComponent) return <route.errorComponent {...props} />
     }
-  }
+    // }
+  } catch (data: any) {}
 
   if (!route.errorComponent) return children
 
@@ -112,7 +102,7 @@ const RouteErrorBoundary: FC<PropsWithChildren> = ({ children }) => {
           return router?.hook('change-url', resetErrorBoundary)
         }, [])
         if (route.errorComponent) {
-          let passedError: any = error.data
+          let passedError: any = error
           return <route.errorComponent error={passedError} resetErrorBoundary={resetErrorBoundary} status={passedError.status} />
         }
         throw error
@@ -129,11 +119,11 @@ const RouteSuspenseFallback: FC<PropsWithChildren> = ({ children }) => {
 
 const RouteComponentSuspense: FC = () => {
   const route = useRoute()
-  const router = useRouter()
-  createRouteSuspender(route, router!)
+  const routeStore = useSWRStore(route.getRouteUniqueKey(), route.load.bind(route))
+  if (routeStore?.isError) throw routeStore.data
   return createElement(route.component, {
     params: route.getParams(),
-    loaderData: route.getData(),
+    loaderData: routeStore?.data,
     dataContext: route.getDataContext(),
   })
 }
@@ -142,13 +132,41 @@ export const useLoaderData = () => useRoute().getData()
 
 const OutletRouteContext = createContext<{ route: AnyRoute; children: AnyRoute[] } | null>(null)
 
-export const Link: FC<HTMLAttributes<HTMLAnchorElement> & { href: string }> = props => {
+export type LinkProps<T extends RouteId> = HTMLAttributes<HTMLAnchorElement> & (LinkPropsWithHref | LinkPropsWithTo<T>)
+
+type LinkPropsWithHref = {
+  href: string
+}
+
+type LinkPropsWithTo<TPath extends RouteId> = SafeRouteParams<TPath> extends undefined ? { href?: string; to: TPath } : { href?: string; to: TPath; params: SafeRouteParams<TPath> }
+
+export const Link = <TPath extends string>(props: LinkProps<TPath>) => {
   const router = useRouter()
-  const onClick = (e: MouseEvent) => {
-    e.preventDefault()
-    if (router) router.push(props.href)
+
+  const localProps: any = { ...props }
+  let href = localProps.href!
+  if ('to' in localProps && localProps.to && typeof localProps.to === 'string') {
+    href = localProps.to
+    if ('params' in localProps && localProps.params && typeof localProps.params !== 'undefined') {
+      for (const key in localProps.params) {
+        href = href.replace(`:${key}`, localProps.params![key])
+      }
+    }
   }
-  return createElement('a', { ...props, onClick })
+
+  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    if (props.onClick) props.onClick(e)
+    if (!e.isPropagationStopped()) {
+      if (router) router.push(href)
+    }
+  }
+
+  if (localProps.to) delete localProps.to
+  if (localProps.params) delete localProps.params
+  localProps.href = href
+
+  return <a {...localProps} href={href} onClick={onClick} />
 }
 
 export const Html: FC<PropsWithChildren<HTMLProps<HTMLHtmlElement>>> = props => {

@@ -32,10 +32,11 @@ export const processViteAndZiroHydration = async (router: ZiroRouter, server?: V
   }
 
   const head = createHead()
+  const routeTreeKeys = router.flatLookup(router.url!, 'GET').map(r => r.getRouteUniqueKey())
   head.push({
     script: [
       {
-        innerHTML: 'window.__ZIRO_DATA__ = ' + JSON.stringify(router.cache) + ';',
+        innerHTML: 'window.__ZIRO_DATA__ = ' + router.cache.serialize(routeTreeKeys) + ';',
         tagPosition: 'bodyClose',
       },
     ],

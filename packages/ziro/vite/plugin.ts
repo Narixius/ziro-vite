@@ -9,6 +9,7 @@ import { Router } from '../router/client.js'
 import { ZiroRouter } from '../router/core.js'
 import { generateRouter } from '../router/generator.js'
 import { isRedirectError, RedirectError } from '../router/redirect.js'
+import { Cookies } from '../router/storage/cookies.js'
 import { isRouteRelatedFile } from '../router/utils.js'
 import { processHTMLTags } from './html-generator.js'
 
@@ -21,17 +22,6 @@ export type ZiroConfig = Partial<{
 
 const defaultZiroConfig: Required<ZiroConfig> = {
   pagesDir: './pages',
-}
-
-export const getCurrentRouteLoaderData = (pathname: string, router: any) => {
-  const currentRoute = router.__store.state.matches.find((route: any) => {
-    return route.id === pathname
-  })
-
-  if (currentRoute) {
-    return [currentRoute.context, currentRoute.loaderData]
-  }
-  return null
 }
 
 export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
@@ -59,29 +49,83 @@ export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
         const dotZiroDirPath = joinURL(server.config.root, '.ziro')
         const pagesDirPath = joinURL(server.config.root, config.pagesDir)
         generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server, router })
-        server.middlewares.use('/', async function (req, res, next) {
-          if (req.headers.accept?.includes('text/html')) {
+        server.middlewares.use(async function (req, res, next) {
+          const method = req.method?.toUpperCase()!
+
+          if (['GET', 'POST'].includes(method.toUpperCase()) && req.headers.accept?.includes('application/json')) {
             const localRouter = router.value
             if (localRouter && req.originalUrl) {
               localRouter.setUrl(req.originalUrl)
-              // reset router start
-              localRouter.cache = {}
+              let data = null
+              localRouter.context = {
+                storage: {
+                  cookies: new Cookies(req.headers.cookie),
+                },
+              }
+              // reset router state
+              //   localRouter.cache = {}
+              localRouter.clearCache()
               localRouter.statusCode = 200
               localRouter.statusMessage = 'success'
-              // reset router end
+
               try {
-                await localRouter.load()
+                if (method === 'GET') data = await localRouter.load({ req, res }, true)
+                if (method === 'POST') data = await localRouter.loadAction({ req, res }, true)
               } catch (e: any) {
                 if (isRedirectError(e)) {
                   res.writeHead((e as RedirectError).getRedirectStatus(), { Location: (e as RedirectError).getPath() })
                   return res.end()
                 }
               }
+
+              if (!String(localRouter.statusCode).startsWith('2') && localRouter.statusMessage !== 'success') {
+                data = {
+                  error: localRouter.statusMessage,
+                }
+              }
+
+              res.statusCode = localRouter.statusCode
+              res.statusMessage = localRouter.statusMessage
+              res.setHeader('Set-Cookie', localRouter.context.storage.cookies!.getCookies())
+
+              if (data) {
+                res.setHeader('content-type', 'application/json')
+                return res.end(JSON.stringify(data))
+              } else {
+                return res.end()
+              }
+            }
+          }
+          if (req.headers.accept?.includes('text/html')) {
+            const localRouter = router.value
+            if (localRouter && req.originalUrl) {
+              localRouter.setUrl(req.originalUrl)
+              const cookies = new Cookies(req.headers.cookie)
+              localRouter.context = {
+                storage: {
+                  cookies,
+                },
+              }
+              // reset router state
+              localRouter.clearCache()
+              localRouter.statusCode = 200
+              localRouter.statusMessage = 'success'
+
+              try {
+                await localRouter.load({ req, res })
+              } catch (e: any) {
+                if (isRedirectError(e)) {
+                  res.writeHead((e as RedirectError).getRedirectStatus(), { Location: (e as RedirectError).getPath() })
+                  return res.end()
+                }
+              }
+
               const html = renderToString(createElement(Router, { router: localRouter }))
               const processedHTML = await processHTMLTags(localRouter, html, server, req)
               res.setHeader('Content-Type', 'text/html')
               res.statusCode = localRouter.statusCode
               res.statusMessage = localRouter.statusMessage
+              res.setHeader('Set-Cookie', cookies.getCookies())
               return res.end(processedHTML)
             }
           }
@@ -121,7 +165,7 @@ export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
           return `import { startTransition } from 'react'
 import { hydrateRoot } from 'react-dom/client'
 import { Router } from 'ziro/router/client'
-import { router } from '/.ziro/routes.ts'
+import { router } from '/.ziro/routes.d.ts'
 
 startTransition(() => {
   hydrateRoot(document, <Router router={router} />)
