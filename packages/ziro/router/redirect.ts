@@ -27,7 +27,7 @@ export class RedirectError extends Error {
 }
 
 export const isRedirectError = (error: Error) => {
-  return error.message === REDIRECT_ERROR_KEY && error instanceof RedirectError
+  return error && error.message === REDIRECT_ERROR_KEY && error instanceof RedirectError
 }
 
 export const redirect = (url: string, status?: 301 | 302 | 303 | 307 | 308) => {
