@@ -6,7 +6,7 @@ export const middlewares = [auth]
 export const loader = async (ctx: LoaderArgs<'/dashboard'>) => {
   return {
     user: {
-      name: 'hi',
+      name: ctx.dataContext.user.name,
     },
   }
 }
