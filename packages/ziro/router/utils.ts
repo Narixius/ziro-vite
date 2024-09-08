@@ -2,7 +2,8 @@ import path from 'node:path'
 import { parseFilename, withoutTrailingSlash } from 'ufo'
 import { rootRouteImportName } from './constants.js'
 
-export const generateImportName = (filePath: string) => {
+export const generateImportName = (filePath?: string) => {
+  if (!filePath) return ''
   let fileName = filePath.replace(/\.(tsx?|jsx?)/g, '').replace(/[.]/g, '')
 
   if (filePath.endsWith('_root')) return rootRouteImportName

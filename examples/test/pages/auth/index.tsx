@@ -1,12 +1,12 @@
 import { useRef } from 'react'
 import { Connect } from 'vite'
-import { LoaderProps } from 'ziro/router'
+import { LoaderArgs, LoaderProps } from 'ziro/router'
 import { abort } from 'ziro/router/abort'
 import { useRouter } from 'ziro/router/client'
 
-export const loader = async ({ utils }: LoaderProps<''>) => {
+export const loader = async (args: LoaderArgs<'/auth'>) => {
   return {
-    ok: utils.storage.cookies?.get('user'),
+    ok: true,
   }
 }
 

@@ -7,7 +7,7 @@ import { Import, createUnimport } from 'unimport'
 import { ViteDevServer } from 'vite'
 import { rootRouteImportName } from './constants.js'
 import { AnyRoute, ZiroRouter, createRouter } from './core.js'
-import { getPageModuleInfo } from './es-module-lexer.js'
+import { PageModuleInfo, getPageModuleInfo } from './es-module-lexer.js'
 import { findParentDir, generateImportName, generateRouterPath, getImportPath, isLayoutFile, isRouteRelatedFile, normalizePathFromLayout } from './utils.js'
 
 export type GenerateRouterFunction = (options: {
@@ -44,6 +44,14 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     },
     {
       name: 'clientLoader',
+      from: 'ziro/router',
+    },
+    {
+      name: 'IntersectionOfMiddlewareReturns',
+      from: 'ziro/router',
+    },
+    {
+      name: 'GetRouteLoader',
       from: 'ziro/router',
     },
   )
@@ -99,6 +107,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
       page.meta = {
         ...(page.meta || {}),
         parentLayout: generateImportName(getImportPath(dotZiroDirPath, layoutInBase)),
+        parentKey: generateRouterPath(getImportPath(dotZiroDirPath, layoutInBase)),
         path: pathFromLayout,
         fullPath: generateRouterPath(page.from),
         isLayout: isLayoutFile(page.from),
@@ -111,6 +120,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
       page.meta = {
         ...(page.meta || {}),
         parentLayout: rootRouteImportName,
+        parentKey: '_root',
         path: pathFromLayout,
         fullPath: generateRouterPath(page.from),
         isLayout: isLayoutFile(page.from),
@@ -130,16 +140,20 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
 
   routerContent += '\n\n// generate route objects \n'
   const rootImportName = 'pagesRoot'
+
+  let rootModuleInfo: null | PageModuleInfo = null
   if (rootPath) {
-    const moduleInfo = await getPageModuleInfo(rootPath)
-    routerContent += `const ${rootImportName}Route = router.setRootRoute({
-  ${`${generateCodeFromModuleInfo('component', 'default', rootImportName, moduleInfo.hasComponent)}
-  ${moduleInfo.hasLoader ? 'loader: clientLoader,' : ''}
-  ${generateCodeFromModuleInfo('action', 'action', rootImportName, moduleInfo.hasAction)}
-  ${generateCodeFromModuleInfo('meta', 'meta', rootImportName, moduleInfo.hasMeta)}
-  ${generateCodeFromModuleInfo('loadingComponent', 'Loading', rootImportName, moduleInfo.hasLoading)}
-  ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', rootImportName, moduleInfo.hasError)}
-  ${generateCodeFromModuleInfo('middlewares', 'middlewares', rootImportName, moduleInfo.hasMiddleware)}`.trim()}
+    rootModuleInfo = await getPageModuleInfo(rootPath)
+    routerContent += `const ${rootImportName}Route = router.setRootRoute<${rootModuleInfo.hasLoader ? `Awaited<ReturnType<typeof ${rootImportName}.loader>>` : '{}'}, ${
+      rootModuleInfo.hasMiddleware ? `typeof ${rootImportName}.middlewares` : '[]'
+    }>({
+  ${`${generateCodeFromModuleInfo('component', 'default', rootImportName, rootModuleInfo.hasComponent)}
+  ${rootModuleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify('_root')}),` : ''}
+  ${generateCodeFromModuleInfo('action', 'action', rootImportName, rootModuleInfo.hasAction)}
+  ${generateCodeFromModuleInfo('meta', 'meta', rootImportName, rootModuleInfo.hasMeta)}
+  ${generateCodeFromModuleInfo('loadingComponent', 'Loading', rootImportName, rootModuleInfo.hasLoading)}
+  ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', rootImportName, rootModuleInfo.hasError)}
+  ${generateCodeFromModuleInfo('middlewares', 'middlewares', rootImportName, rootModuleInfo.hasMiddleware)}`.trim()}
 })
 `
   } else {
@@ -151,11 +165,20 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     if (!!flatRoutes[`${importName}Route`]) return
     const isLayout = isLayoutFile(imp.from)
     const moduleInfo = await getPageModuleInfo(imp.meta!.filePath)
-    routerContent += `const ${importName}Route = router.${!isLayout ? 'addRoute' : 'addLayoutRoute'}({
+    imp.meta!.moduleInfo = moduleInfo
+    routerContent += `const ${importName}Route = router.${!isLayout ? 'addRoute' : 'addLayoutRoute'}<${
+      isLayout
+        ? `typeof ${imp.meta!.parentLayout}Route,${moduleInfo.hasLoader ? `Awaited<ReturnType<typeof ${importName}.loader>>` : '{}'}, ${
+            moduleInfo.hasAction ? `Awaited<ReturnType<typeof ${importName}.action>>` : '{}'
+          }, ${moduleInfo.hasMiddleware ? `typeof ${importName}.middlewares` : '[]'}`
+        : `'${imp.meta!.fullPath}', typeof ${imp.meta!.parentLayout}Route,${moduleInfo.hasLoader ? `Awaited<ReturnType<typeof ${importName}.loader>>` : '{}'}, ${
+            moduleInfo.hasAction ? `Awaited<ReturnType<typeof ${importName}.action>>` : '{}'
+          }, ${moduleInfo.hasMiddleware ? `typeof ${importName}.middlewares` : '[]'}`
+    }>({
   ${isLayout ? `id: '${imp.meta!.fullPath}',` : `path: '${imp.meta!.fullPath}',`}
   parent: ${imp.meta!.parentLayout}Route,
   ${`${generateCodeFromModuleInfo('component', 'default', importName, moduleInfo.hasComponent)}
-  ${moduleInfo.hasLoader ? 'loader: clientLoader,' : ''}
+  ${moduleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify(imp.meta!.fullPath)}),` : ''}
   ${generateCodeFromModuleInfo('action', 'action', importName, moduleInfo.hasAction)}
   ${generateCodeFromModuleInfo('meta', 'meta', importName, moduleInfo.hasMeta)}
   ${generateCodeFromModuleInfo('loadingComponent', 'Loading', importName, moduleInfo.hasLoading)}
@@ -198,13 +221,20 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     _root: {
       parent: undefined
       route: typeof ${rootImportName}Route
+      middlewares: ${rootModuleInfo?.hasMiddleware && !!rootPath ? `typeof ${generateImportName(getImportPath(dotZiroDirPath, rootPath))}.middlewares` : '[]'}
+      dataContext: ${rootModuleInfo?.hasMiddleware ? `IntersectionOfMiddlewareReturns<FileRoutesByPath['_root']['middlewares']>` : `{}`}
+      loaderData: GetRouteLoader<FileRoutesByPath['_root']['route']>
     }
     ${pagesImports
       .map(imp => {
         return `'${imp.meta!.fullPath}': {
-	  parent: typeof ${imp.meta!.parentLayout}Route
+	  parent: '${imp.meta!.parentKey}'
       route: typeof ${generateImportName(imp.from)}Route
-	  middlewares: typeof ${generateImportName(imp.from)}.middlewares
+	  middlewares: ${imp.meta!.moduleInfo.hasMiddleware ? `typeof ${generateImportName(imp.from)}.middlewares` : '[]'}
+	  dataContext: FileRoutesByPath['${imp.meta!.parentKey}']['loaderData'] & FileRoutesByPath['${imp.meta!.parentKey}']['dataContext'] & IntersectionOfMiddlewareReturns<FileRoutesByPath['${
+          imp.meta!.fullPath
+        }']['middlewares']>
+      loaderData: GetRouteLoader<FileRoutesByPath['${imp.meta!.fullPath}']['route']>
     }`
       })
       .join('\n    ')}

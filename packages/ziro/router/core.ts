@@ -15,9 +15,9 @@ import DefaultRootRoute from './default-root.js'
 import { RedirectError, isRedirectError } from './redirect.js'
 import { Cookies } from './storage/cookies.js'
 
-export const clientLoader = () => {
+export const clientLoader = (routeId: string) => (props: RouteProps<''>) => {
   if (window)
-    return fetch(window.location.pathname, {
+    return fetch(ZiroRoute.fillRouteParams(routeId, props.params), {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -29,9 +29,9 @@ export const clientLoader = () => {
     })
 }
 
-type ZeroRouteHooks<TLoaderData, TActionData, TParent> = {
+type ZeroRouteHooks<TLoaderData, TActionData, TPath extends RouteId> = {
   error: (error: Error) => void
-  load: (data: TLoaderData | TActionData | {}, dataContext?: RouteDataContext<TParent>) => void
+  load: (data: TLoaderData | TActionData | {}, dataContext?: GetRouteDataContext<TPath>) => void
   paramsChanged: (params: Record<string, string>) => void
   match: (url: string, fullUrl: string) => void
 }
@@ -41,6 +41,8 @@ type ZiroRouteMethod = 'POST' | 'GET'
 export const DEFAULT_ROOT_PATH = '_root'
 
 export interface FileRoutesByPath {}
+
+export type GetRouteLoader<TRoute extends AnyRoute> = TRoute extends AnyRoute<any, any, infer TLoaderData> ? TLoaderData : {}
 
 export type ParsePathParams<T extends string, TAcc = never> = T extends `${string}:${infer TPossiblyParam}`
   ? TPossiblyParam extends `${infer TParam}/${infer TRest}`
@@ -54,15 +56,15 @@ export type SafeRouteParams<TPath extends string> = keyof RouteParams<TPath> ext
 
 export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
 
-export type RouteLoaderDataContext<TRoute> = (TRoute extends ZiroRoute<any, any, infer TParentLoaderData, any> ? TParentLoaderData : {}) &
-  (TRoute extends ZiroRoute<any, infer TParent, any, any> ? RouteLoaderDataContext<TParent> : {})
+export type RouteLoaderDataContext<TRoute> = (TRoute extends ZiroRoute<any, any, infer TParentLoaderData, any, any> ? TParentLoaderData : {}) &
+  (TRoute extends ZiroRoute<any, infer TParent, any, any, any> ? RouteLoaderDataContext<TParent> : {})
 
-export type RouteMiddlewareDataContext<TRoute> = (TRoute extends ZiroRoute<infer TPath, any, any, any>
+export type RouteMiddlewareDataContext<TRoute> = (TRoute extends ZiroRoute<infer TPath, any, any, any, any>
   ? TPath extends keyof FileRoutesByPath
     ? IntersectionOfMiddlewareReturns<FileRoutesByPath[TPath]['middlewares']>
     : {}
   : {}) &
-  (TRoute extends ZiroRoute<any, infer TParent, any, any> ? RouteMiddlewareDataContext<TParent> : {})
+  (TRoute extends ZiroRoute<any, infer TParent, any, any, any> ? RouteMiddlewareDataContext<TParent> : {})
 
 export type RouteDataContext<TRoute> = RouteLoaderDataContext<TRoute> & RouteMiddlewareDataContext<TRoute>
 
@@ -72,18 +74,30 @@ export type ZiroUtils = {
   }
 }
 
-export type LoaderArgs<TPath extends RouteId, TParent> = {
+export type GetRouteDataContext<TPath extends RouteId> = TPath extends keyof FileRoutesByPath ? FileRoutesByPath[TPath]['dataContext'] : {}
+export type GetRouteLoaderData<TPath extends RouteId> = TPath extends keyof FileRoutesByPath ? FileRoutesByPath[TPath]['loaderData'] : {}
+
+export type LoaderArgs<TPath extends RouteId> = {
   params: RouteParams<TPath>
-  dataContext: RouteDataContext<TParent>
+  dataContext: GetRouteDataContext<TPath>
   utils: ZiroUtils
   serverContext?: ServerContext
 }
+
+export type ActionArgs<TPath extends RouteId> = LoaderArgs<TPath>
+export type MetaArgs<TPath extends RouteId> = {
+  params: RouteParams<TPath>
+  loaderData: GetRouteLoaderData<TPath>
+  dataContext: GetRouteDataContext<TPath>
+}
+export type MetaReturnType = Promise<Head>
+export type MetaFn<TPath extends RouteId> = (args: MetaArgs<TPath>) => Promise<Head>
 
 export type AlsoAllowString<T> = T | (string & {})
 
 export type RouteId = AlsoAllowString<keyof FileRoutesByPath>
 
-export type LoaderProps<TPath extends RouteId> = LoaderArgs<TPath, TPath extends keyof FileRoutesByPath ? FileRoutesByPath[TPath]['parent'] : AnyRoute>
+export type LoaderProps<TPath extends RouteId> = LoaderArgs<TPath>
 
 export type MiddlewareProps<TPath extends RouteId> = LoaderProps<TPath>
 export type Middleware<TPath extends RouteId = '_root', ReturnType = unknown> = {
@@ -95,17 +109,14 @@ export const createMiddleware = <TPath extends RouteId, ReturnType = unknown>(op
   return options
 }
 
-export type LoaderType<TPath extends RouteId, TLoaderData, TParent> = (args: LoaderArgs<TPath, TParent>) => Promise<TLoaderData>
-export type ActionType<TPath extends RouteId, TActionData, TParent> = (args: LoaderArgs<TPath, TParent>) => Promise<TActionData>
-
-export type MetaProps<TPath extends string> = TPath extends keyof FileRoutesByPath ? RouteProps<TPath> : {}
-export type MetaFn<TPath extends RouteId> = (args: MetaProps<TPath>) => Promise<Head>
+export type LoaderType<TPath extends RouteId, TLoaderData, TParent> = (args: LoaderArgs<TPath>) => Promise<TLoaderData>
+export type ActionType<TPath extends RouteId, TActionData, TParent> = (args: LoaderArgs<TPath>) => Promise<TActionData>
 
 type ExtractReturnTypesFromMiddleware<T extends readonly Middleware<any>[]> = {
   [K in keyof T]: T[K] extends Middleware<any> ? Awaited<ReturnType<T[K]['handler']>> : {}
 }
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never
-type IntersectionOfMiddlewareReturns<T extends readonly Middleware<any>[]> = UnionToIntersection<ExtractReturnTypesFromMiddleware<T>[number]>
+export type IntersectionOfMiddlewareReturns<T extends readonly Middleware<any>[]> = UnionToIntersection<ExtractReturnTypesFromMiddleware<T>[number]>
 
 export type RouteProps<TPath extends RouteId> = {
   params: RouteParams<TPath>
@@ -115,11 +126,19 @@ export type RouteProps<TPath extends RouteId> = {
 
 export type ErrorComponentProps = Pick<ReactErrorBoundaryComponentProps, 'error'> & Partial<Pick<ReactErrorBoundaryComponentProps, 'resetErrorBoundary'>> & { status?: number | string }
 export type ZiroRouteComponent<TPath extends keyof FileRoutesByPath> = ComponentType<RouteProps<TPath>>
-export type AnyRoute<TPath extends string = any, TParent extends AnyRoute = any, TLoaderData = any, TActionData = any> = ZiroRoute<TPath, TParent, TLoaderData, TActionData>
-export type ZiroRouteErrorComponent = ComponentType<ErrorComponentProps>
+export type AnyRoute<
+  TPath extends string = any,
+  TParent extends AnyRoute = any,
+  TLoaderData = any,
+  TActionData = any,
+  TMiddlewares extends RouteMiddleware<TPath, TParent>[] = RouteMiddleware<TPath, TParent>[],
+> = ZiroRoute<TPath, TParent, TLoaderData, TActionData, TMiddlewares>
 
-export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TActionData> {
-  private hooks = createHooks<ZeroRouteHooks<TLoaderData, TActionData, TParentRoute>>()
+export type ZiroRouteErrorComponent = ComponentType<ErrorComponentProps>
+type RouteMiddleware<TPath extends RouteId, TParentRoute> = { name: string; handler: (props: LoaderArgs<TPath>) => Promise<unknown> }
+
+export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TActionData, TMiddlewares extends RouteMiddleware<TPath, TParentRoute>[]> {
+  private hooks = createHooks<ZeroRouteHooks<TLoaderData, TActionData, TPath>>()
 
   constructor(
     public component: ComponentType<any>,
@@ -129,8 +148,8 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
     public action?: ActionType<TPath, TActionData, TParentRoute>,
     public loadingComponent?: ComponentType,
     public errorComponent?: ZiroRouteErrorComponent,
-    public meta?: (args: MetaProps<TPath>) => Promise<Head>,
-    public middlewares?: { name: string; handler: (props: LoaderArgs<TPath, TParentRoute>) => Promise<unknown> }[],
+    public meta?: (args: MetaArgs<TPath>) => Promise<Head>,
+    public middlewares?: TMiddlewares,
   ) {
     if (parent) {
       // @ts-ignore
@@ -142,7 +161,7 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
       })
     }
 
-    if (!middlewares) this.middlewares = []
+    if (!middlewares) this.middlewares = [] as unknown as TMiddlewares
     this.hooks.hook('match', (url, fullUrl) => {
       this.fullUrl = fullUrl
     })
@@ -168,11 +187,11 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
     this.hooks.callHook('load', data, this.dataContext)
   }
 
-  private dataContext: RouteDataContext<TParentRoute> = {} as RouteDataContext<TParentRoute>
+  private dataContext: GetRouteDataContext<TPath> = {} as GetRouteDataContext<TPath>
   public getDataContext() {
     return this.dataContext
   }
-  public setDataContext(data: RouteDataContext<TParentRoute>) {
+  public setDataContext(data: GetRouteDataContext<TPath>) {
     this.dataContext = data
   }
 
@@ -191,6 +210,15 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
         this.matchedUrl = this.matchedUrl!.replace(`:${key}`, params[key])
       })
     }
+  }
+  public static fillRouteParams(url: string, params: Record<string, string>) {
+    let result = url
+    if (params && Object.keys(params).length) {
+      Object.keys(params).map(key => {
+        result = result.replace(`:${key}`, params[key])
+      })
+    }
+    return result
   }
 
   private params?: RouteProps<TPath>['params']
@@ -224,7 +252,7 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
         params: this.params,
         loaderData: this.data,
         dataContext: this.dataContext,
-      } as MetaProps<TPath>).then(this.router!.head.push)
+      } as MetaArgs<TPath>).then(this.router!.head.push)
     }
   }
 
@@ -496,7 +524,10 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
       return tree
     },
     flatLookup(path, method = 'GET') {
-      return this._flatLookup(path, method).reverse()
+      const lookupResult = this._flatLookup(path, method).reverse() as Array<any>
+      if (path === '/_root') return [this.getRootRoute()]
+      if (path.endsWith('_layout') && (lookupResult[lookupResult.length - 1] as AnyRoute).parent!.path === path) lookupResult.pop()
+      return lookupResult
     },
     addRoute(options) {
       const route = createRoute(options)
@@ -581,7 +612,6 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
               if (isTargetRoute) loaderData = data
             })
           } catch (e: any) {
-            // console.error(e)
             if (router.dehydrate && isRedirectError(e)) throw e
             if (errorHandlerRoute && !route.errorComponent) {
               try {
@@ -613,18 +643,36 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
   return router
 }
 
-const createRoute = <TFilePath extends string, TParentRoute extends AnyRoute, TLoaderData = {}, TActionData = {}>(
-  options: Pick<ZiroRoute<TFilePath, TParentRoute, TLoaderData, TActionData>, 'path' | 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares' | 'action'>,
+const createRoute = <TPath extends string, TParentRoute extends AnyRoute, TLoaderData = {}, TActionData = {}, TMiddlewares extends RouteMiddleware<TPath, TParentRoute>[] = []>(
+  options: Pick<
+    ZiroRoute<TPath, TParentRoute, TLoaderData, TActionData, TMiddlewares>,
+    'path' | 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares' | 'action'
+  >,
 ) => {
-  return new ZiroRoute(options.component, options.path, options.parent, options.loader, options.action, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
+  return new ZiroRoute<TPath, TParentRoute, TLoaderData, TActionData, TMiddlewares>(
+    options.component,
+    options.path,
+    options.parent,
+    options.loader,
+    options.action,
+    options.loadingComponent,
+    options.errorComponent,
+    options.meta,
+    options.middlewares,
+  )
 }
 
-const createRootRoute = <TLoaderData = {}>(options: Pick<ZiroRoute<'_root', undefined, TLoaderData, {}>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares'>) => {
+const createRootRoute = <TLoaderData = {}, TMiddlewares extends RouteMiddleware<'_root', undefined>[] = []>(
+  options: Pick<ZiroRoute<'_root', undefined, TLoaderData, {}, TMiddlewares>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares'>,
+) => {
   return new ZiroRoute(options.component, '_root', undefined, options.loader, undefined, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
 }
 
-const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}, TActionData = {}>(
-  options: Pick<ZiroRoute<string, TParentRoute, TLoaderData, TActionData>, 'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares' | 'action'> & {
+const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}, TActionData = {}, TMiddlewares extends RouteMiddleware<'', TParentRoute>[] = []>(
+  options: Pick<
+    ZiroRoute<string, TParentRoute, TLoaderData, TActionData, TMiddlewares>,
+    'parent' | 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares' | 'action'
+  > & {
     id: string
   },
 ) => {

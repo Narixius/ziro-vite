@@ -2,7 +2,7 @@ import babel from '@babel/core'
 import { parse } from 'es-module-lexer'
 import fs from 'node:fs'
 
-type PageModuleInfo = {
+export type PageModuleInfo = {
   filepath: string
   hasComponent: boolean
   hasMeta: boolean
