@@ -11,6 +11,9 @@ export default function MainLayout({ dataContext }: RouteProps<'/pokes/_layout'>
         <Link href="/pokes/pikachu" className="text-blue-400 underline">
           Pokes
         </Link>
+        <Link href="/dashboard" className="text-blue-400 underline">
+          Dashboard
+        </Link>
       </div>
       <Outlet />
     </div>

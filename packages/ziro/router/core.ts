@@ -15,7 +15,7 @@ import DefaultRootRoute from './default-root.js'
 import { RedirectError, isRedirectError } from './redirect.js'
 import { Cookies } from './storage/cookies.js'
 
-export const clientLoader = (routeId: string) => (props: RouteProps<''>) => {
+export const clientLoader = (routeId: string, router: ZiroRouter) => (props: RouteProps<''>) => {
   if (window)
     return fetch(ZiroRoute.fillRouteParams(routeId, props.params), {
       method: 'GET',
@@ -23,6 +23,11 @@ export const clientLoader = (routeId: string) => (props: RouteProps<''>) => {
         Accept: 'application/json',
       },
     }).then(async r => {
+      if (r.redirected) {
+        const url = new URL(r.url)
+        router.replace(url.pathname + url.search)
+        return
+      }
       const data = await r.json()
       if (r.ok) return data
       throw new Error(data.error ? data.error : data)
@@ -334,8 +339,9 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
         return data
       })
     }
-    if (!ignoreCache) return (await this.router!.cache.getData(this.getRouteUniqueKey(), handler)).data
-    else return await handler()
+    if (!ignoreCache) {
+      return (await this.router!.cache.getData(this.getRouteUniqueKey(), handler)).data
+    } else return await handler()
   }
 
   public async loadMiddlewares(ignoreCache: boolean = false) {

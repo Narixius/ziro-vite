@@ -1,23 +1,16 @@
-import { Ref } from '@vue/reactivity'
 import fg from 'fast-glob'
 import fs from 'node:fs'
 import path from 'node:path'
 import { joinURL, withTrailingSlash } from 'ufo'
 import { Import, createUnimport } from 'unimport'
 import { ViteDevServer } from 'vite'
+import { AppContext } from '../cli/commands/shared.js'
 import { rootRouteImportName } from './constants.js'
-import { AnyRoute, ZiroRouter, createRouter } from './core.js'
+import { AnyRoute, createRouter } from './core.js'
 import { PageModuleInfo, getPageModuleInfo } from './es-module-lexer.js'
 import { findParentDir, generateImportName, generateRouterPath, getImportPath, isLayoutFile, isRouteRelatedFile, normalizePathFromLayout } from './utils.js'
 
-export type GenerateRouterFunction = (options: {
-  rootDir: string
-  pagesDirPath: string
-  dotZiroDirPath: string
-  server: ViteDevServer
-  router: Ref<ZiroRouter | undefined>
-  generateRouteFile?: boolean
-}) => Promise<void>
+export type GenerateRouterFunction = (options: { rootDir: string; pagesDirPath: string; dotZiroDirPath: string; server: ViteDevServer; generateRouteFile?: boolean }) => Promise<void>
 
 const generateCodeFromModuleInfo = (key: string, prop: string, moduleImportName: string, has: boolean) => {
   if (key === 'middlewares') return ''
@@ -27,7 +20,7 @@ const generateCodeFromModuleInfo = (key: string, prop: string, moduleImportName:
   return ''
 }
 
-export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDirPath, dotZiroDirPath, server, router: serverRouter, generateRouteFile = true }) => {
+export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDirPath, dotZiroDirPath, server, generateRouteFile = true }) => {
   let routeFiles = fg.sync([joinURL(pagesDirPath, '/**/*.{js,jsx,ts,tsx}')]).filter(file => isRouteRelatedFile(pagesDirPath, file))
 
   let routerContent = ``
@@ -57,6 +50,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
   )
 
   let router = createRouter()
+  AppContext.getContext().router = router
 
   const flatRoutes: Record<string, AnyRoute> = {}
   // import root if exists
@@ -148,7 +142,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
       rootModuleInfo.hasMiddleware ? `typeof ${rootImportName}.middlewares` : '[]'
     }>({
   ${`${generateCodeFromModuleInfo('component', 'default', rootImportName, rootModuleInfo.hasComponent)}
-  ${rootModuleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify('_root')}),` : ''}
+  ${rootModuleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify('_root')}, router),` : ''}
   ${generateCodeFromModuleInfo('action', 'action', rootImportName, rootModuleInfo.hasAction)}
   ${generateCodeFromModuleInfo('meta', 'meta', rootImportName, rootModuleInfo.hasMeta)}
   ${generateCodeFromModuleInfo('loadingComponent', 'Loading', rootImportName, rootModuleInfo.hasLoading)}
@@ -178,7 +172,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
   ${isLayout ? `id: '${imp.meta!.fullPath}',` : `path: '${imp.meta!.fullPath}',`}
   parent: ${imp.meta!.parentLayout}Route,
   ${`${generateCodeFromModuleInfo('component', 'default', importName, moduleInfo.hasComponent)}
-  ${moduleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify(imp.meta!.fullPath)}),` : ''}
+  ${moduleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify(imp.meta!.fullPath)}, router),` : ''}
   ${generateCodeFromModuleInfo('action', 'action', importName, moduleInfo.hasAction)}
   ${generateCodeFromModuleInfo('meta', 'meta', importName, moduleInfo.hasMeta)}
   ${generateCodeFromModuleInfo('loadingComponent', 'Loading', importName, moduleInfo.hasLoading)}
@@ -211,8 +205,6 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     }
     await generateRouteFromImportedModule(imp)
   }
-
-  serverRouter.value = router
 
   routerContent += '\n\n// router types \n'
 
