@@ -3,6 +3,7 @@ import { colors } from 'consola/utils'
 import { createApp, eventHandler, toNodeListener } from 'h3'
 import { listen } from 'listhen'
 import { upperFirst } from 'lodash-es'
+import { printZiroHeader } from './shared.js'
 
 const devCommand = defineCommand({
   meta: {
@@ -24,7 +25,7 @@ const devCommand = defineCommand({
     },
   },
   setup() {
-    console.log(`${colors.bold('Z۰ro')} ${colors.gray('(Development)')}`)
+    printZiroHeader()
   },
   async run({ args: { host, port } }) {
     const app = createApp()
@@ -38,11 +39,13 @@ const devCommand = defineCommand({
       public: host,
       port,
     }).then(async server => {
-      console.log(colors.green('Server is running at:'))
+      console.log()
+      console.log(`   ${colors.green(`✓`)} ${colors.white(`Server is running at:`)}`)
       ;(await server.getURLs()).forEach(serverUrl => {
-        console.log(` 🌐${colors.dim(upperFirst(serverUrl.type))}: ${colors.cyan(serverUrl.url)}`)
+        console.log(`   🌐${colors.white(upperFirst(serverUrl.type))}: ${colors.whiteBright(colors.bold(serverUrl.url))}`)
       })
-      if (!host) console.log(` 🌐${colors.strikethrough(colors.dim('Network'))}: ${colors.dim('[use --host to expose to host]')}`)
+      if (!host) console.log(`   🌐${colors.strikethrough(colors.white('Network'))}: ${colors.dim('use --host to expose network access')}`)
+      console.log()
     })
   },
 })

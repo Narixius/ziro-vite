@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "ziro dev --port 3000",
+    "dev": "ziro dev",
     "dev:ziro": "nodemon -w '../../packages/' -x 'bun dev'",
     "build": "ziro build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
