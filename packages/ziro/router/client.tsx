@@ -1,8 +1,10 @@
-import { createContext, createElement, FC, HTMLAttributes, HTMLProps, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
+import { $fetch } from 'ofetch'
+import { createContext, createElement, FC, FormEvent, HTMLAttributes, HTMLProps, MouseEvent, PropsWithChildren, Suspense, useContext, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
+import { withQuery } from 'ufo'
 import { SWRCacheProvider } from './cache/context.js'
 import { useSWRStore } from './cache/useSwr.js'
-import { AnyRoute, DEFAULT_ROOT_PATH, RouteId, SafeRouteParams, ZiroRouter } from './core.js'
+import { ActionResult, ActionSchema, AlsoAllowString, AnyRoute, DEFAULT_ROOT_PATH, FileRoutesByPath, RouteId, SafeRouteParams, ZiroRoute, ZiroRouter } from './core.js'
 import DefaultErrorComponent from './default-error-component.js'
 
 type RouterProviderType = { router: ZiroRouter }
@@ -183,4 +185,96 @@ export const Body: FC<PropsWithChildren> = props => {
 
 export const Head: FC<PropsWithChildren> = props => {
   return <head suppressHydrationWarning>{props.children}</head>
+}
+
+export type TUseActions<TInputSchema, TResult> = {
+  formProps: {
+    action: string
+    onSubmit: (e: FormEvent<HTMLFormElement>) => void
+  }
+  isSubmitting: boolean
+  submit: (body: TInputSchema) => Promise<TResult>
+  data?: TResult
+  errors?: Partial<TInputSchema>
+}
+
+export const useAction = <TPath extends keyof FileRoutesByPath, TActionName extends AlsoAllowString<keyof FileRoutesByPath[TPath]['actions']>>(
+  destination: SafeRouteParams<TPath> extends undefined
+    ? {
+        url: TPath
+        action: TActionName
+        onSuccess?: (
+          data: TPath extends keyof FileRoutesByPath ? (TActionName extends keyof FileRoutesByPath[TPath]['actions'] ? ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]> : any) : any,
+        ) => void | Promise<void>
+      }
+    : {
+        url: TPath
+        params: SafeRouteParams<TPath>
+        action: TActionName
+        onSuccess?: (
+          data: TPath extends keyof FileRoutesByPath ? (TActionName extends keyof FileRoutesByPath[TPath]['actions'] ? ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]> : any) : any,
+        ) => void | Promise<void>
+      },
+): TPath extends keyof FileRoutesByPath
+  ? TActionName extends keyof FileRoutesByPath[TPath]['actions']
+    ? TUseActions<ActionSchema<FileRoutesByPath[TPath]['actions'][TActionName]>, ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]>>
+    : TUseActions<any, any>
+  : TUseActions<any, any> => {
+  const actionURL = withQuery(ZiroRoute.fillRouteParams(destination.url, (destination as any).params || {}), { action: destination.action.toString() })
+
+  type TResult = TPath extends keyof FileRoutesByPath
+    ? TActionName extends keyof FileRoutesByPath[TPath]['actions']
+      ? TUseActions<ActionSchema<FileRoutesByPath[TPath]['actions'][TActionName]>, ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]>>
+      : TUseActions<any, any>
+    : TUseActions<any, any>
+
+  const [isSubmitting, setSubmittion] = useState<TResult['isSubmitting']>(false)
+  const [data, setData] = useState<TResult['data']>(undefined)
+  const [errors, setErrors] = useState<TResult['errors']>(undefined)
+
+  const post = (body: any) => {
+    return $fetch<TResult['data']>(actionURL, {
+      method: 'post',
+      headers: {
+        Accept: 'application/json',
+      },
+      body,
+    })
+      .then(async response => {
+        setData(response)
+      })
+      .catch(error => {
+        if (error?.data?.errors) setErrors(error?.data?.errors)
+        else throw error
+      })
+      .finally(() => {
+        setSubmittion(false)
+      })
+  }
+
+  const submit: TResult['submit'] = post
+
+  return {
+    formProps: {
+      action: actionURL,
+      onSubmit(e) {
+        e.preventDefault()
+        setSubmittion(true)
+        const formData = new FormData(e.target as HTMLFormElement)
+        const filteredFormData = new FormData()
+        formData.forEach((value, key) => {
+          if (value instanceof File && value.size === 0) {
+            console.log(`Skipping empty file: ${key}`)
+          } else {
+            filteredFormData.append(key, value)
+          }
+        })
+        post(filteredFormData)
+      },
+    },
+    isSubmitting,
+    submit,
+    errors,
+    data,
+  } as TResult
 }

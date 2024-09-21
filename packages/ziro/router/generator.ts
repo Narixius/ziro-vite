@@ -47,6 +47,10 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
       name: 'GetRouteLoader',
       from: 'ziro/router',
     },
+    {
+      name: 'GetRouteActions',
+      from: 'ziro/router',
+    },
   )
 
   let router = createRouter()
@@ -143,7 +147,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     }>({
   ${`${generateCodeFromModuleInfo('component', 'default', rootImportName, rootModuleInfo.hasComponent)}
   ${rootModuleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify('_root')}, router),` : ''}
-  ${generateCodeFromModuleInfo('action', 'action', rootImportName, rootModuleInfo.hasAction)}
+  ${generateCodeFromModuleInfo('actions', 'actions', rootImportName, rootModuleInfo.hasActions)}
   ${generateCodeFromModuleInfo('meta', 'meta', rootImportName, rootModuleInfo.hasMeta)}
   ${generateCodeFromModuleInfo('loadingComponent', 'Loading', rootImportName, rootModuleInfo.hasLoading)}
   ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', rootImportName, rootModuleInfo.hasError)}
@@ -162,18 +166,16 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     imp.meta!.moduleInfo = moduleInfo
     routerContent += `const ${importName}Route = router.${!isLayout ? 'addRoute' : 'addLayoutRoute'}<${
       isLayout
-        ? `typeof ${imp.meta!.parentLayout}Route,${moduleInfo.hasLoader ? `Awaited<ReturnType<typeof ${importName}.loader>>` : '{}'}, ${
-            moduleInfo.hasAction ? `Awaited<ReturnType<typeof ${importName}.action>>` : '{}'
-          }, ${moduleInfo.hasMiddleware ? `typeof ${importName}.middlewares` : '[]'}`
-        : `'${imp.meta!.fullPath}', typeof ${imp.meta!.parentLayout}Route,${moduleInfo.hasLoader ? `Awaited<ReturnType<typeof ${importName}.loader>>` : '{}'}, ${
-            moduleInfo.hasAction ? `Awaited<ReturnType<typeof ${importName}.action>>` : '{}'
+        ? `typeof ${imp.meta!.parentLayout}Route, ${moduleInfo.hasLoader ? `typeof ${importName}.loader` : '{}'}, ${moduleInfo.hasMiddleware ? `typeof ${importName}.middlewares` : '[]'}`
+        : `'${imp.meta!.fullPath}', typeof ${imp.meta!.parentLayout}Route, ${moduleInfo.hasLoader ? `Awaited<ReturnType<typeof ${importName}.loader>>` : '{}'}, ${
+            moduleInfo.hasActions ? `typeof ${importName}.actions` : '{}'
           }, ${moduleInfo.hasMiddleware ? `typeof ${importName}.middlewares` : '[]'}`
     }>({
   ${isLayout ? `id: '${imp.meta!.fullPath}',` : `path: '${imp.meta!.fullPath}',`}
   parent: ${imp.meta!.parentLayout}Route,
   ${`${generateCodeFromModuleInfo('component', 'default', importName, moduleInfo.hasComponent)}
   ${moduleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify(imp.meta!.fullPath)}, router),` : ''}
-  ${generateCodeFromModuleInfo('action', 'action', importName, moduleInfo.hasAction)}
+  ${generateCodeFromModuleInfo('actions', 'actions', importName, moduleInfo.hasActions)}
   ${generateCodeFromModuleInfo('meta', 'meta', importName, moduleInfo.hasMeta)}
   ${generateCodeFromModuleInfo('loadingComponent', 'Loading', importName, moduleInfo.hasLoading)}
   ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', importName, moduleInfo.hasError)}
@@ -216,6 +218,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
       middlewares: ${rootModuleInfo?.hasMiddleware && !!rootPath ? `typeof ${generateImportName(getImportPath(dotZiroDirPath, rootPath))}.middlewares` : '[]'}
       dataContext: ${rootModuleInfo?.hasMiddleware ? `IntersectionOfMiddlewareReturns<FileRoutesByPath['_root']['middlewares']>` : `{}`}
       loaderData: GetRouteLoader<FileRoutesByPath['_root']['route']>
+	  actions: {}
     }
     ${pagesImports
       .map(imp => {
@@ -227,6 +230,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
           imp.meta!.fullPath
         }']['middlewares']>
       loaderData: GetRouteLoader<FileRoutesByPath['${imp.meta!.fullPath}']['route']>
+      actions: GetRouteActions<FileRoutesByPath['${imp.meta!.fullPath}']['route']>
     }`
       })
       .join('\n    ')}

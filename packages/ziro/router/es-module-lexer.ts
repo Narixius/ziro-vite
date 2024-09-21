@@ -9,7 +9,7 @@ export type PageModuleInfo = {
   hasLoading: boolean
   hasLoader: boolean
   hasError: boolean
-  hasAction: boolean
+  hasActions: boolean
   hasMiddleware: boolean
 }
 
@@ -26,7 +26,7 @@ export const getPageModuleInfo = async (filepath: string): Promise<PageModuleInf
   if (moduleEsm?.code) {
     const r: PageModuleInfo = {
       filepath,
-      hasAction: false,
+      hasActions: false,
       hasComponent: false,
       hasError: false,
       hasLoader: false,
@@ -37,7 +37,7 @@ export const getPageModuleInfo = async (filepath: string): Promise<PageModuleInf
     const [_, exports] = await parse(moduleEsm.code)
     exports.forEach(exp => {
       if (exp.n === 'default') r.hasComponent = true
-      if (exp.n === 'action') r.hasAction = true
+      if (exp.n === 'actions') r.hasActions = true
       if (exp.n === 'loader') r.hasLoader = true
       if (exp.n === 'meta') r.hasMeta = true
       if (exp.n === 'Loading') r.hasLoading = true

@@ -1,11 +1,8 @@
-// import { AnyRouter } from '@tanstack/react-router'
 import { defu } from 'defu'
 import { joinURL } from 'ufo'
 import { normalizePath, type Plugin } from 'vite'
 import { generateRouter } from '../router/generator.js'
 import { isRouteRelatedFile } from '../router/utils.js'
-
-// const generateRouter = (...any: any) => {}
 
 export type ZiroConfig = Partial<{
   pagesDir: string
