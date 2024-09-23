@@ -3,8 +3,10 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
+    "dev": "tsc-watch --onSuccess \"bun run postbuild\"",
+    "prebuild": "chmod +x ./post-build.sh",
     "build": "tsc",
-    "dev": "nr build --watch"
+    "postbuild": "./post-build.sh"
   },
   "bin": {
     "ziro": "dist/cli/index.js"
@@ -41,6 +43,7 @@
     "eslint": "^9.8.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
+    "tsc-watch": "^6.2.0",
     "tsup": "^8.2.4"
   },
   "peerDependencies": {

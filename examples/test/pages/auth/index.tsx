@@ -43,7 +43,6 @@ export default function AuthPage() {
       router!.push('/dashboard')
     },
   })
-  console.log(login.errors)
 
   return (
     <div className="preview flex min-h-[350px] w-full justify-center p-10 items-center">
@@ -82,7 +81,7 @@ export default function AuthPage() {
         </div>
         <div className="items-center p-6 pt-0 flex mt-6 justify-center">
           <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
-            {login.isLoading ? 'Signing in...' : 'Sign in'}
+            {login.isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
         </div>
       </form>
