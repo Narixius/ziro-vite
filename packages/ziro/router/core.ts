@@ -38,7 +38,7 @@ export const clientLoader = (routeId: string, router: ZiroRouter) => (props: Rou
 type ActionHandler<TBody, TResult> = (body: TBody, actionArgs: any) => Promise<TResult>
 
 type ActionHandlerWithZod<TBodySchema extends z.ZodSchema, TResult> = {
-  input: TBodySchema
+  input?: TBodySchema
   handler: ActionHandler<TBodySchema extends z.ZodSchema ? z.infer<TBodySchema> : any, TResult>
 }
 type DefineActionArgs<T extends z.ZodSchema, TResult> = ActionHandlerWithZod<T, TResult>
@@ -46,7 +46,7 @@ type DefineActionArgs<T extends z.ZodSchema, TResult> = ActionHandlerWithZod<T, 
 export function defineAction<TBodySchema extends z.ZodSchema, TResult>(
   args: DefineActionArgs<TBodySchema, TResult>,
 ): {
-  input: TBodySchema
+  input?: TBodySchema
   handler: ActionHandler<TBodySchema extends z.ZodSchema ? z.infer<TBodySchema> : any, TResult>
 } {
   return args
@@ -346,18 +346,22 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
     const handler = async () => {
       const data = await this.router?.serverContext?.getBody()
       const schema = this.actions![actionName].input as ZodSchema
-      const validation = schema.safeParse(data)
-      if (!validation.success) {
-        this.router!.statusMessage = 'Invalid input'
-        this.router!.statusCode = 400
-        const res = {
-          errors: createValidationErrors(validation.error),
-          input: data,
+      let handlerInput = data
+      if (schema) {
+        const validation = schema.safeParse(data)
+        if (!validation.success) {
+          this.router!.statusMessage = 'Invalid input'
+          this.router!.statusCode = 400
+          const res = {
+            errors: createValidationErrors(validation.error),
+            input: data,
+          }
+          this.setActionData(res)
+          return res
         }
-        this.setActionData(res)
-        return res
+        handlerInput = validation.data
       }
-      return this.actions![actionName].handler(validation.data, {
+      return this.actions![actionName].handler(handlerInput, {
         params: this.params!,
         dataContext: this.dataContext!,
         utils: this.router!.context,
