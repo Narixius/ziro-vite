@@ -324,7 +324,7 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
           if (isTargetRoute) await this.loadActionData(actionName, ignoreCache)
         })
         .then(() => {
-          return this.data
+          return this.actionData
         })
     } catch (data) {
       this.setActionData(data)

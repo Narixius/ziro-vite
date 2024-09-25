@@ -68,31 +68,6 @@ export const runDevServer = async () => {
   AppContext.getContext().vite = vite
   const h3 = AppContext.getContext().h3
   h3.use(fromNodeMiddleware(vite.middlewares))
-  // h3.use(
-  //   eventHandler(async event => {
-  //     if (event.method === 'POST') {
-  //       const schema = z.object({
-  //         email: z.string().email(),
-  //         password: z.string().min(6),
-  //         names: z.array(z.string().min(1)),
-  //       })
-
-  //         console.log(data)
-  //         const validation = schema.safeParse(data)
-  //         if (!validation.success) {
-
-  //           console.log({
-  //             errors: createValidationErrors(validation.error),
-  //           })
-  //           setResponseStatus(event, 403, 'Invalid input')
-  //           return {
-  //             errors: createValidationErrors(validation.error),
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }),
-  // )
   h3.use(renderer)
 }
 
@@ -156,11 +131,11 @@ const renderer = eventHandler(async event => {
         }
       }
 
-      if (!String(router.statusCode).startsWith('2') && router.statusMessage !== 'success') {
-        data = {
-          error: router.statusMessage,
-        }
-      }
+      //   if (!String(router.statusCode).startsWith('2') && router.statusMessage !== 'success') {
+      //     data = {
+      //       error: router.statusMessage,
+      //     }
+      //   }
 
       res.statusCode = router.statusCode
       res.statusMessage = router.statusMessage

@@ -237,17 +237,23 @@ export const useAction = <TPath extends keyof FileRoutesByPath, TActionName exte
   const [data, setData] = useState<TResult['data']>(!isError ? store?.data || undefined : undefined)
   const [errors, setErrors] = useState<TResult['errors']>(isError ? store.data.errors : undefined)
   const defaultValues = isError && store.data.input
-
+  const router = useRouter()!
   const post = (body: any) => {
-    return $fetch<TResult['data']>(actionURL, {
-      method: 'post',
-      headers: {
-        Accept: 'application/json',
-      },
-      body,
-    })
+    return $fetch
+      .raw<TResult['data']>(actionURL, {
+        method: 'post',
+        headers: {
+          Accept: 'application/json',
+        },
+        body,
+      })
       .then(async response => {
-        setData(response)
+        if (response.redirected) {
+          const url = new URL(response.url)
+          router.replace(url.pathname + url.search)
+          return
+        }
+        setData(response._data)
       })
       .catch(error => {
         if (error?.data?.errors) setErrors(error?.data?.errors)
@@ -261,10 +267,6 @@ export const useAction = <TPath extends keyof FileRoutesByPath, TActionName exte
   const submit: TResult['submit'] = post
 
   const registerInput = (name: Parameters<TResult['registerInput']>['0']): HTMLAttributes<HTMLInputElement> => {
-    console.log({
-      name: name as string,
-      defaultValue: defaultValues && name in defaultValues ? defaultValues[name] : '',
-    })
     return {
       name: name as string,
       defaultValue: defaultValues && name in defaultValues ? defaultValues[name] : '',
