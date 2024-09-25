@@ -13,7 +13,7 @@ const RouterContext = createContext<ZiroRouter | null>(null)
 export const useRouter = () => useContext(RouterContext)
 
 export const Router: FC<RouterProviderType> = ({ router }) => {
-  const [routeTree, setRouteTree] = useState(router.url ? router.flatLookup(router.url) : [])
+  const [routeTree, setRouteTree] = useState(router.flatLookup(router.url!))
 
   useEffect(() => {
     const callback = (router: ZiroRouter) => {
@@ -142,7 +142,7 @@ type LinkPropsWithHref = {
 
 type LinkPropsWithTo<TPath extends RouteId> = SafeRouteParams<TPath> extends undefined ? { href?: string; to: TPath } : { href?: string; to: TPath; params: SafeRouteParams<TPath> }
 
-export const Link = <TPath extends string>(props: LinkProps<TPath>) => {
+export const Link = <TPath extends RouteId>(props: LinkProps<TPath>) => {
   const router = useRouter()
 
   const localProps: any = { ...props }
@@ -188,14 +188,16 @@ export const Head: FC<PropsWithChildren> = props => {
 }
 
 export type TUseActions<TInputSchema, TResult> = {
-  formProps: {
+  form: {
     action: string
+    method: string
     onSubmit: (e: FormEvent<HTMLFormElement>) => void
   }
+  registerInput: (name: keyof TInputSchema) => HTMLAttributes<HTMLInputElement>
   isSubmitting: boolean
   submit: (body: TInputSchema) => Promise<TResult>
   data?: TResult
-  errors?: Partial<TInputSchema>
+  errors?: Partial<TInputSchema & { _root: string }>
 }
 
 export const useAction = <TPath extends keyof FileRoutesByPath, TActionName extends AlsoAllowString<keyof FileRoutesByPath[TPath]['actions']>>(
@@ -228,9 +230,13 @@ export const useAction = <TPath extends keyof FileRoutesByPath, TActionName exte
       : TUseActions<any, any>
     : TUseActions<any, any>
 
+  const actionCacheKey = `action:` + ZiroRoute.generateRouteUniqueKey(destination.url, ZiroRoute.fillRouteParams(destination.url, (destination as any).params || {}))
+  const store = useSWRStore(actionCacheKey, async () => ({}))
+  const isError = !!store?.data?.errors
   const [isSubmitting, setSubmittion] = useState<TResult['isSubmitting']>(false)
-  const [data, setData] = useState<TResult['data']>(undefined)
-  const [errors, setErrors] = useState<TResult['errors']>(undefined)
+  const [data, setData] = useState<TResult['data']>(!isError ? store?.data || undefined : undefined)
+  const [errors, setErrors] = useState<TResult['errors']>(isError ? store.data.errors : undefined)
+  const defaultValues = isError && store.data.input
 
   const post = (body: any) => {
     return $fetch<TResult['data']>(actionURL, {
@@ -254,9 +260,21 @@ export const useAction = <TPath extends keyof FileRoutesByPath, TActionName exte
 
   const submit: TResult['submit'] = post
 
-  return {
-    formProps: {
+  const registerInput = (name: Parameters<TResult['registerInput']>['0']): HTMLAttributes<HTMLInputElement> => {
+    console.log({
+      name: name as string,
+      defaultValue: defaultValues && name in defaultValues ? defaultValues[name] : '',
+    })
+    return {
+      name: name as string,
+      defaultValue: defaultValues && name in defaultValues ? defaultValues[name] : '',
+    } as HTMLAttributes<HTMLInputElement>
+  }
+
+  const res = {
+    form: {
       action: actionURL,
+      method: 'post',
       onSubmit(e) {
         e.preventDefault()
         setSubmittion(true)
@@ -272,9 +290,12 @@ export const useAction = <TPath extends keyof FileRoutesByPath, TActionName exte
         post(filteredFormData)
       },
     },
+    registerInput,
     isSubmitting,
     submit,
     errors,
     data,
   } as TResult
+
+  return res
 }

@@ -1,19 +1,20 @@
 import { Head, Unhead } from '@unhead/schema'
+import { NodeEventContext } from 'h3'
 import { createHooks } from 'hookable'
-import * as http from 'node:http'
+import { isArray, last } from 'lodash-es'
 import { ComponentType } from 'react'
 import { FallbackProps as ReactErrorBoundaryComponentProps } from 'react-error-boundary'
 import { RouterContext, addRoute as addRou3Route, createRouter as createRou3Router, findRoute } from 'rou3'
-import { joinURL } from 'ufo'
+import { getQuery, joinURL, parsePath } from 'ufo'
 import { createHead } from 'unhead'
-import { Connect } from 'vite'
-import { z } from 'zod'
+import { ZodSchema, z } from 'zod'
 import { abort } from './abort.js'
 import { SWRCache } from './cache/swr.js'
 import DefaultErrorComponent from './default-error-component.js'
 import DefaultRootRoute from './default-root.js'
 import { RedirectError, isRedirectError } from './redirect.js'
 import { Cookies } from './storage/cookies.js'
+import { createValidationErrors } from './utils/zod.js'
 
 export const clientLoader = (routeId: string, router: ZiroRouter) => (props: RouteProps<''>) => {
   if (window)
@@ -274,8 +275,12 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
     return this.hooks
   }
 
+  static generateRouteUniqueKey(path: string, matchedUrl: string) {
+    return `${path}-${matchedUrl}`
+  }
+
   public getRouteUniqueKey() {
-    return `${this.path}-${this.matchedUrl || this.path}`
+    return ZiroRoute.generateRouteUniqueKey(this.path, this.matchedUrl || this.path)
   }
 
   private router?: ZiroRouter
@@ -312,11 +317,11 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
     }
   }
 
-  public async loadAction(loadAction?: boolean, ignoreCache: boolean = false) {
+  public async loadAction({ isTargetRoute, ignoreCache = false, actionName }: { isTargetRoute?: boolean; ignoreCache?: boolean; actionName: string }) {
     try {
       return await this.loadMiddlewares(ignoreCache)
         .then(async () => {
-          if (loadAction) await this.loadActionData(ignoreCache)
+          if (isTargetRoute) await this.loadActionData(actionName, ignoreCache)
         })
         .then(() => {
           return this.data
@@ -332,26 +337,43 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
     }
   }
 
-  public async loadActionData(ignoreCache: boolean = false) {
+  public async loadActionData(actionName: string, ignoreCache: boolean = false) {
     if (!this.actions) {
       this.setActionData({})
       return
     }
 
     const handler = async () => {
+      const data = await this.router?.serverContext?.getBody()
+      const schema = this.actions![actionName].input as ZodSchema
+      const validation = schema.safeParse(data)
+      if (!validation.success) {
+        this.router!.statusMessage = 'Invalid input'
+        this.router!.statusCode = 400
+        const res = {
+          errors: createValidationErrors(validation.error),
+          input: data,
+        }
+        this.setActionData(res)
+        return res
+      }
+      return this.actions![actionName].handler(validation.data, {
+        params: this.params!,
+        dataContext: this.dataContext!,
+        utils: this.router!.context,
+        serverContext: this.router!.serverContext,
+      }).then(data => {
+        if ('errors' in data) {
+          this.router!.statusMessage = 'Invalid input'
+          this.router!.statusCode = 400
+        }
+        this.setActionData(data)
+        return data
+      })
       // TODO: handle selected action
-      //   return this.action!({
-      //     params: this.params!,
-      //     dataContext: this.dataContext!,
-      //     utils: this.router!.context,
-      //     serverContext: this.router!.serverContext,
-      //   }).then(data => {
-      //     this.setActionData(data)
-      //     return data
-      //   })
     }
 
-    if (!ignoreCache) return await this.router!.cache.getData(this.getRouteUniqueKey(), handler)
+    if (!ignoreCache) return await this.router!.cache.getData('action:' + this.getRouteUniqueKey(), handler)
     else await handler()
   }
 
@@ -424,8 +446,9 @@ export type ZiroContextStorage = {
 }
 
 export type ServerContext = {
-  req: Connect.IncomingMessage
-  res: http.ServerResponse
+  req: NodeEventContext['req']
+  res: NodeEventContext['res']
+  getBody: () => any
 }
 export type ZiroRouter = {
   serverContext?: ServerContext
@@ -563,6 +586,7 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
       return tree
     },
     flatLookup(path, method = 'GET') {
+      path = parsePath(path).pathname
       const lookupResult = this._flatLookup(path, method).reverse() as Array<any>
       if (path === '/_root') return [this.getRootRoute()]
       if (path.endsWith('_layout') && (lookupResult[lookupResult.length - 1] as AnyRoute).parent!.path === path) lookupResult.pop()
@@ -617,10 +641,13 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
         if (this.url) {
           const tree = this.flatLookup(this.url, 'POST')
           if (tree[tree.length - 1].actions) {
+            const queryActionName = getQuery(this.url).action
+            let actionName = getQuery(this.url).action || 'default'
+            if (isArray(queryActionName)) actionName = last(queryActionName)!
             this.serverContext = serverContext
             for (const route of tree) {
               const isTargetRoute = route === tree[tree.length - 1]
-              await route.loadAction(isTargetRoute, ignoreCache).then(data => {
+              await route.loadAction({ isTargetRoute, ignoreCache, actionName: String(actionName) }).then(data => {
                 if (isTargetRoute) actionData = data
               })
             }

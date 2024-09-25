@@ -60,6 +60,7 @@
     "@babel/node": "^7.25.0",
     "@babel/preset-react": "^7.24.7",
     "@babel/preset-typescript": "^7.24.7",
+    "@hiogawa/vite-plugin-ssr-css": "^0.0.1",
     "@types/lodash-es": "^4.17.12",
     "@unhead/ssr": "^1.9.16",
     "citty": "^0.1.6",

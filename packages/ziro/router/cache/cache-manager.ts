@@ -70,6 +70,9 @@ export class CacheManager<T> {
           serializedCache.push([key, entry])
         }
       }
+      for (const [key, entry] of this.cache.entries()) {
+        if (key.includes('action:')) serializedCache.push([key, entry])
+      }
     } else {
       // Serialize the entire cache
       for (const [key, entry] of this.cache.entries()) {

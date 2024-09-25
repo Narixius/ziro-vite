@@ -1,12 +1,11 @@
 import { defineCommand } from 'citty'
 import { colors } from 'consola/utils'
-import { createApp, eventHandler, fromNodeMiddleware, getHeader, NodeEventContext, readBody, readFormData, setResponseStatus, toNodeListener } from 'h3'
+import { createApp, eventHandler, fromNodeMiddleware, readBody, readFormData, toNodeListener } from 'h3'
 import { listen } from 'listhen'
-import { set, upperFirst } from 'lodash-es'
+import { upperFirst } from 'lodash-es'
 import { createElement } from 'react'
 import { renderToString } from 'react-dom/server'
 import { createServer } from 'vite'
-import { z, ZodError } from 'zod'
 import { Router } from '../../router/client.js'
 import { isRedirectError, RedirectError } from '../../router/redirect.js'
 import { Cookies } from '../../router/storage/cookies.js'
@@ -69,68 +68,68 @@ export const runDevServer = async () => {
   AppContext.getContext().vite = vite
   const h3 = AppContext.getContext().h3
   h3.use(fromNodeMiddleware(vite.middlewares))
-  h3.use(
-    eventHandler(async event => {
-      if (event.method === 'POST') {
-        const schema = z.object({
-          email: z.string().email(),
-          password: z.string().min(6),
-          names: z.array(z.string().min(1)),
-        })
+  // h3.use(
+  //   eventHandler(async event => {
+  //     if (event.method === 'POST') {
+  //       const schema = z.object({
+  //         email: z.string().email(),
+  //         password: z.string().min(6),
+  //         names: z.array(z.string().min(1)),
+  //       })
 
-        const contentType = getHeader(event, 'content-type')
-        if (contentType) {
-          let data = null as unknown as z.infer<typeof schema>
-          if (['multipart/form-data', 'application/x-www-form-urlencoded'].some(value => contentType.includes(value))) {
-            function formDataToObject(formData: FormData) {
-              const obj: Record<string, any> = {}
-              formData.forEach((value, key) => {
-                if (typeof obj[key] !== 'undefined') {
-                  if (!Array.isArray(obj[key])) {
-                    obj[key] = [obj[key]]
-                  }
-                  obj[key].push(value)
-                } else {
-                  obj[key] = value
-                }
-              })
-              return obj
-            }
-            data = formDataToObject(await readFormData(event)) as z.infer<typeof schema>
-          }
-          if (contentType === 'application/json') {
-            data = (await readBody(event)) as z.infer<typeof schema>
-          }
-          console.log(data)
-          const validation = schema.safeParse(data)
-          if (!validation.success) {
-            const createValidationErrors = (zodError: ZodError) => {
-              const errorObj: Record<string, any> = {}
-              zodError.errors.forEach(error => {
-                const path = error.path.join('.')
-                set(errorObj, path, error.message)
-              })
-              return errorObj
-            }
-            console.log({
-              errors: createValidationErrors(validation.error),
-            })
-            setResponseStatus(event, 403, 'Invalid input')
-            return {
-              errors: createValidationErrors(validation.error),
-            }
-          }
-        }
-      }
-    }),
-  )
-  h3.use(fromNodeMiddleware(renderer))
+  //         console.log(data)
+  //         const validation = schema.safeParse(data)
+  //         if (!validation.success) {
+
+  //           console.log({
+  //             errors: createValidationErrors(validation.error),
+  //           })
+  //           setResponseStatus(event, 403, 'Invalid input')
+  //           return {
+  //             errors: createValidationErrors(validation.error),
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }),
+  // )
+  h3.use(renderer)
 }
 
-const renderer = async (req: NodeEventContext['req'], res: NodeEventContext['res']) => {
+const renderer = eventHandler(async event => {
+  const req = event.node.req
+  const res = event.node.res
   const method = req.method!
 
-  if (['GET', 'POST'].includes(method.toUpperCase()) && req.headers.accept?.includes('application/json')) {
+  const getBody = async () => {
+    const contentType = req.headers['content-type']
+    let data = null as unknown as any
+    if (contentType) {
+      if (['multipart/form-data', 'application/x-www-form-urlencoded'].some(value => contentType.includes(value))) {
+        function formDataToObject(formData: FormData) {
+          const obj: Record<string, any> = {}
+          formData.forEach((value, key) => {
+            if (typeof obj[key] !== 'undefined') {
+              if (!Array.isArray(obj[key])) {
+                obj[key] = [obj[key]]
+              }
+              obj[key].push(value)
+            } else {
+              obj[key] = value
+            }
+          })
+          return obj
+        }
+        data = formDataToObject(await readFormData(event))
+      }
+      if (contentType === 'application/json') {
+        data = await readBody(event)
+      }
+    }
+    return data
+  }
+
+  if (['POST', 'GET'].includes(method.toUpperCase())) {
     const router = AppContext.getContext().router
     if (router && req.originalUrl) {
       router.setUrl(req.originalUrl)
@@ -145,12 +144,14 @@ const renderer = async (req: NodeEventContext['req'], res: NodeEventContext['res
       router.statusCode = 200
       router.statusMessage = 'success'
 
+      const isJsonResponse = req.headers.accept?.includes('application/json')
+
       try {
-        if (method === 'GET') data = await router.load({ req, res }, true)
-        if (method === 'POST') data = await router.loadAction({ req, res }, true)
+        if (method === 'GET') data = await router.load({ req, res, getBody }, isJsonResponse)
+        if (method === 'POST') data = await router.loadAction({ req, res, getBody }, isJsonResponse)
       } catch (e: any) {
         if (isRedirectError(e)) {
-          res.writeHead((e as RedirectError).getRedirectStatus(), { Location: (e as RedirectError).getPath() })
+          res.writeHead((e as RedirectError).getRedirectStatus(), { Location: (e as RedirectError).getPath(), 'Set-Cookie': router.context.storage.cookies!.getCookies() })
           return res.end()
         }
       }
@@ -165,45 +166,19 @@ const renderer = async (req: NodeEventContext['req'], res: NodeEventContext['res
       res.statusMessage = router.statusMessage
       res.setHeader('Set-Cookie', router.context.storage.cookies!.getCookies())
 
-      if (data) {
-        res.setHeader('content-type', 'application/json')
-        return res.end(JSON.stringify(data))
-      } else {
-        return res.end()
-      }
-    }
-  }
-  if (req.headers.accept?.includes('text/html')) {
-    const router = AppContext.getContext().router
-    if (router && req.originalUrl) {
-      router.setUrl(req.originalUrl)
-      const cookies = new Cookies(req.headers.cookie)
-      router.context = {
-        storage: {
-          cookies,
-        },
-      }
-      // reset router state
-      router.clearCache()
-      router.statusCode = 200
-      router.statusMessage = 'success'
-
-      try {
-        await router.load({ req, res })
-      } catch (e: any) {
-        if (isRedirectError(e)) {
-          res.writeHead((e as RedirectError).getRedirectStatus(), { Location: (e as RedirectError).getPath() })
+      if (isJsonResponse) {
+        if (data) {
+          res.setHeader('content-type', 'application/json')
+          return res.end(JSON.stringify(data))
+        } else {
           return res.end()
         }
+      } else {
+        const html = renderToString(createElement(Router, { router: router }))
+        const processedHTML = await processHTMLTags(router, html, AppContext.getContext().vite, req)
+        res.setHeader('Content-Type', 'text/html')
+        return res.end(processedHTML)
       }
-
-      const html = renderToString(createElement(Router, { router: router }))
-      const processedHTML = await processHTMLTags(router, html, AppContext.getContext().vite, req)
-      res.setHeader('Content-Type', 'text/html')
-      res.statusCode = router.statusCode
-      res.statusMessage = router.statusMessage
-      res.setHeader('Set-Cookie', cookies.getCookies())
-      return res.end(processedHTML)
     }
   }
-}
+})

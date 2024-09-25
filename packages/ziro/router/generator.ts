@@ -147,7 +147,6 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     }>({
   ${`${generateCodeFromModuleInfo('component', 'default', rootImportName, rootModuleInfo.hasComponent)}
   ${rootModuleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify('_root')}, router),` : ''}
-  ${generateCodeFromModuleInfo('actions', 'actions', rootImportName, rootModuleInfo.hasActions)}
   ${generateCodeFromModuleInfo('meta', 'meta', rootImportName, rootModuleInfo.hasMeta)}
   ${generateCodeFromModuleInfo('loadingComponent', 'Loading', rootImportName, rootModuleInfo.hasLoading)}
   ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', rootImportName, rootModuleInfo.hasError)}
@@ -193,7 +192,7 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
       loadingComponent: routeModule.Loading,
       errorComponent: routeModule.ErrorComponent,
       middlewares: routeModule.middlewares,
-      action: routeModule.action,
+      actions: routeModule.actions,
     }
     if (isLayout) flatRoutes[`${importName}Route`] = router.addLayoutRoute(routeProps)
     else flatRoutes[`${importName}Route`] = router.addRoute(routeProps)

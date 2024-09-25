@@ -5,14 +5,12 @@ export const middlewares = [auth]
 
 export const loader = async (ctx: LoaderArgs<'/dashboard'>) => {
   return {
-    user: {
-      name: ctx.dataContext.user.name,
-    },
+    user: ctx.dataContext.user,
   }
 }
 
 export default function Dashboard(props: RouteProps<'/dashboard'>) {
-  return <span>{props.loaderData.user.name}</span>
+  return <span>{props.loaderData.user.username}</span>
 }
 
 export const Loading = () => {

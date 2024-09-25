@@ -8,7 +8,13 @@ export default function MainLayout({ dataContext }: RouteProps<'/pokes/_layout'>
         <Link to="/" className="text-blue-400 underline">
           Home page
         </Link>
-        <Link href="/pokes/pikachu" className="text-blue-400 underline">
+        <Link
+          to="/pokes/:pokemon"
+          params={{
+            pokemon: 'yo',
+          }}
+          className="text-blue-400 underline"
+        >
           Pokes
         </Link>
         <Link href="/dashboard" className="text-blue-400 underline">
