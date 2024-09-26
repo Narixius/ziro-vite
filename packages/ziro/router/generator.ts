@@ -165,7 +165,9 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     imp.meta!.moduleInfo = moduleInfo
     routerContent += `const ${importName}Route = router.${!isLayout ? 'addRoute' : 'addLayoutRoute'}<${
       isLayout
-        ? `typeof ${imp.meta!.parentLayout}Route, ${moduleInfo.hasLoader ? `typeof ${importName}.loader` : '{}'}, ${moduleInfo.hasMiddleware ? `typeof ${importName}.middlewares` : '[]'}`
+        ? `typeof ${imp.meta!.parentLayout}Route, ${moduleInfo.hasLoader ? `Awaited<ReturnType<typeof ${importName}.loader>>` : '{}'}, ${
+            moduleInfo.hasMiddleware ? `typeof ${importName}.middlewares` : '[]'
+          }`
         : `'${imp.meta!.fullPath}', typeof ${imp.meta!.parentLayout}Route, ${moduleInfo.hasLoader ? `Awaited<ReturnType<typeof ${importName}.loader>>` : '{}'}, ${
             moduleInfo.hasActions ? `typeof ${importName}.actions` : '{}'
           }, ${moduleInfo.hasMiddleware ? `typeof ${importName}.middlewares` : '[]'}`
