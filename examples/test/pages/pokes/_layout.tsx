@@ -23,22 +23,41 @@ export const Loading = () => {
 
 export default function PokesLayout(props: RouteProps<'/pokes/_layout'>) {
   return (
-    <div>
-      <p>Pokemons</p>
+    <div className="flex flex-col">
       <div className="flex gap-2">
-        {props.loaderData.pokemons.map(pokemon => {
-          return (
-            <Link to="/pokes/:pokemon" key={pokemon} params={{ pokemon }} className="text-blue-400 underline">
-              {pokemon}
-            </Link>
-          )
-        })}
-
-        <Link href="/pokes/not-found-pokemon" className="text-blue-400 underline">
-          invalid pokemon
+        <Link to="/" className="text-blue-400 underline">
+          Home page
+        </Link>
+        <Link
+          to="/pokes/:pokemon"
+          params={{
+            pokemon: 'yo',
+          }}
+          className="text-blue-400 underline"
+        >
+          Pokes
+        </Link>
+        <Link href="/dashboard" className="text-blue-400 underline">
+          Dashboard
         </Link>
       </div>
-      <Outlet />
+      <div>
+        <p>Pokemons</p>
+        <div className="flex gap-2">
+          {props.loaderData.pokemons.map(pokemon => {
+            return (
+              <Link to="/pokes/:pokemon" key={pokemon} params={{ pokemon }} className="text-blue-400 underline">
+                {pokemon}
+              </Link>
+            )
+          })}
+
+          <Link href="/pokes/not-found-pokemon" className="text-blue-400 underline">
+            invalid pokemon
+          </Link>
+        </div>
+        <Outlet />
+      </div>
     </div>
   )
 }
