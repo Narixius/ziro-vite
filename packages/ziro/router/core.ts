@@ -52,8 +52,8 @@ export function defineAction<TBodySchema extends z.ZodSchema, TResult>(
   return args
 }
 
-export type ActionSchema<T> = T extends { input: infer TSchema; handler: (body: any, ctx: any) => Promise<any> } ? (TSchema extends z.ZodSchema ? z.infer<TSchema> : any) : unknown
-export type ActionResult<T> = T extends { input: any; handler: (body: any, ctx: any) => Promise<infer TResult> } ? TResult : unknown
+export type ActionSchema<T> = T extends { handler: (body: infer TSchema, ctx: any) => Promise<any> } ? TSchema : unknown
+export type ActionResult<T> = T extends { handler: (body: any, ctx: any) => Promise<infer TResult> } ? TResult : unknown
 
 export type Action<TInput extends any> = { input: TInput; handler: (body: TInput extends z.ZodSchema ? z.infer<TInput> : any, ctx: any) => Promise<any> }
 export type Actions = Record<string, Action<any>>
@@ -72,7 +72,7 @@ export const DEFAULT_ROOT_PATH = '_root'
 export interface FileRoutesByPath {}
 
 export type GetRouteLoader<TRoute extends AnyRoute> = TRoute extends AnyRoute<any, any, infer TLoaderData> ? TLoaderData : {}
-export type GetRouteActions<TRoute extends AnyRoute> = TRoute extends AnyRoute<any, any, any, infer Actions> ? Actions : {}
+export type GetRouteActions<TRoute extends AnyRoute> = TRoute extends AnyRoute<any, any, any, infer TActions> ? TActions : {}
 
 export type ParsePathParams<T extends string, TAcc = never> = T extends `${string}:${infer TPossiblyParam}`
   ? TPossiblyParam extends `${infer TParam}/${infer TRest}`
@@ -161,14 +161,14 @@ export type AnyRoute<
   TPath extends string = any,
   TParent extends AnyRoute = any,
   TLoaderData = any,
-  TActionData extends Actions = {},
+  TActionData = {},
   TMiddlewares extends RouteMiddleware<TPath, TParent>[] = RouteMiddleware<TPath, TParent>[],
 > = ZiroRoute<TPath, TParent, TLoaderData, TActionData, TMiddlewares>
 
 export type ZiroRouteErrorComponent = ComponentType<ErrorComponentProps>
 type RouteMiddleware<TPath extends RouteId, TParentRoute> = { name: string; handler: (props: LoaderArgs<TPath>) => Promise<unknown> }
 
-export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TActions extends Actions, TMiddlewares extends RouteMiddleware<TPath, TParentRoute>[]> {
+export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TActions, TMiddlewares extends RouteMiddleware<TPath, TParentRoute>[]> {
   private hooks = createHooks<ZeroRouteHooks<TLoaderData, TActions, TPath>>()
 
   constructor(
