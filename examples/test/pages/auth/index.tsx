@@ -70,10 +70,8 @@ export default function AuthPage() {
             </FormControl>
             <FormMessage />
           </FormField>
-
           <FormRootMessage />
-
-          <Button className="w-full" variant="default">
+          <Button className="w-full mt-3" variant="default">
             {login.isSubmitting ? 'Signing in...' : 'Sign in'}
           </Button>
         </Form>
