@@ -9,5 +9,11 @@
 			"./.ziro/routes.d.ts"
 		],
 		"moduleResolution": "Bundler",
+		"baseUrl": ".",
+		"paths": {
+			"@/*": [
+				"./*"
+			]
+		}
 	}
 }

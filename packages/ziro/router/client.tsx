@@ -4,7 +4,7 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { withQuery } from 'ufo'
 import { SWRCacheProvider } from './cache/context.js'
 import { useSWRStore } from './cache/useSwr.js'
-import { ActionResult, ActionSchema, AlsoAllowString, AnyRoute, DEFAULT_ROOT_PATH, FileRoutesByPath, RouteId, SafeRouteParams, ZiroRoute, ZiroRouter } from './core.js'
+import { ActionResult, ActionSchema, AnyRoute, DEFAULT_ROOT_PATH, FileRoutesByPath, RouteId, SafeRouteParams, ZiroRoute, ZiroRouter } from './core.js'
 import DefaultErrorComponent from './default-error-component.js'
 
 type RouterProviderType = { router: ZiroRouter }
@@ -200,35 +200,23 @@ export type TUseActions<TInputSchema, TResult> = {
   errors?: Partial<TInputSchema & { _root: string }>
 }
 
-export const useAction = <TPath extends keyof FileRoutesByPath, TActionName extends AlsoAllowString<keyof FileRoutesByPath[TPath]['actions']>>(
+export const useAction = <TPath extends keyof FileRoutesByPath, TActionName extends keyof FileRoutesByPath[TPath]['actions']>(
   destination: SafeRouteParams<TPath> extends undefined
     ? {
         url: TPath
         action: TActionName
-        onSuccess?: (
-          data: TPath extends keyof FileRoutesByPath ? (TActionName extends keyof FileRoutesByPath[TPath]['actions'] ? ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]> : any) : any,
-        ) => void | Promise<void>
+        onSuccess?: (data: ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]>) => void | Promise<void>
       }
     : {
         url: TPath
         params: SafeRouteParams<TPath>
         action: TActionName
-        onSuccess?: (
-          data: TPath extends keyof FileRoutesByPath ? (TActionName extends keyof FileRoutesByPath[TPath]['actions'] ? ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]> : any) : any,
-        ) => void | Promise<void>
+        onSuccess?: (data: ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]>) => void | Promise<void>
       },
-): TPath extends keyof FileRoutesByPath
-  ? TActionName extends keyof FileRoutesByPath[TPath]['actions']
-    ? TUseActions<ActionSchema<FileRoutesByPath[TPath]['actions'][TActionName]>, ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]>>
-    : TUseActions<any, any>
-  : TUseActions<any, any> => {
+): TUseActions<ActionSchema<FileRoutesByPath[TPath]['actions'][TActionName]>, ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]>> => {
   const actionURL = withQuery(ZiroRoute.fillRouteParams(destination.url, (destination as any).params || {}), { action: destination.action.toString() })
 
-  type TResult = TPath extends keyof FileRoutesByPath
-    ? TActionName extends keyof FileRoutesByPath[TPath]['actions']
-      ? TUseActions<ActionSchema<FileRoutesByPath[TPath]['actions'][TActionName]>, ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]>>
-      : TUseActions<any, any>
-    : TUseActions<any, any>
+  type TResult = TUseActions<ActionSchema<FileRoutesByPath[TPath]['actions'][TActionName]>, ActionResult<FileRoutesByPath[TPath]['actions'][TActionName]>>
 
   const actionCacheKey = `action:` + ZiroRoute.generateRouteUniqueKey(destination.url, ZiroRoute.fillRouteParams(destination.url, (destination as any).params || {}))
   const store = useSWRStore(actionCacheKey, async () => ({}))
@@ -238,7 +226,8 @@ export const useAction = <TPath extends keyof FileRoutesByPath, TActionName exte
   const [errors, setErrors] = useState<TResult['errors']>(isError ? store.data.errors : undefined)
   const defaultValues = isError && store.data.input
   const router = useRouter()!
-  const post = (body: any) => {
+
+  const post = (body: any): ReturnType<TResult['submit']> => {
     return $fetch
       .raw<TResult['data']>(actionURL, {
         method: 'post',
@@ -254,14 +243,15 @@ export const useAction = <TPath extends keyof FileRoutesByPath, TActionName exte
           return
         }
         setData(response._data)
+        return response!._data!
       })
       .catch(error => {
         if (error?.data?.errors) setErrors(error?.data?.errors)
-        else throw error
+        throw error
       })
       .finally(() => {
         setSubmittion(false)
-      })
+      }) as ReturnType<TResult['submit']>
   }
 
   const submit: TResult['submit'] = post

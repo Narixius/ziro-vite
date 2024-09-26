@@ -7,7 +7,7 @@ export const middlewares = [auth]
 
 export const actions = {
   logout: defineAction({
-    handler: async (body, { utils }: ActionArgs<'/dashboard'>) => {
+    handler: async (_, { utils }: ActionArgs<'/dashboard'>) => {
       await logout(utils.storage.cookies!)
       return redirect('/auth')
     },
