@@ -7,6 +7,7 @@ import { sharedContext } from './commands/shared.js'
 runMain(
   defineCommand({
     async setup() {
+      console.clear()
       console.log()
       const ziroPackageJson = await readPackageJSON(new URL('../../package.json', import.meta.url).toString())
       sharedContext.version = ziroPackageJson.version!

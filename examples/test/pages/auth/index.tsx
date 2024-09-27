@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormLabel, FormMessage, FormRootMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { ActionArgs, defineAction, LoaderArgs } from 'ziro/router'
-import { useAction, useRouter } from 'ziro/router/client'
+import { useAction } from 'ziro/router/client'
 import { redirect } from 'ziro/router/redirect'
 import { z } from 'zod'
 import { login } from '../../middlewares/auth'
@@ -38,14 +38,9 @@ export const actions = {
 }
 
 export default function AuthPage() {
-  const router = useRouter()
-
   const login = useAction({
     url: '/auth',
     action: 'login',
-    onSuccess() {
-      router!.push('/dashboard')
-    },
   })
 
   return (
@@ -66,7 +61,7 @@ export default function AuthPage() {
           <FormField name="password">
             <FormLabel>Password</FormLabel>
             <FormControl>
-              <Input {...login.registerInput('password')} />
+              <Input type="password" {...login.registerInput('password')} />
             </FormControl>
             <FormMessage />
           </FormField>
@@ -78,4 +73,8 @@ export default function AuthPage() {
       </CardContent>
     </Card>
   )
+}
+
+export const Loading = () => {
+  return <span>Auth Loading...</span>
 }

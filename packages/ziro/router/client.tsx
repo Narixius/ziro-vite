@@ -245,6 +245,13 @@ export const useAction = <TPath extends keyof FileRoutesByPath, TActionName exte
         setData(response._data)
         return response!._data!
       })
+      .then(data => {
+        if (destination.onSuccess) {
+          destination.onSuccess(data!)
+          return data!
+        }
+        return data!
+      })
       .catch(error => {
         if (error?.data?.errors) setErrors(error?.data?.errors)
         throw error

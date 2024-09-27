@@ -28,17 +28,14 @@ export default function PokesLayout(props: RouteProps<'/pokes/_layout'>) {
         <Link to="/" className="text-blue-400 underline">
           Home page
         </Link>
-        <Link
-          to="/pokes/:pokemon"
-          params={{
-            pokemon: 'yo',
-          }}
-          className="text-blue-400 underline"
-        >
+        <Link to="/pokes" className="text-blue-400 underline">
           Pokes
         </Link>
         <Link href="/dashboard" className="text-blue-400 underline">
           Dashboard
+        </Link>
+        <Link to="/auth" className="text-blue-400 underline">
+          Signin
         </Link>
       </div>
       <div>
