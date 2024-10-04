@@ -2,17 +2,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormLabel, FormMessage, FormRootMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { todos } from '@/pages/todo/todo'
 import { v4 as uuid } from 'uuid'
 import { defineAction, LoaderProps, RouteProps } from 'ziro/router'
 import { useAction } from 'ziro/router/client'
 import { z } from 'zod'
-
-type Todo = {
-  id: string
-  title: string
-}
-
-const todos: Todo[] = []
 
 export const loader = async (props: LoaderProps<'/todo'>) => {
   return {
