@@ -48,7 +48,7 @@ const devCommand = defineCommand({
         AppContext.getContext().listener = server
         console.log()
         console.log(`   ${colors.green(`✔`)} ${colors.dim(`Server is running at:`)}`)
-        const maxTypeLength = Math.max(...(await server.getURLs()).map(serverUrl => serverUrl.type.length), 'network'.length) + 2
+        const maxTypeLength = Math.max(...(await server.getURLs()).map(serverUrl => serverUrl.type.length), 'network'.length) + 1
         ;(await server.getURLs()).forEach(serverUrl => {
           const paddedType = serverUrl.type.padEnd(maxTypeLength)
           console.log(`   ${colors.blue('🌐')}${colors.dim(upperFirst(paddedType))}: ${colors.whiteBright(colors.bold(colors.underline(serverUrl.url)))}`)
