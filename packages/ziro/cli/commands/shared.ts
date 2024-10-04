@@ -2,6 +2,7 @@ import { colors } from 'consola/utils'
 import { App as H3App } from 'h3'
 import { Listener } from 'listhen'
 import { ViteDevServer } from 'vite'
+import { ziroTitleText } from '../../constraints.js'
 import { ZiroRouter } from '../../router'
 
 export const sharedContext = {
@@ -9,7 +10,7 @@ export const sharedContext = {
 }
 
 export const printZiroHeader = () => {
-  console.log(`  ${colors.bold('Z۰RO')} ${colors.dim(`v${sharedContext.version}`)} ${colors.dim(`[Development]`)}`)
+  console.log(`  ${colors.bold(ziroTitleText)} ${colors.dim(`v${sharedContext.version}`)} ${colors.dim(`(Development)`)}`)
 }
 
 interface IAppContext {

@@ -1,8 +1,11 @@
+import { transform } from '@babel/core'
 import { defu } from 'defu'
 import { joinURL } from 'ufo'
 import { normalizePath, type Plugin } from 'vite'
 import { generateRouter } from '../router/generator.js'
 import { isRouteRelatedFile } from '../router/utils.js'
+import deadImportsRemover from './babel/dead-imports-remover.js'
+import serverCodeRemover from './babel/server-code-remover.js'
 
 export type ZiroConfig = Partial<{
   pagesDir: string
@@ -14,6 +17,8 @@ const defaultZiroConfig: Required<ZiroConfig> = {
 
 export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
   const config = defu(ziroConfig, defaultZiroConfig)
+  let dotZiroDirPath = joinURL(process.cwd(), '.ziro')
+  let pagesDirPath = joinURL(process.cwd(), config.pagesDir)
 
   return [
     {
@@ -34,8 +39,8 @@ export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
       },
 
       async configureServer(server) {
-        const dotZiroDirPath = joinURL(server.config.root, '.ziro')
-        const pagesDirPath = joinURL(server.config.root, config.pagesDir)
+        dotZiroDirPath = joinURL(server.config.root, '.ziro')
+        pagesDirPath = joinURL(server.config.root, config.pagesDir)
         generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server })
 
         server.watcher.on('all', async (eventName, filepath) => {
@@ -48,6 +53,26 @@ export const ziro = (ziroConfig: ZiroConfig): Plugin[] => {
         const dotZiroDirPath = joinURL(server.config.root, '.ziro')
         const pagesDirPath = joinURL(server.config.root, config.pagesDir)
         if (isRouteRelatedFile(pagesDirPath, file)) generateRouter({ rootDir: server.config.root, pagesDirPath, dotZiroDirPath, server, generateRouteFile: false })
+      },
+      transform(code, id, options) {
+        if (options && !options.ssr && isRouteRelatedFile(pagesDirPath, id)) {
+          const res = transform(code, {
+            filename: id,
+            targets: {
+              esmodules: true,
+            },
+            plugins: [serverCodeRemover(), deadImportsRemover()],
+          })
+
+          return transform(res!.code!, {
+            filename: id,
+            targets: {
+              esmodules: true,
+            },
+            plugins: [deadImportsRemover()],
+          })!.code!
+        }
+        return code
       },
       transformIndexHtml() {
         return [

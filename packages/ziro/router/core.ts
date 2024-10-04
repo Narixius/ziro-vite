@@ -122,14 +122,11 @@ export type MetaArgs<TPath extends RouteId> = {
   dataContext: GetRouteDataContext<TPath>
 }
 export type MetaReturnType = Promise<Head>
-export type MetaFn<TPath extends RouteId> = (args: MetaArgs<TPath>) => Promise<Head>
+export type MetaFn<TPath extends RouteId> = (args: MetaArgs<TPath>) => MetaReturnType
 
 export type AlsoAllowString<T> = T | (string & {})
-
 export type RouteId = AlsoAllowString<keyof FileRoutesByPath>
-
 export type LoaderProps<TPath extends RouteId> = LoaderArgs<TPath>
-
 export type MiddlewareProps<TPath extends RouteId> = LoaderProps<TPath>
 export type Middleware<TPath extends RouteId = '_root', ReturnType = unknown> = {
   name: string
@@ -735,7 +732,17 @@ const createRoute = <TPath extends string, TParentRoute extends AnyRoute, TLoade
 const createRootRoute = <TLoaderData = {}, TMiddlewares extends RouteMiddleware<'_root', undefined>[] = []>(
   options: Pick<ZiroRoute<'_root', undefined, TLoaderData, {}, TMiddlewares>, 'component' | 'loader' | 'loadingComponent' | 'errorComponent' | 'meta' | 'middlewares'>,
 ) => {
-  return new ZiroRoute(options.component, '_root', undefined, options.loader, undefined, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
+  return new ZiroRoute<'_root', unknown, TLoaderData, {}, TMiddlewares>(
+    options.component,
+    '_root',
+    undefined,
+    options.loader,
+    {},
+    options.loadingComponent,
+    options.errorComponent,
+    options.meta,
+    options.middlewares,
+  )
 }
 
 const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}, TMiddlewares extends RouteMiddleware<'', TParentRoute>[] = []>(
