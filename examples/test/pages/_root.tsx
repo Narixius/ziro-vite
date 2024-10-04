@@ -1,6 +1,6 @@
 import { LoaderArgs, MetaFn } from 'ziro/router'
 import { Body, Head, Html, Outlet } from 'ziro/router/client'
-import './styles.css'
+import baseStyle from './styles.css?url'
 
 export const meta: MetaFn<'_root'> = async ctx => {
   return {
@@ -8,6 +8,12 @@ export const meta: MetaFn<'_root'> = async ctx => {
     titleTemplate(title) {
       return `${title} | ${ctx.loaderData.version} `
     },
+    link: [
+      {
+        href: baseStyle,
+        rel: 'stylesheet',
+      },
+    ],
   }
 }
 
