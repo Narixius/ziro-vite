@@ -24,7 +24,7 @@ export class Middleware {
       params: params || {},
       request,
     }).then(data => {
-      cache?.set(cacheKey, data, Infinity)
+      if (data) cache?.set(cacheKey, data, Infinity)
     })
   }
 }
