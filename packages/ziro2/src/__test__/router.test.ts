@@ -66,7 +66,7 @@ describe('Router', () => {
 
   // Define the middleware to check if the user is authenticated
   const authMiddleware = new Middleware('authMiddleware', async ctx => {
-    if (!ctx.dataContext.data.user) {
+    if (!!!ctx.request.headers.get('authorization')) {
       throw new Error('User not authenticated')
     }
   })
@@ -248,9 +248,15 @@ describe('Router', () => {
   })
 
   it('should call the dashboard loader when loading the dashboard route if authenticated', async () => {
-    await router.load(new Request('http://localhost/auth'), cache) // Simulate authentication
-    // await router.load('get', '/dashboard', cache)
-    // expect(dashboardLoader).toHaveBeenCalled()
+    await router.load(
+      new Request('http://localhost/dashboard', {
+        headers: {
+          authorization: 'Bearer token',
+        },
+      }),
+      cache,
+    )
+    expect(dashboardLoader).toHaveBeenCalled()
   })
 
   it('should throw an error when loading the dashboard route if not authenticated', async () => {
