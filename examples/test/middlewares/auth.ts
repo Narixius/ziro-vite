@@ -1,10 +1,9 @@
 import { base64url, jwtVerify, SignJWT } from 'jose'
-import { LoaderArgs } from 'ziro/router'
-import { redirect } from 'ziro/router/redirect'
+import { LoaderArgs, redirect } from 'ziro/router'
 import { Cookies } from '../../../packages/ziro/dist/router/storage/cookies'
 
-export const auth = {
-  name: 'auth',
+export const authGuard = {
+  name: 'AUTH-GUARD',
   handler: async ({ utils }: LoaderArgs<'/'>) => {
     const token = utils.storage.cookies?.get(COOKIE_KEY)
     if (!token) return redirect('/auth')
@@ -18,6 +17,18 @@ export const auth = {
     }
   },
 }
+
+export const guestGuard = {
+  name: 'GUEST-GUARD',
+  handler: async ({ utils }: LoaderArgs<'/'>) => {
+    const token = utils.storage.cookies?.get(COOKIE_KEY)
+    if (token && (await verifyToken(token))) {
+      redirect('/dashboard')
+    }
+    return {}
+  },
+}
+
 const jwtKey = base64url.decode('1g4Zt7C+jEftICFoPagQrRRM4oJf1OaRr0vv2byVJTxwY6ePjjopE1x2RkUqudz5ffB+x+FB0oFHbtV6uNz3/A==')
 const COOKIE_KEY = 'auth'
 

@@ -1,14 +1,14 @@
 import { Head, Unhead } from '@unhead/schema'
 import { NodeEventContext } from 'h3'
 import { createHooks } from 'hookable'
-import { isArray, last } from 'lodash-es'
+import { isArray, last, omit } from 'lodash-es'
 import { ComponentType } from 'react'
 import { FallbackProps as ReactErrorBoundaryComponentProps } from 'react-error-boundary'
 import { RouterContext, addRoute as addRou3Route, createRouter as createRou3Router, findRoute } from 'rou3'
 import { getQuery, joinURL, parsePath } from 'ufo'
 import { createHead } from 'unhead'
 import { ZodSchema, z } from 'zod'
-import { abort } from './abort.js'
+import { abort, isAbortError } from './abort.js'
 import { SWRCache } from './cache/swr.js'
 import DefaultErrorComponent from './default-error-component.js'
 import DefaultRootRoute from './default-root.js'
@@ -314,11 +314,11 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
     }
   }
 
-  public async loadAction({ isTargetRoute, ignoreCache = false, actionName }: { isTargetRoute?: boolean; ignoreCache?: boolean; actionName: string }) {
+  public async loadAction({ isTargetRoute, ignoreCache = false }: { isTargetRoute?: boolean; ignoreCache?: boolean }) {
     try {
       return await this.loadMiddlewares(ignoreCache)
         .then(async () => {
-          if (isTargetRoute) await this.loadActionData(actionName, ignoreCache)
+          if (isTargetRoute) await this.loadActionData(ignoreCache)
         })
         .then(() => {
           return this.actionData
@@ -334,15 +334,22 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
     }
   }
 
-  public async loadActionData(actionName: string, ignoreCache: boolean = false) {
+  public async loadActionData(ignoreCache: boolean = false) {
     if (!this.actions) {
       this.setActionData({})
       return
     }
 
     const handler = async () => {
+      const url = this.router!.url!
+      const query = getQuery(url)
+      const queryActionName = query.action
+      let actionName = query.action || 'default'
+      if (isArray(queryActionName)) actionName = last(queryActionName)!
+      const preserveValue = query.pv
+      const excludedFields = query.ef
       const data = await this.router?.serverContext?.getBody()
-      const schema = this.actions![actionName].input as ZodSchema
+      const schema = this.actions![actionName.toString()].input as ZodSchema
       let handlerInput = data
       if (schema) {
         const validation = schema.safeParse(data)
@@ -351,26 +358,40 @@ export class ZiroRoute<TPath extends RouteId, TParentRoute, TLoaderData, TAction
           this.router!.statusCode = 400
           const res = {
             errors: createValidationErrors(validation.error),
-            input: data,
+            input: preserveValue ? omit(data, excludedFields || []) : undefined,
           }
           this.setActionData(res)
           return res
         }
         handlerInput = validation.data
       }
-      return this.actions![actionName].handler(handlerInput, {
+      return this.actions![actionName.toString()].handler(handlerInput, {
         params: this.params!,
         dataContext: this.dataContext!,
         utils: this.router!.context,
         serverContext: this.router!.serverContext,
-      }).then(data => {
-        if ('errors' in data) {
-          this.router!.statusMessage = 'Invalid input'
-          this.router!.statusCode = 400
-        }
-        this.setActionData(data)
-        return data
       })
+        .then(data => {
+          if ('errors' in data) {
+            this.router!.statusMessage = 'Invalid input'
+            this.router!.statusCode = 400
+          }
+          this.setActionData(data)
+          return data
+        })
+        .catch(error => {
+          if (isRedirectError(error) || isAbortError(error)) throw error
+          const errorMessage = error.message
+          const d = {
+            errors: {
+              _root: errorMessage,
+            },
+            input: preserveValue ? omit(data, excludedFields || []) : undefined,
+          }
+          if (this.router) this.router.statusCode = 401
+          this.setActionData(d)
+          return d
+        })
       // TODO: handle selected action
     }
 
@@ -642,13 +663,10 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
         if (this.url) {
           const tree = this.flatLookup(this.url, 'POST')
           if (tree[tree.length - 1].actions) {
-            const queryActionName = getQuery(this.url).action
-            let actionName = getQuery(this.url).action || 'default'
-            if (isArray(queryActionName)) actionName = last(queryActionName)!
             this.serverContext = serverContext
             for (const route of tree) {
               const isTargetRoute = route === tree[tree.length - 1]
-              await route.loadAction({ isTargetRoute, ignoreCache, actionName: String(actionName) }).then(data => {
+              await route.loadAction({ isTargetRoute, ignoreCache }).then(data => {
                 if (isTargetRoute) actionData = data
               })
             }
@@ -668,6 +686,7 @@ export const createRouter = (opts: CreateRouterOptions = {}): ZiroRouter => {
     async load(serverContext, ignoreCache) {
       let loaderData = null
       this.dehydrate = true
+      this.head = createHead()
       if (this.url) {
         const tree = this.flatLookup(this.url)
         let errorHandlerRoute = null
@@ -750,5 +769,15 @@ const createLayoutRoute = <TParentRoute extends AnyRoute, TLoaderData = {}, TMid
     id: string
   },
 ) => {
-  return new ZiroRoute(options.component, options.id, options.parent, options.loader, undefined, options.loadingComponent, options.errorComponent, options.meta, options.middlewares)
+  return new ZiroRoute<typeof options.id, TParentRoute, TLoaderData, {}, TMiddlewares>(
+    options.component,
+    options.id,
+    options.parent,
+    options.loader,
+    undefined,
+    options.loadingComponent,
+    options.errorComponent,
+    options.meta,
+    options.middlewares,
+  )
 }

@@ -1,8 +1,7 @@
-import { Body, Head, Html } from './client.js'
+import { Body, Head, Html } from './client/index.js'
 
 export default function ErrorHandler({ error, resetErrorBoundary, ...rest }: any) {
   //   debugger
-  //   console.log(rest.isRootRendered)
   const content = (
     <div
       style={{

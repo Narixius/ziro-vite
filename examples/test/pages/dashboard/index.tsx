@@ -1,9 +1,8 @@
-import { ActionArgs, defineAction, LoaderArgs, RouteProps } from 'ziro/router'
-import { useAction } from 'ziro/router/client'
-import { redirect } from 'ziro/router/redirect'
-import { auth, logout } from '../../middlewares/auth'
+import { ActionArgs, defineAction, LoaderArgs, redirect, RouteProps } from 'ziro/router'
+import { useAction } from 'ziro/router/hooks'
+import { authGuard, logout } from '../../middlewares/auth'
 
-export const middlewares = [auth]
+export const middlewares = [authGuard]
 
 export const actions = {
   logout: defineAction({

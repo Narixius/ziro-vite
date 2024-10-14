@@ -4,7 +4,7 @@ import * as LabelPrimitive from '@radix-ui/react-label'
 import { Slot } from '@radix-ui/react-slot'
 import { ComponentPropsWithoutRef, createContext, ElementRef, FC, forwardRef, HTMLAttributes, useContext, useId } from 'react'
 import { FieldPath, FieldValues } from 'react-hook-form'
-import { TUseActions } from 'ziro/router/client'
+import { TUseActions } from 'ziro/router/hooks'
 
 type TForm = Pick<TUseActions<any, any>, 'form' | 'errors'>
 

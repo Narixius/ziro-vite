@@ -12,10 +12,16 @@ import { findParentDir, generateImportName, generateRouterPath, getImportPath, i
 
 export type GenerateRouterFunction = (options: { rootDir: string; pagesDirPath: string; dotZiroDirPath: string; server: ViteDevServer; generateRouteFile?: boolean }) => Promise<void>
 
-const generateCodeFromModuleInfo = (key: string, prop: string, moduleImportName: string, has: boolean) => {
+const generateCodeFromModuleInfo = (key: string, prop: string, moduleImportName: string, has: boolean, importPath: string, basePath: string) => {
   if (key === 'middlewares') return ''
+
   if (has) {
-    return `${key}: ${moduleImportName}.${prop},`
+    if (['component', 'loadingComponent', 'errorComponent'].includes(key)) {
+      return `${key}: lazy(()=>import(${JSON.stringify(getImportPath(basePath, importPath))})),`
+    }
+    return `${key}: async (...options) => {
+    ;(await import(${JSON.stringify(getImportPath(basePath, importPath))})).${prop}(...options)
+  },`
   }
   return ''
 }
@@ -50,6 +56,10 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     {
       name: 'GetRouteActions',
       from: 'ziro/router',
+    },
+    {
+      name: 'lazy',
+      from: 'react',
     },
   )
 
@@ -145,12 +155,12 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     routerContent += `const ${rootImportName}Route = router.setRootRoute<${rootModuleInfo.hasLoader ? `Awaited<ReturnType<typeof ${rootImportName}.loader>>` : '{}'}, ${
       rootModuleInfo.hasMiddleware ? `typeof ${rootImportName}.middlewares` : '[]'
     }>({
-  ${`${generateCodeFromModuleInfo('component', 'default', rootImportName, rootModuleInfo.hasComponent)}
+  ${`${generateCodeFromModuleInfo('component', 'default', rootImportName, rootModuleInfo.hasComponent, rootPath, dotZiroDirPath)}
   ${rootModuleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify('_root')}, router),` : ''}
-  ${generateCodeFromModuleInfo('meta', 'meta', rootImportName, rootModuleInfo.hasMeta)}
-  ${generateCodeFromModuleInfo('loadingComponent', 'Loading', rootImportName, rootModuleInfo.hasLoading)}
-  ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', rootImportName, rootModuleInfo.hasError)}
-  ${generateCodeFromModuleInfo('middlewares', 'middlewares', rootImportName, rootModuleInfo.hasMiddleware)}`.trim()}
+  ${generateCodeFromModuleInfo('meta', 'meta', rootImportName, rootModuleInfo.hasMeta, rootPath, dotZiroDirPath)}
+  ${generateCodeFromModuleInfo('loadingComponent', 'Loading', rootImportName, rootModuleInfo.hasLoading, rootPath, dotZiroDirPath)}
+  ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', rootImportName, rootModuleInfo.hasError, rootPath, dotZiroDirPath)}
+  ${generateCodeFromModuleInfo('middlewares', 'middlewares', rootImportName, rootModuleInfo.hasMiddleware, rootPath, dotZiroDirPath)}`.trim()}
 })
 `
   } else {
@@ -174,13 +184,14 @@ export const generateRouter: GenerateRouterFunction = async ({ rootDir, pagesDir
     }>({
   ${isLayout ? `id: '${imp.meta!.fullPath}',` : `path: '${imp.meta!.fullPath}',`}
   parent: ${imp.meta!.parentLayout}Route,
-  ${`${generateCodeFromModuleInfo('component', 'default', importName, moduleInfo.hasComponent)}
+  ${`
+  ${moduleInfo.hasComponent ? `component: lazy(()=>import(${JSON.stringify(getImportPath(dotZiroDirPath, moduleInfo.filepath))})),` : ''}
   ${moduleInfo.hasLoader ? `loader: clientLoader(${JSON.stringify(imp.meta!.fullPath)}, router),` : ''}
-  ${generateCodeFromModuleInfo('actions', 'actions', importName, moduleInfo.hasActions)}
-  ${generateCodeFromModuleInfo('meta', 'meta', importName, moduleInfo.hasMeta)}
-  ${generateCodeFromModuleInfo('loadingComponent', 'Loading', importName, moduleInfo.hasLoading)}
-  ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', importName, moduleInfo.hasError)}
-  ${generateCodeFromModuleInfo('middlewares', 'middlewares', importName, moduleInfo.hasMiddleware)}`.trim()}
+  /*${generateCodeFromModuleInfo('actions', 'actions', importName, moduleInfo.hasActions, imp.meta?.filePath, dotZiroDirPath)}*/
+  ${generateCodeFromModuleInfo('meta', 'meta', importName, moduleInfo.hasMeta, imp.meta?.filePath, dotZiroDirPath)}
+  ${generateCodeFromModuleInfo('loadingComponent', 'Loading', importName, moduleInfo.hasLoading, imp.meta?.filePath, dotZiroDirPath)}
+  ${generateCodeFromModuleInfo('errorComponent', 'ErrorComponent', importName, moduleInfo.hasError, imp.meta?.filePath, dotZiroDirPath)}
+  /*${generateCodeFromModuleInfo('middlewares', 'middlewares', importName, moduleInfo.hasMiddleware, imp.meta?.fullPath, dotZiroDirPath)}*/`.trim()}
 })
 `
     const routeModule = await server.ssrLoadModule(imp.meta!.filePath)

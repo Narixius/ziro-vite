@@ -1,7 +1,7 @@
 import { PluginObj } from '@babel/core'
 import { ziroTitleText } from '../../constraints.js'
 
-const serverOnlyExports = ['loader', 'actions']
+const serverOnlyExports = ['loader', 'actions', 'middlewares']
 
 export default function serverCodeRemover(): PluginObj {
   const pluginName = `[${ziroTitleText}] server-code-remover`

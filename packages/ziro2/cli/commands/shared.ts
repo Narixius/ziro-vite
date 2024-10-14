@@ -3,7 +3,7 @@ import { App as H3App } from 'h3'
 import { Listener } from 'listhen'
 import { ViteDevServer } from 'vite'
 import { ziroTitleText } from '../../constraints.js'
-import { ZiroRouter } from '../../router'
+import { Router } from '../../src/Router.js'
 
 export const sharedContext = {
   version: 'N/A',
@@ -15,7 +15,7 @@ export const printZiroHeader = () => {
 
 interface IAppContext {
   version: string
-  router: ZiroRouter
+  router: Router
   h3: H3App
   listener: Listener
   vite: ViteDevServer

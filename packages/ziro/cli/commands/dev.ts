@@ -6,7 +6,7 @@ import { upperFirst } from 'lodash-es'
 import { createElement } from 'react'
 import { renderToString } from 'react-dom/server'
 import { createServer } from 'vite'
-import { Router } from '../../router/client.js'
+import { Router } from '../../router/client/components.js'
 import { isRedirectError, RedirectError } from '../../router/redirect.js'
 import { Cookies } from '../../router/storage/cookies.js'
 import { processHTMLTags } from '../../vite/html-generator.js'
@@ -47,13 +47,13 @@ const devCommand = defineCommand({
       .then(async server => {
         AppContext.getContext().listener = server
         console.log()
-        console.log(`   ${colors.green(`✔`)} ${colors.dim(`Server is running at:`)}`)
+        console.log(`  ${colors.green(`✔`)} ${colors.dim(`Server is running at:`)}`)
         const maxTypeLength = Math.max(...(await server.getURLs()).map(serverUrl => serverUrl.type.length), 'network'.length) + 1
         ;(await server.getURLs()).forEach(serverUrl => {
           const paddedType = serverUrl.type.padEnd(maxTypeLength)
-          console.log(`   ${colors.blue('🌐')}${colors.dim(upperFirst(paddedType))}: ${colors.whiteBright(colors.bold(colors.underline(serverUrl.url)))}`)
+          console.log(`  ${colors.blue('🌐')}${colors.dim(upperFirst(paddedType))}: ${colors.whiteBright(colors.bold(colors.underline(serverUrl.url)))}`)
         })
-        if (!host) console.log(`   ${colors.dim('✘')} ${colors.dim('Network'.padEnd(maxTypeLength) + ':')} ${colors.dim('use --host to expose network access')}`)
+        if (!host) console.log(`  ${colors.dim('✘')} ${colors.dim('Network'.padEnd(maxTypeLength) + ':')} ${colors.dim('use --host to expose network access')}`)
         console.log()
       })
       .then(runDevServer)

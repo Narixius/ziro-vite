@@ -1,4 +1,4 @@
-import { Body, Head, Html, Outlet } from './client.js'
+import { Body, Head, Html, Outlet } from './client/index.js'
 
 const RootPage = () => {
   return (

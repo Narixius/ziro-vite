@@ -2,17 +2,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormLabel, FormMessage, FormRootMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { ActionArgs, defineAction, LoaderArgs } from 'ziro/router'
-import { useAction } from 'ziro/router/client'
-import { redirect } from 'ziro/router/redirect'
+import { guestGuard, login } from '@/middlewares/auth'
+import { ActionArgs, defineAction, redirect } from 'ziro/router'
+import { useAction } from 'ziro/router/hooks'
 import { z } from 'zod'
-import { login } from '../../middlewares/auth'
 
-export const loader = async (args: LoaderArgs<'/auth'>) => {
-  return {
-    ok: true,
-  }
-}
+export const middlewares = [guestGuard]
 
 export const actions = {
   login: defineAction({
@@ -26,12 +21,7 @@ export const actions = {
           await login({ username: input.username }, utils.storage.cookies!)
           return redirect('/dashboard')
         }
-        return {
-          errors: {
-            _root: 'Invalid username or password',
-          },
-          input,
-        }
+        throw new Error('Invalid username or password')
       }
     },
   }),
@@ -41,6 +31,10 @@ export default function AuthPage() {
   const login = useAction({
     url: '/auth',
     action: 'login',
+    preserveValues: {
+      enabled: true,
+      exclude: ['password'],
+    },
   })
 
   return (
