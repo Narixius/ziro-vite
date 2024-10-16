@@ -2,29 +2,36 @@ import { Cache } from './Cache'
 import { DataContext } from './RouteDataContext'
 
 export class Middleware {
-  constructor(public name: string, private handler: (ctx: { dataContext: DataContext; request: Request; params: Record<string, string> }) => Promise<any>) {}
+  constructor(public name: string, public handler: (ctx: { dataContext: DataContext; request: Request; params: Record<string, string> }) => Promise<any>) {}
 
-  generateCacheKey(params?: Record<string, string>): string {
-    const paramString = Object.entries(params || {})
-      .map(([key, value]) => `${key}:${value}`)
-      .join('|')
-    return `${this.name}|${paramString}`
+  generateCacheKey(): string {
+    return `${this.name}`
   }
 
-  async execute(dataContext: DataContext, request: Request, params?: Record<string, string>, cache?: Cache) {
-    const cacheKey = this.generateCacheKey(params)
+  async execute(dataContext: DataContext, request: Request, params: Record<string, string> = {}, cache?: Cache) {
+    const cacheKey = this.generateCacheKey()
     const cachedData = cache?.get(cacheKey)
-
+    console.log(cacheKey, cache, cache?.get(cacheKey))
     if (cachedData) {
+      dataContext.data = {
+        ...dataContext.data,
+        ...cachedData,
+      }
       return cachedData
     }
 
     await this.handler({
       dataContext,
-      params: params || {},
+      params,
       request,
     }).then(data => {
-      if (data) cache?.set(cacheKey, data, Infinity)
+      if (data) {
+        dataContext.data = {
+          ...dataContext.data,
+          ...cachedData,
+        }
+        cache?.set(cacheKey, data, Infinity)
+      }
     })
   }
 }

@@ -1,3 +1,4 @@
+import { Head } from '@unhead/schema'
 import { omit } from 'lodash-es'
 import { Action } from './Action'
 import { Cache } from './Cache'
@@ -13,18 +14,22 @@ export type ParsePathParams<T extends string, TAcc = never> = T extends `${strin
     ? '_splat'
     : TPossiblyParam | TAcc
   : TAcc
+export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
 
 export type AnyRoute = Route<any, any, any, any, any>
 
 export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoaderResult, TActions extends Record<string, Action> = {}, TMiddlewares extends Middleware[] = [], TProps = {}> {
   private paramsKeys: string[] = []
   constructor(
-    private id: string,
-    private parent?: AnyRoute,
-    private loader?: (ctx: { dataContext: DataContext; request: Request; params: Record<string, string> }) => Promise<TLoaderResult>,
-    private actions?: TActions,
-    private middlewares?: TMiddlewares,
-    private props?: TProps,
+    private id: RouteId,
+    private options: {
+      parent?: AnyRoute
+      loader?: (ctx: { dataContext: DataContext<any>['data']; request: Request; params: RouteParams<RouteId> }) => Promise<TLoaderResult>
+      actions?: TActions
+      meta?: (ctx: { loaderData: TLoaderResult; dataContext: DataContext<any>['data']; request: Request; params: RouteParams<RouteId> }) => Promise<Head>
+      middlewares?: TMiddlewares
+      props?: TProps
+    },
   ) {
     this.paramsKeys = id.match(/:[a-zA-Z0-9]+/g) || []
   }
@@ -32,10 +37,10 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
     return this.id
   }
   getParent() {
-    return this.parent
+    return this.options.parent
   }
-  getMeta() {
-    return this.props
+  getProps() {
+    return this.options.props
   }
   parsePath(params?: Record<string, string>) {
     return omit(params, this.paramsKeys)
@@ -44,31 +49,48 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
     const paramString = this.paramsKeys.map(key => `${key}:${params?.[key] ?? ''}`).join('|')
     return `${this.id}|${paramString}`
   }
-  async loadMiddlewares(dataContext: DataContext, request: Request, params: Record<string, string>, cache?: Cache) {
-    if (!this.middlewares) return
+  async loadMiddlewares(dataContext: DataContext<any>['data'], request: Request, params: RouteParams<RouteId>, cache?: Cache) {
+    if (!this.options.middlewares) return
 
-    for (const middleware of this.middlewares) {
+    for (const middleware of this.options.middlewares) {
       await middleware.execute(dataContext, request, params, cache)
     }
   }
-  async load(dataContext: DataContext, request: Request, params?: Record<string, string>, cache?: Cache) {
+  async loadMeta(dataContext: DataContext<any>, request: Request, params: RouteParams<RouteId>, cache: Cache) {
+    if (this.options.meta) {
+      await this.options
+        .meta({
+          dataContext,
+          params,
+          request,
+          loaderData: cache.get(this.generateCacheKey(params)) as TLoaderResult,
+        })
+        .then(head => {
+          dataContext.head.push(head)
+        })
+    }
+  }
+  async load(dataContext: DataContext<any>, request: Request, params: Record<string, string>, cache: Cache) {
     params = this.parsePath(params)
 
-    await this.loadMiddlewares(dataContext, request, params)
+    await this.loadMiddlewares(dataContext, request, params as RouteParams<RouteId>, cache)
 
     const cachedData = cache?.get(this.generateCacheKey(params)) as TLoaderResult | undefined
     if (cachedData) {
       return cachedData
     }
-    const data = await this.loader?.({
-      dataContext,
-      params,
+    const data = await this.options.loader?.({
+      dataContext: dataContext.data,
+      params: params as RouteParams<RouteId>,
       request,
     })
     // update the cache
     if (data) {
       cache?.set(this.generateCacheKey(params), data, Infinity)
     }
+
+    await this.loadMeta(dataContext, request, params as RouteParams<RouteId>, cache)
+
     // update the data context
     if (data) {
       dataContext.data = {
