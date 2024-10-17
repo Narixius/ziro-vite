@@ -24,17 +24,29 @@ export class Router {
     return tree
   }
 
-  async load(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
+  async onRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
     const tree = this.findRouteTree(parseURL(request.url).pathname)
     if (tree) {
       const routeTree = tree.data
       // load each of the routes from the first one to the last one
       for (let i = 0; i < routeTree.length; i++) {
         const route = routeTree[i]
-        await route.load(dataContext, request, tree.params || {}, cache)
+        await route.onRequest(dataContext, request, tree.params || {}, cache)
       }
     }
 
-    return tree
+    return dataContext
+  }
+
+  async onBeforeResponse(request: Request, response: Response, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
+    const tree = this.findRouteTree(parseURL(request.url).pathname)
+    if (tree) {
+      const routeTree = tree.data
+      // load each of the routes from the first one to the last one
+      for (let i = 0; i < routeTree.length; i++) {
+        const route = routeTree[i]
+        await route.onBeforeResponse(dataContext, request, response, tree.params || {}, cache)
+      }
+    }
   }
 }

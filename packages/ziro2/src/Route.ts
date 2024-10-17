@@ -49,13 +49,6 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
     const paramString = this.paramsKeys.map(key => `${key}:${params?.[key] ?? ''}`).join('|')
     return `${this.id}|${paramString}`
   }
-  async loadMiddlewares(dataContext: DataContext<any>['data'], request: Request, params: RouteParams<RouteId>, cache?: Cache) {
-    if (!this.options.middlewares) return
-
-    for (const middleware of this.options.middlewares) {
-      await middleware.execute(dataContext, request, params, cache)
-    }
-  }
   async loadMeta(dataContext: DataContext<any>, request: Request, params: RouteParams<RouteId>, cache: Cache) {
     if (this.options.meta) {
       await this.options
@@ -70,10 +63,27 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
         })
     }
   }
-  async load(dataContext: DataContext<any>, request: Request, params: Record<string, string>, cache: Cache) {
+
+  async loadMiddlewaresOnRequest(request: Request, params: RouteParams<RouteId>, dataContext: DataContext<any>['data'], cache?: Cache) {
+    if (!this.options.middlewares) return
+
+    for (const middleware of this.options.middlewares) {
+      await middleware.onRequest(request, params, dataContext, cache)
+    }
+  }
+
+  async loadMiddlewaresOnBeforeResponse(request: Request, response: Response, params: RouteParams<RouteId>, dataContext: DataContext<any>['data'], cache?: Cache) {
+    if (!this.options.middlewares) return
+
+    for (const middleware of this.options.middlewares) {
+      await middleware.onBeforeResponse(request, response, params, dataContext, cache)
+    }
+  }
+
+  async onRequest(dataContext: DataContext<any>, request: Request, params: Record<string, string>, cache: Cache) {
     params = this.parsePath(params)
 
-    await this.loadMiddlewares(dataContext, request, params as RouteParams<RouteId>, cache)
+    await this.loadMiddlewaresOnRequest(request, params as RouteParams<RouteId>, dataContext, cache)
 
     const cachedData = cache?.get(this.generateCacheKey(params)) as TLoaderResult | undefined
     if (cachedData) {
@@ -99,5 +109,9 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
       }
     }
     return data
+  }
+
+  async onBeforeResponse(dataContext: DataContext<any>, request: Request, response: Response, params: Record<string, string>, cache: Cache) {
+    await this.loadMiddlewaresOnBeforeResponse(request, response, params as RouteParams<RouteId>, dataContext, cache)
   }
 }
