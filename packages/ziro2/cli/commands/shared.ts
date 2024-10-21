@@ -3,7 +3,7 @@ import { App as H3App } from 'h3'
 import { Listener } from 'listhen'
 import { ViteDevServer } from 'vite'
 import { ziroTitleText } from '../../constraints.js'
-import { Router } from '../../src/Router.js'
+import { Router } from '../../src/router/Router.js'
 
 export const sharedContext = {
   version: 'N/A',

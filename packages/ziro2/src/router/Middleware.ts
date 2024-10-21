@@ -11,13 +11,8 @@ export class Middleware {
     },
   ) {}
 
-  generateCacheKey(): string {
-    return `${this.name}`
-  }
-
   async onRequest(request: Request, params: Record<string, string> = {}, dataContext: DataContext, cache?: Cache) {
-    const cacheKey = this.generateCacheKey()
-    const cachedData = cache?.get(cacheKey)
+    const cachedData = cache?.getMiddlewareCache(this.name)
     if (cachedData) {
       dataContext.data = {
         ...dataContext.data,
@@ -39,7 +34,7 @@ export class Middleware {
               ...dataContext.data,
               ...cachedData,
             }
-            cache?.set(cacheKey, data, Infinity)
+            cache?.setMiddlewareCache(this.name, data, Infinity)
           }
         })
   }

@@ -1,4 +1,4 @@
-import { LoaderArgs, MetaFn } from 'ziro/router'
+import { MetaFn } from 'ziro/router'
 import { Body, Head, Html, Outlet } from 'ziro/router/client'
 import baseStyle from './styles.css?url'
 
@@ -17,10 +17,14 @@ export const meta: MetaFn<'_root'> = async ctx => {
   }
 }
 
-export const loader = async (ctx: LoaderArgs<'_root'>) => {
+export const loader = async ctx => {
   return {
     version: 1.1,
   }
+}
+
+export const Loading = () => {
+  return 'loading...'
 }
 
 const RootPage = () => {

@@ -3,6 +3,8 @@ import { parseURL } from 'ufo'
 import { Cache } from './Cache'
 import { AnyRoute } from './Route'
 import { DataContext } from './RouteDataContext'
+import { createAbortResponse } from './utils/abort'
+import { createResponse } from './utils/response'
 
 export interface FileRoutesByPath {}
 
@@ -21,17 +23,19 @@ export class Router {
 
   findRouteTree(path: string) {
     const tree = rou3.findRoute(this.tree, '', path)
-    return tree
+    return {
+      tree: tree?.data,
+      params: tree?.params,
+    }
   }
 
   async onRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
-    const tree = this.findRouteTree(parseURL(request.url).pathname)
+    const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
     if (tree) {
-      const routeTree = tree.data
       // load each of the routes from the first one to the last one
-      for (let i = 0; i < routeTree.length; i++) {
-        const route = routeTree[i]
-        await route.onRequest(dataContext, request, tree.params || {}, cache)
+      for (let i = 0; i < tree.length; i++) {
+        const route = tree[i]
+        await route.onRequest(request, params || {}, dataContext, cache)
       }
     }
 
@@ -39,14 +43,24 @@ export class Router {
   }
 
   async onBeforeResponse(request: Request, response: Response, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
-    const tree = this.findRouteTree(parseURL(request.url).pathname)
+    const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
     if (tree) {
-      const routeTree = tree.data
       // load each of the routes from the first one to the last one
-      for (let i = 0; i < routeTree.length; i++) {
-        const route = routeTree[i]
-        await route.onBeforeResponse(dataContext, request, response, tree.params || {}, cache)
+      for (let i = 0; i < tree.length; i++) {
+        const route = tree[i]
+        await route.onBeforeResponse(request, response, params || {}, dataContext, cache)
       }
     }
+  }
+
+  async handleAction(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
+    const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
+    if (tree) {
+      const actionRoute = tree[tree.length - 1]
+      // load each of the routes from the first one to the last one
+      const actionResult = await actionRoute.handleAction(request, params || {}, dataContext, cache)
+      return createResponse(actionResult)
+    }
+    return createAbortResponse(404, 'Not Found')
   }
 }

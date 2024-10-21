@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "ziro dev",
+    "dev": "vite dev",
     "dev:ziro": "nodemon -w '../../packages/' -x 'bun dev'",
-    "build": "ziro build",
+    "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -30,6 +30,7 @@
     "ufo": "^1.5.4",
     "uuid": "^10.0.0",
     "ziro": "workspace:*",
+    "ziro2": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {

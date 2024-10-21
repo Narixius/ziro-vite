@@ -1,11 +1,13 @@
 import { Head } from '@unhead/schema'
 import { omit } from 'lodash-es'
+import { parseQuery, parseURL } from 'ufo'
+import { AlsoAllowString } from '../types'
 import { Action } from './Action'
 import { Cache } from './Cache'
 import { Middleware } from './Middleware'
 import { DataContext } from './RouteDataContext'
 import { FileRoutesByPath } from './Router'
-import { AlsoAllowString } from './utils'
+import { createAbortResponse } from './utils/abort'
 
 export type ParsePathParams<T extends string, TAcc = never> = T extends `${string}:${infer TPossiblyParam}`
   ? TPossiblyParam extends `${infer TParam}/${infer TRest}`
@@ -18,7 +20,13 @@ export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, s
 
 export type AnyRoute = Route<any, any, any, any, any>
 
-export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoaderResult, TActions extends Record<string, Action> = {}, TMiddlewares extends Middleware[] = [], TProps = {}> {
+export class Route<
+  RouteId extends AlsoAllowString<keyof FileRoutesByPath>,
+  TLoaderResult,
+  TActions extends Record<string, Action<any, any>> = {},
+  TMiddlewares extends Middleware[] = [],
+  TProps = {},
+> {
   private paramsKeys: string[] = []
   constructor(
     private id: RouteId,
@@ -45,10 +53,7 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
   parsePath(params?: Record<string, string>) {
     return omit(params, this.paramsKeys)
   }
-  generateCacheKey(params?: Record<string, string>): string {
-    const paramString = this.paramsKeys.map(key => `${key}:${params?.[key] ?? ''}`).join('|')
-    return `${this.id}|${paramString}`
-  }
+
   async loadMeta(dataContext: DataContext<any>, request: Request, params: RouteParams<RouteId>, cache: Cache) {
     if (this.options.meta) {
       await this.options
@@ -56,7 +61,7 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
           dataContext,
           params,
           request,
-          loaderData: cache.get(this.generateCacheKey(params)) as TLoaderResult,
+          loaderData: cache.getLoaderCache(this.id, request.url) as TLoaderResult,
         })
         .then(head => {
           dataContext.head.push(head)
@@ -80,12 +85,12 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
     }
   }
 
-  async onRequest(dataContext: DataContext<any>, request: Request, params: Record<string, string>, cache: Cache) {
+  async onRequest(request: Request, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache) {
     params = this.parsePath(params)
 
     await this.loadMiddlewaresOnRequest(request, params as RouteParams<RouteId>, dataContext, cache)
 
-    const cachedData = cache?.get(this.generateCacheKey(params)) as TLoaderResult | undefined
+    const cachedData = cache?.getLoaderCache(this.id, request.url) as TLoaderResult | undefined
     if (cachedData) {
       return cachedData
     }
@@ -96,7 +101,7 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
     })
     // update the cache
     if (data) {
-      cache?.set(this.generateCacheKey(params), data, Infinity)
+      cache?.setLoaderCache(this.id, request.url, data, Infinity)
     }
 
     await this.loadMeta(dataContext, request, params as RouteParams<RouteId>, cache)
@@ -111,7 +116,29 @@ export class Route<RouteId extends AlsoAllowString<keyof FileRoutesByPath>, TLoa
     return data
   }
 
-  async onBeforeResponse(dataContext: DataContext<any>, request: Request, response: Response, params: Record<string, string>, cache: Cache) {
+  async onBeforeResponse(request: Request, response: Response, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache) {
     await this.loadMiddlewaresOnBeforeResponse(request, response, params as RouteParams<RouteId>, dataContext, cache)
+  }
+
+  async handleAction(request: Request, params: RouteParams<RouteId>, dataContext: DataContext<any>, cache: Cache) {
+    const query = parseQuery(String(parseURL(request.url).search))
+    const actionName = String(query.action)
+    const action = this.options.actions?.[actionName]
+
+    if (action) {
+      await this.loadMiddlewaresOnRequest(request, params, dataContext, cache)
+      return action.handle(
+        {
+          routeId: this.id,
+          actionName,
+        },
+        request,
+        params,
+        dataContext,
+        cache,
+      )
+    }
+
+    return createAbortResponse(404, 'Not Found')
   }
 }
