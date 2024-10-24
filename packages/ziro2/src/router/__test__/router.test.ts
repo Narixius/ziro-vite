@@ -70,8 +70,12 @@ describe('Router', () => {
   // Define the middleware to check if the user is authenticated
   const authMiddleware = new Middleware('authMiddleware', {
     onRequest: async ctx => {
-      if (!!!ctx.request.headers.get('authorization')) {
+      const authHeader = ctx.request.headers.get('authorization')
+      if (!!!authHeader) {
         throw new Error('User not authenticated')
+      }
+      return {
+        user: authHeader,
       }
     },
   })

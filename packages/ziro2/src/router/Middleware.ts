@@ -1,11 +1,11 @@
 import { Cache } from './Cache'
 import { DataContext } from './RouteDataContext'
 
-export class Middleware {
+export class Middleware<TOnRequestResult> {
   constructor(
     public name: string,
     public handlers: {
-      onRequest?: (ctx: { dataContext: DataContext; request: Request; params: Record<string, string> }) => Promise<any>
+      onRequest?: (ctx: { dataContext: DataContext; request: Request; params: Record<string, string> }) => Promise<TOnRequestResult>
       onBeforeResponse?: (ctx: { dataContext: DataContext; request: Request; response: Response; params: Record<string, string> }) => Promise<any>
       [key: string]: any
     },
