@@ -21,6 +21,13 @@ describe('Router', () => {
   const rootRoute = new Route('_root', {
     loader: rootLoader,
   })
+  const redirectTestRoute = new Route('/redirect-test', {
+    parent: rootRoute,
+    loader: async ({ dataContext }) => {
+      redirect('http://example.com')
+    },
+  })
+
   let homepageLoader = vi.fn(async () => {
     return {
       i18n: {
@@ -28,6 +35,7 @@ describe('Router', () => {
       },
     }
   })
+
   const homepageRoute = new Route('/', {
     parent: rootRoute,
     loader: homepageLoader,
@@ -75,13 +83,6 @@ describe('Router', () => {
     }
   })
   const dashboardRoute = new Route('/dashboard', { parent: rootRoute, loader: dashboardLoader, middlewares: [authMiddleware] })
-
-  const redirectTestRoute = new Route('/redirect-test', {
-    parent: rootRoute,
-    loader: async () => {
-      redirect('http://example.com')
-    },
-  })
 
   const abortTestRoute = new Route('/abort/:status', {
     parent: rootRoute,

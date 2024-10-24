@@ -18,7 +18,9 @@ export type ParsePathParams<T extends string, TAcc = never> = T extends `${strin
   : TAcc
 export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
 
-export type AnyRoute = Route<any, any, any, any, any>
+export type AnyRoute = Route<any, any, any, any, any, any, any, any>
+
+export type ParentTDataContext<TParent> = TParent extends Route<any, any, any, any, any, any, any, infer TParentDataContextToChild> ? TParentDataContextToChild : {}
 
 export class Route<
   RouteId extends AlsoAllowString<keyof FileRoutesByPath>,
@@ -26,13 +28,16 @@ export class Route<
   TActions extends Record<string, Action<any, any>> = {},
   TMiddlewares extends Middleware[] = [],
   TProps = {},
+  TParent extends AnyRoute | undefined = undefined,
+  TDataContext = ParentTDataContext<TParent>,
+  TDataContextToChild = TDataContext & TLoaderResult,
 > {
   private paramsKeys: string[] = []
   constructor(
     private id: RouteId,
     private options: {
-      parent?: AnyRoute
-      loader?: (ctx: { dataContext: DataContext<any>['data']; request: Request; params: RouteParams<RouteId> }) => Promise<TLoaderResult>
+      parent?: TParent
+      loader?: (ctx: { dataContext: DataContext<TDataContext>['data']; request: Request; params: RouteParams<RouteId> }) => Promise<TLoaderResult>
       actions?: TActions
       meta?: (ctx: { loaderData: TLoaderResult; dataContext: DataContext<any>['data']; request: Request; params: RouteParams<RouteId> }) => Promise<Head>
       middlewares?: TMiddlewares

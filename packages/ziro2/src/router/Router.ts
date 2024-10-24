@@ -10,7 +10,7 @@ export interface FileRoutesByPath {}
 
 export class Router {
   tree = rou3.createRouter<AnyRoute[]>()
-  constructor(private hostname: string, private baseUrl?: string) {}
+  constructor(private baseUrl?: string) {}
   addRoute(route: AnyRoute) {
     let tree = [route]
     while (true) {
