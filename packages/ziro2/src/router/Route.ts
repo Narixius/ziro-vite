@@ -20,17 +20,17 @@ export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, s
 export type AnyRoute = Route<any, any, any, any, any, any, any, any>
 export type GetRouteDataContext<TParent> = TParent extends Route<any, any, any, any, any, any, any, infer TParentDataContextToChild> ? TParentDataContextToChild : {}
 
-type ExtractReturnTypesFromMiddleware<T extends readonly Middleware<any>[]> = {
-  [K in keyof T]: T[K] extends Middleware<infer TOnRequestResult> ? TOnRequestResult : {}
+type ExtractReturnTypesFromMiddleware<T extends readonly Middleware<any, any>[]> = {
+  [K in keyof T]: T[K] extends Middleware<any, infer TOnRequestResult> ? TOnRequestResult : {}
 }
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never
-type IntersectionOfMiddlewareReturns<T extends readonly Middleware<any>[]> = UnionToIntersection<ExtractReturnTypesFromMiddleware<T>[number]>
+type IntersectionOfMiddlewareReturns<T extends readonly Middleware<any, any>[]> = UnionToIntersection<ExtractReturnTypesFromMiddleware<T>[number]>
 
 export class Route<
   RouteId extends AlsoAllowString<keyof FileRoutesByPath>,
   TLoaderResult,
   TActions extends Record<string, Action<any, any>> = {},
-  TMiddlewares extends Middleware<any>[] = [],
+  TMiddlewares extends Middleware<TDataContext, any>[] = [],
   TProps = {},
   TParent extends AnyRoute | undefined = undefined,
   TDataContext = GetRouteDataContext<TParent> & IntersectionOfMiddlewareReturns<TMiddlewares>,
@@ -41,9 +41,15 @@ export class Route<
     private id: RouteId,
     private options: {
       parent?: TParent
-      loader?: (ctx: { dataContext: DataContext<TDataContext>['data']; request: Request; params: RouteParams<RouteId> }) => Promise<TLoaderResult>
+      loader?: (ctx: { dataContext: DataContext<TDataContext>['data']; head: DataContext<TDataContext>['head']; request: Request; params: RouteParams<RouteId> }) => Promise<TLoaderResult>
       actions?: TActions
-      meta?: (ctx: { loaderData: TLoaderResult; dataContext: DataContext<TDataContext>['data']; request: Request; params: RouteParams<RouteId> }) => Promise<Head>
+      meta?: (ctx: {
+        loaderData: TLoaderResult
+        dataContext: DataContext<TDataContext>['data']
+        head: DataContext<TDataContext>['head']
+        request: Request
+        params: RouteParams<RouteId>
+      }) => Promise<Head>
       middlewares?: TMiddlewares
       props?: TProps
     },
@@ -71,6 +77,7 @@ export class Route<
           params,
           request,
           loaderData: cache.getLoaderCache(this.id, request.url) as TLoaderResult,
+          head: dataContext.head,
         })
         .then(head => {
           dataContext.head.push(head)
@@ -107,6 +114,7 @@ export class Route<
       dataContext: dataContext.data,
       params: params as RouteParams<RouteId>,
       request,
+      head: dataContext.head,
     })
     // update the cache
     if (data) {

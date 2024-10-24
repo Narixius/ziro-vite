@@ -1,17 +1,28 @@
 import { Cache } from './Cache'
 import { DataContext } from './RouteDataContext'
 
-export class Middleware<TOnRequestResult> {
+export class Middleware<TDataContextType = any, TOnRequestResult = {}> {
   constructor(
     public name: string,
     public handlers: {
-      onRequest?: (ctx: { dataContext: DataContext; request: Request; params: Record<string, string> }) => Promise<TOnRequestResult>
-      onBeforeResponse?: (ctx: { dataContext: DataContext; request: Request; response: Response; params: Record<string, string> }) => Promise<any>
+      onRequest?: (ctx: {
+        dataContext: DataContext<TDataContextType>['data']
+        head: DataContext<TDataContextType>['head']
+        request: Request
+        params: Record<string, string>
+      }) => Promise<TOnRequestResult>
+      onBeforeResponse?: (ctx: {
+        dataContext: DataContext<TDataContextType>['data']
+        head: DataContext<TDataContextType>['head']
+        request: Request
+        response: Response
+        params: Record<string, string>
+      }) => Promise<any>
       [key: string]: any
     },
   ) {}
 
-  async onRequest(request: Request, params: Record<string, string> = {}, dataContext: DataContext, cache?: Cache) {
+  async onRequest(request: Request, params: Record<string, string> = {}, dataContext: DataContext<TDataContextType>, cache?: Cache) {
     const cachedData = cache?.getMiddlewareCache(this.name)
     if (cachedData) {
       dataContext.data = {
@@ -24,9 +35,10 @@ export class Middleware<TOnRequestResult> {
     if (this.handlers?.onRequest)
       await this.handlers
         .onRequest({
-          dataContext,
+          dataContext: dataContext.data,
           params,
           request,
+          head: dataContext.head,
         })
         .then(data => {
           if (data) {
@@ -38,13 +50,14 @@ export class Middleware<TOnRequestResult> {
           }
         })
   }
-  async onBeforeResponse(request: Request, response: Response, params: Record<string, string> = {}, dataContext: DataContext, cache?: Cache) {
+  async onBeforeResponse(request: Request, response: Response, params: Record<string, string> = {}, dataContext: DataContext<TDataContextType>, cache?: Cache) {
     if (this.handlers?.onBeforeResponse)
       await this.handlers.onBeforeResponse({
-        dataContext,
         params,
         request,
         response,
+        dataContext: dataContext.data,
+        head: dataContext.head,
       })
   }
 }
