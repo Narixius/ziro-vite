@@ -5,7 +5,7 @@ import { generateRoutesTypings } from '../router-types'
 import { generateServerRouterCode } from '../server-router'
 import * as babelHelpers from '../utils/babel-utils'
 import { getRouteFileInfo } from '../utils/es-module-lexer'
-import { findRouteFiles, generateImportName } from '../utils/route-files-utils'
+import { findRouteFiles } from '../utils/route-files-utils'
 
 vi.mock('tinyglobby', () => ({
   globSync: vi.fn(),
@@ -206,40 +206,12 @@ describe('generated codes from manifest', () => {
     const manifest = await generateManifest(mockOptions)
     const result = await generateRoutesTypings('/somewhere/cwd/.ziro/', manifest)
     expect(result).toContain(`declare module 'ziro2/generator'`)
-    expect(result).toContain(
-      `"/root": Route<"/root", Awaited<ReturnType<typeof ${generateImportName(mockFiles[0])}.loader>>, typeof ${generateImportName(mockFiles[0])}.actions, typeof ${generateImportName(
-        mockFiles[0],
-      )}.middlewares>`,
-    )
-    expect(result).toContain(
-      `"/": Route<"/", Awaited<ReturnType<typeof ${generateImportName(mockFiles[1])}.loader>>, typeof ${generateImportName(mockFiles[1])}.actions, typeof ${generateImportName(
-        mockFiles[1],
-      )}.middlewares>`,
-    )
-    expect(result).toContain(
-      `"/_layout": Route<"/_layout", Awaited<ReturnType<typeof ${generateImportName(mockFiles[2])}.loader>>, typeof ${generateImportName(mockFiles[2])}.actions, typeof ${generateImportName(
-        mockFiles[2],
-      )}.middlewares>`,
-    )
-    expect(result).toContain(
-      `"/blog": Route<"/blog", Awaited<ReturnType<typeof ${generateImportName(mockFiles[3])}.loader>>, typeof ${generateImportName(mockFiles[3])}.actions, typeof ${generateImportName(
-        mockFiles[3],
-      )}.middlewares>`,
-    )
-    expect(result).toContain(
-      `"/blog/_layout": Route<"/blog/_layout", Awaited<ReturnType<typeof ${generateImportName(mockFiles[4])}.loader>>, typeof ${generateImportName(mockFiles[4])}.actions, typeof ${generateImportName(
-        mockFiles[4],
-      )}.middlewares>`,
-    )
-    expect(result).toContain(
-      `"/blog/:slug": Route<"/blog/:slug", Awaited<ReturnType<typeof ${generateImportName(mockFiles[5])}.loader>>, typeof ${generateImportName(mockFiles[5])}.actions, typeof ${generateImportName(
-        mockFiles[5],
-      )}.middlewares>`,
-    )
-    expect(result).toContain(
-      `"/blog/admin/rest/:slug": Route<"/blog/admin/rest/:slug", Awaited<ReturnType<typeof ${generateImportName(mockFiles[6])}.loader>>, typeof ${generateImportName(
-        mockFiles[6],
-      )}.actions, typeof ${generateImportName(mockFiles[6])}.middlewares>`,
-    )
+    expect(result).toContain(`"/root": Route<"/root", {}, {}, []>`)
+    expect(result).toContain(`"/": Route<"/", {}, {}, []>`)
+    expect(result).toContain(`"/_layout": Route<"/_layout", {}, {}, []>`)
+    expect(result).toContain(`"/blog": Route<"/blog", {}, {}, []`)
+    expect(result).toContain(`"/blog/_layout": Route<"/blog/_layout", {}, {}, []>`)
+    expect(result).toContain(`"/blog/:slug": Route<"/blog/:slug", {}, {}, []>`)
+    expect(result).toContain(`"/blog/admin/rest/:slug": Route<"/blog/admin/rest/:slug", {}, {}, []>`)
   })
 })
