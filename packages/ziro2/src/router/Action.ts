@@ -16,7 +16,7 @@ export class Action<TInput extends z.ZodSchema = z.ZodSchema, TResult = void> {
   constructor(
     private ctx: {
       input: TInput
-      handler: (body: z.infer<TInput>, ctx: { request: Request; dataContext: DataContext }) => Promise<TResult>
+      handler: (body: z.infer<TInput>, ctx: { request: Request; dataContext: DataContext<any>['data']; head: DataContext<any>['head'] }) => Promise<TResult>
     },
   ) {}
 
@@ -55,6 +55,10 @@ export class Action<TInput extends z.ZodSchema = z.ZodSchema, TResult = void> {
       }
       return createAbortResponse(400, res)
     }
-    return this.ctx.handler(body, ctx)
+    return this.ctx.handler(body, {
+      dataContext: ctx.dataContext.data,
+      head: ctx.dataContext.head,
+      request: ctx.request,
+    })
   }
 }

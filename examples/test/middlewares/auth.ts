@@ -40,9 +40,8 @@ export const signToken = async (user: User) => {
   return await new SignJWT(user).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('7d').sign(jwtKey)
 }
 
-export const login = async (user: User, cookies: Cookies) => {
+export const login = async (user: User) => {
   const token = await signToken(user)
-  cookies.set(COOKIE_KEY, token)
   return token
 }
 

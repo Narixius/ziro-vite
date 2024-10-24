@@ -3,26 +3,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormLabel, FormMessage, FormRootMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { guestGuard, login } from '@/middlewares/auth'
-import { ActionArgs, defineAction, redirect } from 'ziro/router'
 import { useAction } from 'ziro/router/hooks'
+import { Action, redirect } from 'ziro2/router'
 import { z } from 'zod'
 
 export const middlewares = [guestGuard]
 
 export const actions = {
-  login: defineAction({
+  login: new Action({
     input: z.object({
       username: z.string().min(1, 'This field is required'),
       password: z.string().min(1, 'This field is required'),
     }),
-    async handler(input, { utils, serverContext }: ActionArgs<'/auth'>) {
-      if (serverContext) {
-        if (input.username[0] == 'a' && input.password[0] == 'a') {
-          await login({ username: input.username }, utils.storage.cookies!)
-          return redirect('/dashboard')
-        }
-        throw new Error('Invalid username or password')
+    async handler(input, { dataContext }) {
+      if (input.username[0] == 'a' && input.password[0] == 'a') {
+        const token = await login({ username: input.username })
+        const headers = new Headers()
+        headers.set('token', token)
+        return redirect('/dashboard', 200, {
+          headers,
+        })
       }
+      throw new Error('Invalid username or password')
     },
   }),
 }

@@ -23,7 +23,7 @@ export const generateRoutesTypings = async (manifestDirPath: string, manifest: R
       routeManifest.routeInfo.hasActions,
       `typeof ${importName}.actions`,
       `{}`,
-    )}, ${cl(routeManifest.routeInfo.hasMiddleware, `typeof ${importName}.middlewares`, `[]`)}>\n`
+    )}, ${cl(routeManifest.routeInfo.hasMiddleware, `typeof ${importName}.middlewares`, `[]`)}, ${routeManifest.parentId ? `RoutesByRouteId["${routeManifest.parentId}"]` : `undefined`}>\n`
   }
   code += `  }\n}`
   const { injectImports } = createUnimport({ imports })

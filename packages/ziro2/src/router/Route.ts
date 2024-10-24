@@ -31,8 +31,8 @@ export class Route<
   TLoaderResult,
   TActions extends Record<string, Action<any, any>> = {},
   TMiddlewares extends Middleware<TDataContext, any>[] = [],
-  TProps = {},
   TParent extends AnyRoute | undefined = undefined,
+  TProps = {},
   TDataContext = GetRouteDataContext<TParent> & IntersectionOfMiddlewareReturns<TMiddlewares>,
   TDataContextToChild = TDataContext & TLoaderResult,
 > {

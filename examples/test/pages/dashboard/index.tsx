@@ -1,19 +1,25 @@
-import { ActionArgs, defineAction, LoaderArgs, redirect, RouteProps } from 'ziro/router'
+import { serialize } from 'cookie-es'
+import { RouteProps } from 'ziro/router'
 import { useAction } from 'ziro/router/hooks'
-import { authGuard, logout } from '../../middlewares/auth'
+import { Action, redirect } from 'ziro2/router'
+import { z } from 'zod'
 
-export const middlewares = [authGuard]
+// export const middlewares = [authGuard]
 
 export const actions = {
-  logout: defineAction({
-    handler: async (_, { utils }: ActionArgs<'/dashboard'>) => {
-      await logout(utils.storage.cookies!)
-      return redirect('/auth')
+  logout: new Action({
+    input: z.any(),
+    handler: async () => {
+      const headers = new Headers()
+      headers.set('auth', serialize('token', '', { expires: new Date(0) }))
+      return redirect('/auth', 301, {
+        headers,
+      })
     },
   }),
 }
 
-export const loader = async (ctx: LoaderArgs<'/dashboard'>) => {
+export const loader = async ctx => {
   return {
     user: ctx.dataContext.user,
   }
