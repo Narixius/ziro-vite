@@ -1,7 +1,7 @@
 import { serialize } from 'cookie-es'
 import { RouteProps } from 'ziro/router'
 import { useAction } from 'ziro/router/hooks'
-import { Action, redirect } from 'ziro2/router'
+import { Action, LoaderArgs, redirect } from 'ziro2/router'
 import { z } from 'zod'
 
 // export const middlewares = [authGuard]
@@ -19,9 +19,9 @@ export const actions = {
   }),
 }
 
-export const loader = async ctx => {
+export const loader = async (props: LoaderArgs<'/dashboard'>) => {
   return {
-    user: ctx.dataContext.user,
+    ok: true,
   }
 }
 

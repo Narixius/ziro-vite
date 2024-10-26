@@ -1,14 +1,15 @@
 import { FC } from 'react'
-import { ErrorComponentProps, LoaderProps, RouteProps } from 'ziro/router'
+import { ErrorComponentProps, RouteProps } from 'ziro/router'
 import { Link, Outlet } from 'ziro/router/client'
+import { LoaderArgs, MetaFn } from 'ziro2/router'
 
-export const meta = async () => {
+export const meta: MetaFn<'/_layout'> = async () => {
   return {
     title: 'poks',
   }
 }
 
-export const loader = async (options: LoaderProps<'/pokes/_layout'>) => {
+export const loader = async (options: LoaderArgs<'/pokes/_layout'>) => {
   const samplePokemons = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=4&offset=${Math.floor(Math.random() * 16)}`).then(r => r.json())
   return { pokemons: (samplePokemons.results as { name: string }[]).map(r => r.name) } as { pokemons: string[] }
 }

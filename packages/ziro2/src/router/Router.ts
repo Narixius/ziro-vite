@@ -6,7 +6,7 @@ import { DataContext } from './RouteDataContext'
 import { createAbortResponse } from './utils/abort'
 import { createResponse } from './utils/response'
 
-export interface FileRoutesByPath {}
+export interface RoutesByRouteId {}
 
 export class Router {
   tree = rou3.createRouter<AnyRoute[]>()

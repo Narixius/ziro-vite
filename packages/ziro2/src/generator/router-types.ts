@@ -2,16 +2,26 @@ import { createUnimport, Import } from 'unimport'
 import { RoutesManifest } from './manifest'
 import { cl, generateImportName, getImportPath } from './utils/route-files-utils'
 
-export interface RoutesByRouteId {}
-
 export const generateRoutesTypings = async (manifestDirPath: string, manifest: RoutesManifest) => {
   const imports: Import[] = [
     {
       from: 'ziro2/router',
       name: 'Route',
     },
+    {
+      from: 'ziro2/router',
+      name: 'GetRouteDataContext',
+    },
+    {
+      from: 'ziro2/router',
+      name: 'IntersectionOfMiddlewaresResult',
+    },
+    {
+      from: 'ziro2/router',
+      name: 'LoaderReturnType',
+    },
   ]
-  let code = `\ndeclare module 'ziro2/generator' {\n  interface RoutesByRouteId {\n`
+  let code = `\ndeclare module 'ziro2/router' {\n  interface RoutesByRouteId {\n`
   for (const [routeId, routeManifest] of Object.entries(manifest)) {
     const importName = generateImportName(routeManifest.routeInfo.filepath)
     imports.push({
@@ -19,11 +29,18 @@ export const generateRoutesTypings = async (manifestDirPath: string, manifest: R
       as: importName,
       from: getImportPath(manifestDirPath, routeManifest.routeInfo.filepath),
     })
-    code += `    "${routeId}": Route<"${routeId}", ${cl(routeManifest.routeInfo.hasLoader, ` Awaited<ReturnType<typeof ${importName}.loader>>`, `{}`)}, ${cl(
+    code += `    "${routeId}": {
+		route: Route<"${routeId}", ${cl(routeManifest.routeInfo.hasLoader, ` LoaderReturnType<typeof ${importName}.loader>`, `{}`)}, ${cl(
       routeManifest.routeInfo.hasActions,
       `typeof ${importName}.actions`,
       `{}`,
-    )}, ${cl(routeManifest.routeInfo.hasMiddleware, `typeof ${importName}.middlewares`, `[]`)}, ${routeManifest.parentId ? `RoutesByRouteId["${routeManifest.parentId}"]` : `undefined`}>\n`
+    )}, ${cl(routeManifest.routeInfo.hasMiddleware, `typeof ${importName}.middlewares`, `[]`)}, ${routeManifest.parentId ? `RoutesByRouteId["${routeManifest.parentId}"]["route"]` : `undefined`}>,
+		dataContext: GetRouteDataContext<${routeManifest.parentId ? `RoutesByRouteId["${routeManifest.parentId}"]["route"]` : `undefined`}> & IntersectionOfMiddlewaresResult<${cl(
+      routeManifest.routeInfo.hasMiddleware,
+      `typeof ${importName}.middlewares`,
+      `[]`,
+    )}>
+	}\n`
   }
   code += `  }\n}`
   const { injectImports } = createUnimport({ imports })

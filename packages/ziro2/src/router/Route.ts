@@ -6,7 +6,7 @@ import { Action } from './Action'
 import { Cache } from './Cache'
 import { Middleware } from './Middleware'
 import { DataContext } from './RouteDataContext'
-import { FileRoutesByPath } from './Router'
+import { RoutesByRouteId } from './Router'
 import { createAbortResponse } from './utils/abort'
 
 export type ParsePathParams<T extends string, TAcc = never> = T extends `${string}:${infer TPossiblyParam}`
@@ -17,23 +17,36 @@ export type ParsePathParams<T extends string, TAcc = never> = T extends `${strin
     : TPossiblyParam | TAcc
   : TAcc
 export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
-export type AnyRoute = Route<any, any, any, any, any, any, any, any>
+export type AnyRoute<RouteId extends AlsoAllowString<keyof RoutesByRouteId> = any, TLoaderResult = any> = Route<RouteId, TLoaderResult, any, any, any, any, any, any>
 export type GetRouteDataContext<TParent> = TParent extends Route<any, any, any, any, any, any, any, infer TParentDataContextToChild> ? TParentDataContextToChild : {}
+
+type RouteContext<RouteId extends keyof RoutesByRouteId> = RoutesByRouteId[RouteId]['dataContext']
+export type LoaderArgs<RouteId extends keyof RoutesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
+export type ActionArgs<RouteId extends keyof RoutesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
+export type MetaArgs<RouteId extends keyof RoutesByRouteId> = {
+  request: Request
+  dataContext: RouteContext<RouteId>
+  head: DataContext['head']
+  params: RouteParams<RouteId>
+  loaderData: RoutesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
+}
+export type MetaFn<RouteId extends keyof RoutesByRouteId> = (args: MetaArgs<RouteId>) => Promise<Head>
+export type LoaderReturnType<T extends (...args: any[]) => Promise<any>> = Awaited<ReturnType<T>>
 
 type ExtractReturnTypesFromMiddleware<T extends readonly Middleware<any, any>[]> = {
   [K in keyof T]: T[K] extends Middleware<any, infer TOnRequestResult> ? TOnRequestResult : {}
 }
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never
-type IntersectionOfMiddlewareReturns<T extends readonly Middleware<any, any>[]> = UnionToIntersection<ExtractReturnTypesFromMiddleware<T>[number]>
+export type IntersectionOfMiddlewaresResult<T extends readonly Middleware<any, any>[]> = UnionToIntersection<ExtractReturnTypesFromMiddleware<T>[number]>
 
 export class Route<
-  RouteId extends AlsoAllowString<keyof FileRoutesByPath>,
+  RouteId extends AlsoAllowString<keyof RoutesByRouteId>,
   TLoaderResult,
   TActions extends Record<string, Action<any, any>> = {},
   TMiddlewares extends Middleware<TDataContext, any>[] = [],
   TParent extends AnyRoute | undefined = undefined,
   TProps = {},
-  TDataContext = GetRouteDataContext<TParent> & IntersectionOfMiddlewareReturns<TMiddlewares>,
+  TDataContext = GetRouteDataContext<TParent> & IntersectionOfMiddlewaresResult<TMiddlewares>,
   TDataContextToChild = TDataContext & TLoaderResult,
 > {
   private paramsKeys: string[] = []

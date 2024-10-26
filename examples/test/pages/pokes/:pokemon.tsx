@@ -1,6 +1,7 @@
-import { abort, LoaderProps, MetaFn, RouteProps, ZiroRouteErrorComponent } from 'ziro/router'
+import { abort, RouteProps, ZiroRouteErrorComponent } from 'ziro/router'
+import { LoaderArgs, MetaFn } from 'ziro2/router'
 
-export const loader = async ({ params }: LoaderProps<'/pokes/:pokemon'>) => {
+export const loader = async ({ params }: LoaderArgs<'/pokes/:pokemon'>) => {
   //   abort(400, 'Could not load pokemon')
   return await fetch(`https://pokeapi.co/api/v2/pokemon/${params.pokemon}`)
     .then(response => {
