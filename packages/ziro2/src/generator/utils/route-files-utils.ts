@@ -64,7 +64,7 @@ export const isRouteRelatedFile = (pagesDirPath: string, path: string) => {
   let filename = getFilename(path)!
   // remove file extension
   filename = filename.replace(/\.\w+$/, '')
-  if (filename === 'index' || filename === '_layout' || filename === 'root' || filename?.startsWith(':')) {
+  if (filename === 'index' || filename === '_layout' || filename === '_root' || filename?.startsWith(':')) {
     return true
   }
   //   }
@@ -86,8 +86,8 @@ export const findRouteFiles = (_options: Required<GenerateManifestOptions>) => {
       const aFileName = getFilename(a)!
       const bFileName = getFilename(b)!
       if (depth === 0) {
-        if (aFileName.startsWith('root')) return -1
-        else if (bFileName.startsWith('root')) return 1
+        if (aFileName.startsWith('_root')) return -1
+        else if (bFileName.startsWith('_root')) return 1
         if (aFileName.startsWith('_layout')) return -1
         else if (bFileName.startsWith('_layout')) return 1
       }

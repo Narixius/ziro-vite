@@ -42,8 +42,8 @@ describe('findRouteFiles', () => {
   })
 
   it('should include files with _root in the filename', () => {
-    const mockFiles = ['/somewhere/cwd/pages/root.tsx', '/somewhere/cwd/pages/contact.tsx']
-    const filteredFiles = ['/somewhere/cwd/pages/root.tsx']
+    const mockFiles = ['/somewhere/cwd/pages/_root.tsx', '/somewhere/cwd/pages/contact.tsx']
+    const filteredFiles = ['/somewhere/cwd/pages/_root.tsx']
     vi.mocked(globSync).mockReturnValue(mockFiles)
     const result = findRouteFiles(mockOptions)
     expect(result).toEqual(filteredFiles)
@@ -113,7 +113,7 @@ describe('generateManifest', () => {
       pagesPath: 'pages',
     }
     const mockFiles = [
-      '/somewhere/cwd/pages/root.tsx',
+      '/somewhere/cwd/pages/_root.tsx',
       '/somewhere/cwd/pages/index.tsx',
       '/somewhere/cwd/pages/_layout.tsx',
       '/somewhere/cwd/pages/blog/index.tsx',
@@ -123,14 +123,14 @@ describe('generateManifest', () => {
     ]
     vi.mocked(globSync).mockReturnValue(mockFiles)
     const result = await generateManifest(mockOptions)
-    expect(result['/root']).toEqual({
-      id: '/root',
+    expect(result['/_root']).toEqual({
+      id: '/_root',
       parentId: undefined,
       routeInfo: expect.any(Object),
     })
     expect(result['/_layout']).toEqual({
       id: '/_layout',
-      parentId: '/root',
+      parentId: '/_root',
       routeInfo: expect.any(Object),
     })
     expect(result['/']).toEqual({
@@ -168,7 +168,7 @@ describe('generated codes from manifest', () => {
       pagesPath: 'pages',
     }
     const mockFiles = [
-      '/somewhere/cwd/pages/root.tsx',
+      '/somewhere/cwd/pages/_root.tsx',
       '/somewhere/cwd/pages/index.tsx',
       '/somewhere/cwd/pages/_layout.tsx',
       '/somewhere/cwd/pages/blog/index.tsx',
@@ -180,7 +180,7 @@ describe('generated codes from manifest', () => {
     const manifest = await generateManifest(mockOptions)
     const result = await generateServerRouterCode('/somewhere/cwd/.ziro/', manifest)
     expect(result).toContain('const router = new Router()')
-    expect(result).toContain('new Route("/root",')
+    expect(result).toContain('new Route("/_root",')
     expect(result).toContain('new Route("/",')
     expect(result).toContain('new Route("/blog/_layout",')
     expect(result).toContain('new Route("/blog",')
@@ -194,7 +194,7 @@ describe('generated codes from manifest', () => {
       pagesPath: 'pages',
     }
     const mockFiles = [
-      '/somewhere/cwd/pages/root.tsx',
+      '/somewhere/cwd/pages/_root.tsx',
       '/somewhere/cwd/pages/index.tsx',
       '/somewhere/cwd/pages/_layout.tsx',
       '/somewhere/cwd/pages/blog/index.tsx',
@@ -206,11 +206,11 @@ describe('generated codes from manifest', () => {
     const manifest = await generateManifest(mockOptions)
     const result = await generateRoutesTypings('/somewhere/cwd/.ziro/', manifest)
     expect(result).toContain(`declare module 'ziro2/router'`)
-    expect(result).toContain(`"/root": Route<"/root", {}, {}, [], undefined>`)
-    expect(result).toContain(`"/": Route<"/", {}, {}, [], RoutesByRouteId["/_layout"]>`)
-    expect(result).toContain(`"/_layout": Route<"/_layout", {}, {}, [], RoutesByRouteId["/root"]>`)
-    expect(result).toContain(`"/blog/_layout": Route<"/blog/_layout", {}, {}, [], RoutesByRouteId["/_layout"]>`)
-    expect(result).toContain(`"/blog/:slug": Route<"/blog/:slug", {}, {}, [], RoutesByRouteId["/blog/_layout"]>`)
-    expect(result).toContain(`"/blog/admin/rest/:slug": Route<"/blog/admin/rest/:slug", {}, {}, [], RoutesByRouteId["/blog/_layout"]>`)
+    expect(result).toContain(`"/_root": Route<"/_root", {}, {}, [], undefined>`)
+    expect(result).toContain(`"/": Route<"/", {}, {}, [], RouteFilesByRouteId["/_layout"]>`)
+    expect(result).toContain(`"/_layout": Route<"/_layout", {}, {}, [], RouteFilesByRouteId["/_root"]>`)
+    expect(result).toContain(`"/blog/_layout": Route<"/blog/_layout", {}, {}, [], RouteFilesByRouteId["/_layout"]>`)
+    expect(result).toContain(`"/blog/:slug": Route<"/blog/:slug", {}, {}, [], RouteFilesByRouteId["/blog/_layout"]>`)
+    expect(result).toContain(`"/blog/admin/rest/:slug": Route<"/blog/admin/rest/:slug", {}, {}, [], RouteFilesByRouteId["/blog/_layout"]>`)
   })
 })

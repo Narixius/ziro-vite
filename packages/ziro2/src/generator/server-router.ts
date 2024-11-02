@@ -22,7 +22,6 @@ export const generateServerRouterCode = async (manifestDirPath: string, manifest
       as: importName,
       from: getImportPath(manifestDirPath, routeManifest.routeInfo.filepath),
     })
-
     code += `const ${routeVariableName} = new Route("${routeId}", {
 ${[
   routeManifest.parentId ? `  parent: ${generateImportName(manifest[routeManifest.parentId].routeInfo.filepath)}Route` : '',
@@ -30,6 +29,14 @@ ${[
   routeManifest.routeInfo.hasActions ? `  actions: ${importName}.actions` : ``,
   routeManifest.routeInfo.hasMiddleware ? `  middlewares: ${importName}.middlewares` : ``,
   routeManifest.routeInfo.hasMeta ? `  meta: ${importName}.meta` : ``,
+  `  props: {\n${[
+    routeManifest.routeInfo.hasComponent ? `	component: ${importName}.default` : '',
+    routeManifest.routeInfo.hasErrorBoundary ? `	ErrorBoundary: ${importName}.ErrorBoundary` : '',
+    routeManifest.routeInfo.hasLoadingComponent ? `	LoadingComponent: ${importName}.Loading` : '',
+  ]
+    .filter(Boolean)
+    .join(',\n')}
+  }`,
 ]
   .filter(Boolean)
   .join(',\n')}\n})\n`
@@ -38,6 +45,7 @@ ${[
     }
     code += '\n'
   }
+  code += `export default router\n`
   const { injectImports } = createUnimport({ imports })
   return (await injectImports(code)).code
 }

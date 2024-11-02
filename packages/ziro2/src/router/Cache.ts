@@ -1,7 +1,11 @@
+import { createHooks } from 'hookable'
+
 type CacheCategories = 'loader' | 'middleware' | 'action'
+type CacheStatus = 'pending' | 'success' | 'error'
 
 export class Cache {
-  private cache: Map<string, { value: any; expiry: number }>
+  private cache: Map<string, { value: any; expiry: number; status: CacheStatus }>
+  private hooks = createHooks()
 
   constructor() {
     this.cache = new Map()
@@ -11,10 +15,15 @@ export class Cache {
     return JSON.stringify({ category, name, url })
   }
 
+  public on(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown) {
+    this.hooks.hook(this.generateKey(category, name, url), callback)
+  }
+
   private set(category: CacheCategories, name: string, url: string, value: any, ttl: number = Infinity): void {
     const expiry = Date.now() + ttl
     const key = this.generateKey(category, name, url)
-    this.cache.set(key, { value, expiry })
+    this.cache.set(key, { value, expiry, status: 'success' })
+    this.hooks.callHook(this.generateKey(category, name, url), value)
   }
 
   private get(category: CacheCategories, name: string, url: string): any | undefined {
@@ -47,7 +56,7 @@ export class Cache {
     return JSON.stringify(serializedCache)
   }
 
-  getMiddlewareCache(name: string): any | undefined {
+  getMiddlewareCache(name: string): Promise<any | undefined> {
     return this.get('middleware', name, '')
   }
 
@@ -55,7 +64,7 @@ export class Cache {
     this.set('middleware', name, '', value, ttl)
   }
 
-  getActionCache(name: string, url: string): any | undefined {
+  getActionCache(name: string, url: string): Promise<any | undefined> {
     return this.get('action', name, url)
   }
 
@@ -63,7 +72,7 @@ export class Cache {
     this.set('action', name, url, value, ttl)
   }
 
-  getLoaderCache(name: string, url: string): any | undefined {
+  getLoaderCache(name: string, url: string): Promise<any | undefined> {
     return this.get('loader', name, url)
   }
 

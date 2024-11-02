@@ -7,11 +7,13 @@ import { createAbortResponse } from './utils/abort'
 import { createResponse } from './utils/response'
 
 export interface RoutesByRouteId {}
+export interface RouteFilesByRouteId {}
 
-export class Router {
-  tree = rou3.createRouter<AnyRoute[]>()
+export class Router<RouteProps = {}> {
+  tree = rou3.createRouter<AnyRoute<any, any, any, any, any, RouteProps>[]>()
+
   constructor(private baseUrl?: string) {}
-  addRoute(route: AnyRoute) {
+  addRoute(route: AnyRoute<any, any, any, any, any, RouteProps>) {
     let tree = [route]
     while (true) {
       if (!tree[0].getParent()) break

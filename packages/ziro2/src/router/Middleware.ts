@@ -44,7 +44,7 @@ export class Middleware<TDataContextType = any, TOnRequestResult = {}> {
           if (data) {
             dataContext.data = {
               ...dataContext.data,
-              ...cachedData,
+              ...(cachedData || {}),
             }
             cache?.setMiddlewareCache(this.name, data, Infinity)
           }

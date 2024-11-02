@@ -38,7 +38,7 @@ export const getRouteFileInfo = async (filepath: string): Promise<RouteFileInfo>
       if (exp.n === 'ErrorBoundary') r.hasErrorBoundary = true
       if (exp.n === 'middlewares') r.hasMiddleware = true
     })
-    r.index = !getFilename(filepath)?.startsWith('root') && !getFilename(filepath)?.startsWith('_layout')
+    r.index = !getFilename(filepath)?.startsWith('_root') && !getFilename(filepath)?.startsWith('_layout')
     return r
   }
   throw new Error(`Failed to parse module: ${filepath}`)

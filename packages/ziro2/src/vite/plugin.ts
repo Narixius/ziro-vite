@@ -4,10 +4,10 @@ import { joinURL } from 'ufo'
 import { createUnplugin } from 'unplugin'
 import { generateManifest, GenerateManifestOptions, generateRoutesTypings, generateServerRouterCode } from '../generator'
 
-export type ZiroOptions = Partial<{
+export type ZiroOptions = {
   pagesDir?: string
   manifestDirPath?: string
-}>
+}
 
 const generateManifestFilesChain = async (manifestDirPath: string, manifestOptions: GenerateManifestOptions) => {
   return generateManifest(manifestOptions)
@@ -34,7 +34,7 @@ const generateManifestFilesChain = async (manifestDirPath: string, manifestOptio
     })
 }
 
-const ZiroUnplugin = createUnplugin<ZiroOptions>(_options => {
+const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options => {
   const options = defu(_options, {
     pagesDir: 'pages',
     manifestDirPath: '.ziro',
@@ -56,8 +56,39 @@ const ZiroUnplugin = createUnplugin<ZiroOptions>(_options => {
         pagesDirPath = joinURL(server.config.root, options.pagesDir)
         await generateRouteFiles()
         server.watcher.on('all', async (eventName, filepath) => {
-          await generateRouteFiles()
+          if (!filepath.startsWith(manifestDirPath)) await generateRouteFiles()
         })
+      },
+      transformIndexHtml() {
+        return [
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: '/@ziro/client-entry.jsx',
+            },
+            injectTo: 'body',
+          },
+        ]
+      },
+      resolveId(id) {
+        if ([`/@ziro/client-entry.jsx`].includes(id)) {
+          return id
+        }
+      },
+      load(id) {
+        if (id === '/@ziro/client-entry.jsx') {
+          return `import { startTransition } from 'react'
+import { hydrateRoot, createRoot } from 'react-dom/client'
+import { Router } from 'ziro2/react'
+import router from '/.ziro/router.server.ts'
+
+const root = createRoot(document.querySelector("#root"))
+startTransition(() => {
+  root.render(<Router router={router} />)
+//   hydrateRoot(document, <Router router={router} />)
+})`
+        }
       },
     },
   }

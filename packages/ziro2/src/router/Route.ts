@@ -6,7 +6,7 @@ import { Action } from './Action'
 import { Cache } from './Cache'
 import { Middleware } from './Middleware'
 import { DataContext } from './RouteDataContext'
-import { RoutesByRouteId } from './Router'
+import { RouteFilesByRouteId } from './Router'
 import { createAbortResponse } from './utils/abort'
 
 export type ParsePathParams<T extends string, TAcc = never> = T extends `${string}:${infer TPossiblyParam}`
@@ -17,20 +17,27 @@ export type ParsePathParams<T extends string, TAcc = never> = T extends `${strin
     : TPossiblyParam | TAcc
   : TAcc
 export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
-export type AnyRoute<RouteId extends AlsoAllowString<keyof RoutesByRouteId> = any, TLoaderResult = any> = Route<RouteId, TLoaderResult, any, any, any, any, any, any>
+export type AnyRoute<
+  RouteId extends AlsoAllowString<keyof RouteFilesByRouteId> = any,
+  TLoaderResult = any,
+  TActions extends Record<string, Action> = {},
+  TMiddlewares extends Middleware[] = any,
+  TParent extends AnyRoute = any,
+  TProps = any,
+> = Route<RouteId, TLoaderResult, TActions, TMiddlewares, TParent, TProps, any, any>
 export type GetRouteDataContext<TParent> = TParent extends Route<any, any, any, any, any, any, any, infer TParentDataContextToChild> ? TParentDataContextToChild : {}
 
-type RouteContext<RouteId extends keyof RoutesByRouteId> = RoutesByRouteId[RouteId]['dataContext']
-export type LoaderArgs<RouteId extends keyof RoutesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
-export type ActionArgs<RouteId extends keyof RoutesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
-export type MetaArgs<RouteId extends keyof RoutesByRouteId> = {
+type RouteContext<RouteId extends keyof RouteFilesByRouteId> = RouteFilesByRouteId[RouteId]['dataContext']
+export type LoaderArgs<RouteId extends keyof RouteFilesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
+export type ActionArgs<RouteId extends keyof RouteFilesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
+export type MetaArgs<RouteId extends keyof RouteFilesByRouteId> = {
   request: Request
   dataContext: RouteContext<RouteId>
   head: DataContext['head']
   params: RouteParams<RouteId>
-  loaderData: RoutesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
+  loaderData: RouteFilesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
 }
-export type MetaFn<RouteId extends keyof RoutesByRouteId> = (args: MetaArgs<RouteId>) => Promise<Head>
+export type MetaFn<RouteId extends keyof RouteFilesByRouteId> = (args: MetaArgs<RouteId>) => Promise<Head>
 export type LoaderReturnType<T extends (...args: any[]) => Promise<any>> = Awaited<ReturnType<T>>
 
 type ExtractReturnTypesFromMiddleware<T extends readonly Middleware<any, any>[]> = {
@@ -40,7 +47,7 @@ type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) exten
 export type IntersectionOfMiddlewaresResult<T extends readonly Middleware<any, any>[]> = UnionToIntersection<ExtractReturnTypesFromMiddleware<T>[number]>
 
 export class Route<
-  RouteId extends AlsoAllowString<keyof RoutesByRouteId>,
+  RouteId extends AlsoAllowString<keyof RouteFilesByRouteId>,
   TLoaderResult,
   TActions extends Record<string, Action<any, any>> = {},
   TMiddlewares extends Middleware<TDataContext, any>[] = [],
@@ -79,17 +86,25 @@ export class Route<
     return this.options.props
   }
   parsePath(params?: Record<string, string>) {
-    return omit(params, this.paramsKeys)
+    const matchedParams = omit(params, this.paramsKeys) as RouteParams<RouteId>
+    const matchedUrl = this.id.replace(/:([a-zA-Z0-9]+)/g, (_, key) => {
+      return params?.[key] || ''
+    })
+    return {
+      params: matchedParams,
+      url: matchedUrl,
+    }
   }
 
-  async loadMeta(dataContext: DataContext<TDataContext>, request: Request, params: RouteParams<RouteId>, cache: Cache) {
+  async loadMeta(dataContext: DataContext<TDataContext>, request: Request, fullParams: RouteParams<RouteId>, cache: Cache) {
     if (this.options.meta) {
+      const { params, url: matchedUrl } = this.parsePath(fullParams)
       await this.options
         .meta({
           dataContext: dataContext.data,
           params,
           request,
-          loaderData: cache.getLoaderCache(this.id, request.url) as TLoaderResult,
+          loaderData: cache.getLoaderCache(this.id, matchedUrl) as TLoaderResult,
           head: dataContext.head,
         })
         .then(head => {
@@ -114,25 +129,25 @@ export class Route<
     }
   }
 
-  async onRequest(request: Request, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache) {
-    params = this.parsePath(params)
+  async onRequest(request: Request, fullParams: Record<string, string>, dataContext: DataContext<any>, cache: Cache) {
+    const { params, url: matchedUrl } = this.parsePath(fullParams)
 
     await this.loadMiddlewaresOnRequest(request, params as RouteParams<RouteId>, dataContext, cache)
 
-    const cachedData = cache?.getLoaderCache(this.id, request.url) as TLoaderResult | undefined
-    if (cachedData) {
-      return cachedData
+    let data = cache?.getLoaderCache(this.id, matchedUrl) as TLoaderResult | undefined
+    if (!data) {
+      data = await this.options.loader?.({
+        dataContext: dataContext.data,
+        params: params as RouteParams<RouteId>,
+        request,
+        head: dataContext.head,
+      })
     }
-    const data = await this.options.loader?.({
-      dataContext: dataContext.data,
-      params: params as RouteParams<RouteId>,
-      request,
-      head: dataContext.head,
-    })
+
     // update the cache
-    if (data) {
-      cache?.setLoaderCache(this.id, request.url, data, Infinity)
-    }
+    // if (data) {
+    cache?.setLoaderCache(this.id, matchedUrl, data || {}, Infinity)
+    // }
 
     await this.loadMeta(dataContext, request, params as RouteParams<RouteId>, cache)
 

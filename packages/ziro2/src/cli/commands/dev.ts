@@ -37,6 +37,7 @@ const devCommand = defineCommand({
       showURL: false,
       public: host,
       port,
+      autoClose: true,
     })
       .then(async server => {
         AppContext.getContext().listener = server
@@ -71,5 +72,6 @@ const renderer = eventHandler(async event => {
   const req = event.node.req
   const res = event.node.res
   const method = req.method!
-  return 'ziro is charged'
+  // render the html
+  return AppContext.getContext().vite.transformIndexHtml(req.url!, `<div id="root"></div>`)
 })

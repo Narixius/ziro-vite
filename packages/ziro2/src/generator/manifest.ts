@@ -35,15 +35,15 @@ function assignParentIds(manifest: RoutesManifest): RoutesManifest {
     if (updatedManifest['/_layout'] && '/_layout' !== routeId) {
       return '/_layout'
     }
-    // If even '/_layout' doesn't exist, return '/root' as the ultimate fallback
-    return '/root'
+    // If even '/_layout' doesn't exist, return '/_root' as the ultimate fallback
+    return '/_root'
   }
 
   for (const [routeId, route] of Object.entries(updatedManifest)) {
-    if (routeId === '/root') {
+    if (routeId === '/_root') {
       route.parentId = undefined // Root has no parent
     } else if (routeId === '/_layout') {
-      route.parentId = '/root' // Root layout's parent is /root
+      route.parentId = '/_root' // Root layout's parent is /_root
     } else if (routeId.endsWith('/_layout')) {
       // For nested layouts, the parent is always the next level up layout
       route.parentId = findParentLayout(routeId)
@@ -54,7 +54,7 @@ function assignParentIds(manifest: RoutesManifest): RoutesManifest {
 
     // Ensure we don't create circular references
     if (route.parentId === routeId) {
-      route.parentId = '/root'
+      route.parentId = '/_root'
     }
   }
 

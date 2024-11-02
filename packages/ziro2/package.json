@@ -10,12 +10,16 @@
     "coverage": "vitest run --coverage"
   },
   "bin": {
-    "ziro": "dist/cli/index.js"
+    "ziro2": "dist/src/cli/index.js"
   },
   "exports": {
     "./router": {
       "types": "./dist/src/router/index.d.ts",
       "import": "./dist/src/router/index.js"
+    },
+    "./react": {
+      "types": "./dist/src/router/react/index.d.ts",
+      "import": "./dist/src/router/react/index.js"
     },
     "./generator": {
       "types": "./dist/src/generator/index.d.ts",

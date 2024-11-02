@@ -39,7 +39,7 @@ export default function SingleBlogPage({ loaderData }: RouteProps<'/pokes/:pokem
   )
 }
 
-export const ErrorComponent: ZiroRouteErrorComponent = ({ error, resetErrorBoundary }) => {
+export const ErrorBoundary: ZiroRouteErrorComponent = ({ error, resetErrorBoundary }) => {
   return (
     <div>
       <span className="text-red-800">{error.message}</span>
