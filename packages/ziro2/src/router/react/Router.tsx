@@ -1,11 +1,12 @@
 import { createHooks } from 'hookable'
-import { createContext, FC, Suspense, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { RouteFilesByRouteId } from 'ziro2/router'
 import { Cache } from '../Cache'
 import { AnyRoute } from '../Route'
 import { DataContext } from '../RouteDataContext'
 import { Router as RouterObj } from '../Router'
+import { isRedirectResponse } from '../utils/redirect'
 
 export type RouteProps<RouteId extends keyof RouteFilesByRouteId> = {
   loaderData: RouteFilesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
@@ -24,7 +25,10 @@ const routerHook = createHooks<{
   onUrlChange: () => void
 }>()
 
-const RouterContext = createContext<{ router: RouterObj }>(null!)
+type NavigateFn = (to: string, options: { replace?: boolean }) => void
+
+const RouterContext = createContext<{ router: RouterObj; navigate: NavigateFn }>(null!)
+
 export const Router: FC<RouterProps> = ({ router }) => {
   const [url, setUrl] = useState(window.location.pathname)
   const dataContext = useRef(new DataContext())
@@ -49,8 +53,18 @@ export const Router: FC<RouterProps> = ({ router }) => {
       setUrl(window.location.pathname)
     })
   }, [])
+
+  const navigate = useCallback((to: string, options: { replace?: boolean }) => {
+    if (typeof window !== 'undefined') window.history[options.replace ? 'replaceState' : 'pushState']({}, '', to)
+    else {
+      startTransition(() => {
+        setUrl(to)
+      })
+    }
+  }, [])
+
   return (
-    <RouterContext.Provider value={{ router }}>
+    <RouterContext.Provider value={{ router, navigate }}>
       <OutletContext.Provider
         value={{
           tree: treeInfo.tree!,
@@ -83,6 +97,10 @@ const getCurrentBrowserURLRequest = () => {
   return req
 }
 
+class SuspenseError {
+  constructor(public value: any) {}
+}
+
 const promiseMaps: Record<
   string,
   {
@@ -92,7 +110,7 @@ const promiseMaps: Record<
   }
 > = {}
 
-function useRouteLoader<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache): T | void {
+function useRouteLoader<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache, navigate: NavigateFn): T | void {
   const { url: matchedUrl } = route.parsePath(params)
 
   const cachedData = cache.getLoaderCache(route.getId(), matchedUrl)
@@ -123,17 +141,23 @@ function useRouteLoader<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>
     )
     // async call load route
     loadRoute(route, params, dataContext, cache).catch(e => {
-      console.log(route.getId(), 'promise rejected')
-      cache.setLoaderCache(route.getId(), matchedUrl, e)
-      reject(e)
+      if (e instanceof Response) {
+        if (isRedirectResponse(e)) {
+          navigate(e.headers.get('Location') || e.url, { replace: true })
+          return
+        }
+      }
+      const error = new SuspenseError(e)
+      cache.setLoaderCache(route.getId(), matchedUrl, error)
+      reject(error)
       delete promiseMaps[promiseKey]
     })
   }
 
   if (cachedData) {
-    // fix this section
-    if (cachedData instanceof Error) {
-      throw cachedData
+    // todo: fix this section
+    if (cachedData instanceof SuspenseError) {
+      throw cachedData.value
     }
     // async call load meta
     loadRouteMeta(route, params, dataContext, cache)
@@ -184,8 +208,8 @@ const RouteRenderer: FC = () => {
   const route = tree[0]
   const routeProps = route.getProps()
   const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
-
-  const data = useRouteLoader(route, params, dataContext, cache)
+  const { navigate } = useContext(RouterContext)
+  const data = useRouteLoader(route, params, dataContext, cache, navigate)
   if (!routeProps?.component) return null
 
   return (

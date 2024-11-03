@@ -8,7 +8,9 @@ import { Action, redirect } from 'ziro2/router'
 import { z } from 'zod'
 
 export const middlewares = [guestGuard]
-
+export const loader = async () => {
+  redirect('/pokes')
+}
 export const actions = {
   login: new Action({
     input: z.object({
