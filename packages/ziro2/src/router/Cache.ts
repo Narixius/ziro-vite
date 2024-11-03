@@ -15,8 +15,12 @@ export class Cache {
     return JSON.stringify({ category, name, url })
   }
 
-  public on(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown) {
-    this.hooks.hook(this.generateKey(category, name, url), callback)
+  public onDataCached(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown, once: boolean = false) {
+    this.hooks[once ? 'hookOnce' : 'hook'](this.generateKey(category, name, url), callback)
+  }
+
+  public removeHook(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown) {
+    this.hooks.removeHook(this.generateKey(category, name, url), callback)
   }
 
   private set(category: CacheCategories, name: string, url: string, value: any, ttl: number = Infinity): void {

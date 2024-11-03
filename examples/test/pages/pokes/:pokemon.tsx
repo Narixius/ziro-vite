@@ -1,4 +1,5 @@
-import { abort, RouteProps, ZiroRouteErrorComponent } from 'ziro/router'
+import { abort, ZiroRouteErrorComponent } from 'ziro/router'
+import { RouteProps } from 'ziro2/react'
 import { LoaderArgs, MetaFn } from 'ziro2/router'
 
 export const loader = async ({ params }: LoaderArgs<'/pokes/:pokemon'>) => {
@@ -21,7 +22,7 @@ export const loader = async ({ params }: LoaderArgs<'/pokes/:pokemon'>) => {
 }
 
 export const Loading = () => {
-  return 'loading...'
+  return 'loading pokemon...'
 }
 
 export const meta: MetaFn<'/pokes/:pokemon'> = async ({ loaderData }) => {

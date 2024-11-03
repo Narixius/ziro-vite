@@ -1,7 +1,7 @@
 import { RouteProps } from 'ziro/router'
 import { Link, Outlet } from 'ziro2/react'
 
-export const loader = () => ({})
+export const loader = async () => ({})
 
 export default function MainLayout({ dataContext }: RouteProps<'/_layout'>) {
   return (

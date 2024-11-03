@@ -30,6 +30,7 @@ export type GetRouteDataContext<TParent> = TParent extends Route<any, any, any, 
 type RouteContext<RouteId extends keyof RouteFilesByRouteId> = RouteFilesByRouteId[RouteId]['dataContext']
 export type LoaderArgs<RouteId extends keyof RouteFilesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
 export type ActionArgs<RouteId extends keyof RouteFilesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
+
 export type MetaArgs<RouteId extends keyof RouteFilesByRouteId> = {
   request: Request
   dataContext: RouteContext<RouteId>
@@ -37,6 +38,7 @@ export type MetaArgs<RouteId extends keyof RouteFilesByRouteId> = {
   params: RouteParams<RouteId>
   loaderData: RouteFilesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
 }
+
 export type MetaFn<RouteId extends keyof RouteFilesByRouteId> = (args: MetaArgs<RouteId>) => Promise<Head>
 export type LoaderReturnType<T extends (...args: any[]) => Promise<any>> = Awaited<ReturnType<T>>
 
