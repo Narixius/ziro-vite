@@ -6,7 +6,7 @@ export const meta: MetaFn<'/_root'> = async ctx => {
   return {
     title: 'root from here',
     titleTemplate(title) {
-      return `${title} | ${ctx.loaderData.version} `
+      return `${title} | Test app`
     },
     link: [
       {

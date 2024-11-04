@@ -16,6 +16,9 @@ export default function MainLayout({ dataContext }: RouteProps<'/_layout'>) {
         <Link href="/auth" className="underline text-blue-500">
           Login
         </Link>
+        <Link href="/dashboard" className="underline text-blue-500">
+          Dashboard
+        </Link>
       </div>
       <Outlet />
     </div>

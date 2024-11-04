@@ -1,5 +1,5 @@
 import { createHooks } from 'hookable'
-import { createContext, FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import { FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { RouteFilesByRouteId } from 'ziro2/router'
 import { Cache } from '../Cache'
@@ -7,12 +7,14 @@ import { AnyRoute } from '../Route'
 import { DataContext } from '../RouteDataContext'
 import { Router as RouterObj } from '../Router'
 import { isRedirectResponse } from '../utils/redirect'
+import { OutletContext } from './contexts/OutletContext'
+import { NavigateFn, RouterContext } from './contexts/RouterContext'
 
 export type RouteProps<RouteId extends keyof RouteFilesByRouteId> = {
   loaderData: RouteFilesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
 }
 
-type TRouteProps = {
+export type TRouteProps = {
   component?: FC<{ loaderData: any }>
   LoadingComponent?: FC
   ErrorBoundary?: FC<FallbackProps>
@@ -24,10 +26,6 @@ type RouterProps = {
 const routerHook = createHooks<{
   onUrlChange: () => void
 }>()
-
-type NavigateFn = (to: string, options: { replace?: boolean }) => void
-
-const RouterContext = createContext<{ router: RouterObj; navigate: NavigateFn }>(null!)
 
 export const Router: FC<RouterProps> = ({ router }) => {
   const [url, setUrl] = useState(window.location.pathname)
@@ -41,6 +39,15 @@ export const Router: FC<RouterProps> = ({ router }) => {
 
   useEffect(() => {
     window.history.pushState = new Proxy(window.history.pushState, {
+      apply: (target, thisArg, argArray) => {
+        // trigger here what you need
+        startTransition(() => {
+          setUrl(argArray[2])
+        })
+        return target.apply(thisArg, argArray as [any, string, string?])
+      },
+    })
+    window.history.replaceState = new Proxy(window.history.replaceState, {
       apply: (target, thisArg, argArray) => {
         // trigger here what you need
         startTransition(() => {
@@ -79,15 +86,6 @@ export const Router: FC<RouterProps> = ({ router }) => {
     </RouterContext.Provider>
   )
 }
-
-const OutletContext = createContext<{
-  tree: AnyRoute<any, any, any, any, any, TRouteProps>[]
-  route?: AnyRoute<any, any, any, any, any, TRouteProps>
-  params: Record<string, string>
-  dataContext: DataContext
-  cache: Cache
-  level: number
-}>(null!)
 
 const getCurrentBrowserURLRequest = () => {
   const url = new URL(window.location.href)
@@ -155,7 +153,7 @@ function useRouteLoader<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>
   }
 
   if (cachedData) {
-    // todo: fix this section
+    // todo: fix loop erroring
     if (cachedData instanceof SuspenseError) {
       throw cachedData.value
     }
@@ -199,7 +197,7 @@ const ErrorBoundaryFallback: FC<FallbackProps> = props => {
     routerHook.hookOnce('onUrlChange', props.resetErrorBoundary)
     return props.resetErrorBoundary
   }, [tree])
-
+  // TODO: create default error boundary
   return routeProps?.ErrorBoundary ? <routeProps.ErrorBoundary {...props} /> : <span>error</span>
 }
 

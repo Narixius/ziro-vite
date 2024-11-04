@@ -17,10 +17,12 @@ export type ParsePathParams<T extends string, TAcc = never> = T extends `${strin
     : TPossiblyParam | TAcc
   : TAcc
 export type RouteParams<TPath extends string> = Record<ParsePathParams<TPath>, string>
+export type SafeRouteParams<TPath extends string> = keyof RouteParams<TPath> extends never ? undefined : RouteParams<TPath>
+
 export type AnyRoute<
   RouteId extends AlsoAllowString<keyof RouteFilesByRouteId> = any,
   TLoaderResult = any,
-  TActions extends Record<string, Action> = {},
+  TActions extends Record<string, Action<any, any>> = {},
   TMiddlewares extends Middleware[] = any,
   TParent extends AnyRoute = any,
   TProps = any,
@@ -87,11 +89,14 @@ export class Route<
   getProps() {
     return this.options.props
   }
-  parsePath(params?: Record<string, string>) {
-    const matchedParams = omit(params, this.paramsKeys) as RouteParams<RouteId>
-    const matchedUrl = this.id.replace(/:([a-zA-Z0-9]+)/g, (_, key) => {
+  static fillRouteParams(routeId: string, params: Record<string, string>) {
+    return routeId.replace(/:([a-zA-Z0-9]+)/g, (_, key) => {
       return params?.[key] || ''
     })
+  }
+  parsePath(params: Record<string, string>) {
+    const matchedParams = omit(params, this.paramsKeys) as RouteParams<RouteId>
+    const matchedUrl = Route.fillRouteParams(this.id, params)
     return {
       params: matchedParams,
       url: matchedUrl,
