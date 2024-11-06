@@ -104,7 +104,7 @@ describe('Router', () => {
   const jsonErrorTestRoute = new Route('/json-error-test', {
     parent: rootRoute,
     loader: async () => {
-      throw JsonError(
+      throw new JsonError(
         {
           message: 'invalid data',
         },

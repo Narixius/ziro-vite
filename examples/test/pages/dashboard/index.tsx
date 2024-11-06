@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 export const loader = async (ctx: LoaderArgs<'/dashboard'>) => {
   console.log('fetching dashboard')
-  await new Promise(resolve => setTimeout(resolve, 2000))
+  await new Promise(resolve => setTimeout(resolve, 500))
   return {
     user: localStorage.getItem('username'),
   }
@@ -43,5 +43,5 @@ export default function Dashboard(props: RouteProps<'/dashboard'>) {
 }
 
 export const Loading = () => {
-  return <span>Loading...</span>
+  return <span>Loading Dashboard</span>
 }

@@ -10,6 +10,8 @@ import { OutletContext } from './contexts/OutletContext'
 import { RouterContext } from './contexts/RouterContext'
 type InferRouteAction<TRoute extends AnyRoute> = TRoute extends AnyRoute<any, any, infer TActions> ? TActions : never
 
+type TPreserveValues<TActionFields = string> = { enabled: boolean; exclude?: TActionFields[] }
+
 export const useAction = <
   // @ts-ignore
   RouteId extends AlsoAllowString<RoutesByRouteId['routes']>,
@@ -32,16 +34,19 @@ export const useAction = <
             params: RouteParams<RouteId>
           }),
   action: TActionName,
-  options?: {
-    preserveValues?: boolean | { enabled: boolean; exclude?: TActionFields[] }
+  options: {
+    preserveValues?: boolean | TPreserveValues<TActionFields>
+  } = {
+    preserveValues: true,
   },
 ) => {
   const [isPending, setIsPending] = useState(false)
+  const [defaultValues, setDefaultValues] = useState<Record<string, any>>({})
   const [data, setData] = useState<TActionResult | undefined>(undefined)
   const [errors, setErrors] = useState<Record<keyof TActionSchema | 'root', string> | undefined>(undefined)
   const routeId = typeof url === 'string' ? url : url.url
   const params = typeof url === 'string' ? {} : url.params
-  const { router } = useContext(RouterContext)
+  const { router, revalidateTree } = useContext(RouterContext)
   const { cache } = useContext(OutletContext)
   const submit = (body: TActionSchema) => {}
   const actionUrl = Route.fillRouteParams(routeId, params)
@@ -51,8 +56,16 @@ export const useAction = <
     onSubmit(e: React.FormEvent<HTMLFormElement>) {
       e.preventDefault()
       setIsPending(true)
+      setErrors(undefined)
       const formData = new FormData((e.target as HTMLFormElement).elements.length > 0 ? (e.target as HTMLFormElement) : undefined)
-      formData.append('x', 'asdf')
+
+      const pvEnabled = typeof options?.preserveValues === 'boolean' ? options?.preserveValues : true
+      const pvOptions = (typeof options?.preserveValues === 'boolean' ? {} : options?.preserveValues) as TPreserveValues<TActionFields>
+      formData.append('__pv', String(Number(pvEnabled)))
+      if (pvEnabled && pvOptions.exclude) {
+        formData.append('__ex', pvOptions.exclude.join(','))
+      }
+
       const url = parseURL(
         withQuery(actionUrl, {
           action: action.toString(),
@@ -97,17 +110,26 @@ export const useAction = <
         .then(data => {
           if (data === undefined) return
           if ('errors' in data) {
+            if ('input' in data) {
+              setDefaultValues(data.input)
+            }
             return setErrors(data.errors)
           }
           setData(data)
         })
         .then(() => {
-          cache.clear()
+          revalidateTree()
         })
         .finally(() => {
           setIsPending(false)
         })
     },
+  }
+  const register = (inputName: keyof TActionSchema) => {
+    return {
+      name: inputName,
+      defaultValue: defaultValues[inputName as string],
+    }
   }
   return {
     formProps,
@@ -115,5 +137,6 @@ export const useAction = <
     submit,
     data,
     errors,
+    register,
   }
 }

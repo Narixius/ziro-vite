@@ -23,8 +23,10 @@ export const actions = {
       username: z.string().min(3, 'This field is required'),
       password: z.string().min(4, 'This field is required'),
     }),
-    async handler(input, { dataContext }) {
+    async handler(input) {
+      //   await new Promise(resolve => setTimeout(resolve, 1000))
       if (input.username[0] == 'a' && input.password[0] == 'a') {
+        await new Promise(resolve => setTimeout(resolve, 500))
         const token = await login({ username: input.username })
         const headers = new Headers()
         headers.set('token', token)
@@ -54,31 +56,32 @@ export default function AuthPage() {
       exclude: ['password'],
     },
   })
+
   return (
     <Card className="w-full max-w-sm mx-auto mt-20">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center tracking-normal">Login</CardTitle>
         <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form {...loginAction.formProps} className="flex flex-col gap-2">
           <Label className="flex flex-col gap-0.5 text-gray-600">
             <span className="text-sm font-normal">Username</span>
-            <Input name="username" autoComplete="username" invalid={!!loginAction.errors?.username} />
+            <Input {...loginAction.register('username')} autoComplete="username" invalid={!!loginAction.errors?.username} />
             <ErrorMessage message={loginAction.errors?.username} />
           </Label>
           <Label className="flex flex-col gap-0.5 text-gray-600">
             <span className="text-sm font-normal">Password</span>
-            <Input type="password" autoComplete="current-password" name="password" invalid={!!loginAction.errors?.password} />
+            <Input {...loginAction.register('password')} type="password" autoComplete="current-password" invalid={!!loginAction.errors?.password} />
             <ErrorMessage message={loginAction.errors?.password} />
           </Label>
           {!!loginAction.errors?.root && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="my-2">
               <AlertDescription>{loginAction.errors?.root}</AlertDescription>
             </Alert>
           )}
-          <Button className="w-full" variant="default">
-            Sign in
+          <Button disabled={loginAction.isPending} className="w-full" variant="default">
+            {loginAction.isPending ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
       </CardContent>

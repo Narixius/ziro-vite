@@ -2,11 +2,11 @@ import { createHooks } from 'hookable'
 import { FC, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { RouteFilesByRouteId } from 'ziro2/router'
+import { AlsoAllowString } from '../../types'
 import { Cache } from '../Cache'
 import { AnyRoute } from '../Route'
 import { DataContext } from '../RouteDataContext'
 import { Router as RouterObj } from '../Router'
-import { isRedirectResponse } from '../utils/redirect'
 import { OutletContext } from './contexts/OutletContext'
 import { NavigateFn, RouterContext } from './contexts/RouterContext'
 
@@ -31,28 +31,31 @@ export const Router: FC<RouterProps> = ({ router }) => {
   const [url, setUrl] = useState(window.location.pathname)
   const dataContext = useRef(new DataContext())
   const cache = useRef(new Cache())
+
   const treeInfo = useMemo(() => {
     routerHook.callHook('onUrlChange')
+    loadRouter(router, dataContext.current, cache.current)
     return router.findRouteTree(url)
   }, [url])
+
   const [, startTransition] = useTransition()
 
   useEffect(() => {
     window.history.pushState = new Proxy(window.history.pushState, {
       apply: (target, thisArg, argArray) => {
         // trigger here what you need
-        startTransition(() => {
-          setUrl(argArray[2])
-        })
+        // startTransition(() => {
+        setUrl(argArray[2])
+        // })
         return target.apply(thisArg, argArray as [any, string, string?])
       },
     })
     window.history.replaceState = new Proxy(window.history.replaceState, {
       apply: (target, thisArg, argArray) => {
         // trigger here what you need
-        startTransition(() => {
-          setUrl(argArray[2])
-        })
+        // startTransition(() => {
+        setUrl(argArray[2])
+        // })
         return target.apply(thisArg, argArray as [any, string, string?])
       },
     })
@@ -64,14 +67,33 @@ export const Router: FC<RouterProps> = ({ router }) => {
   const navigate = useCallback((to: string, options: { replace?: boolean }) => {
     if (typeof window !== 'undefined') window.history[options.replace ? 'replaceState' : 'pushState']({}, '', to)
     else {
-      startTransition(() => {
-        setUrl(to)
-      })
+      //   startTransition(() => {
+      setUrl(to)
+      //   })
     }
   }, [])
 
+  const revalidateTree = useCallback(() => {
+    // proxy the cache, on get methods, return undefined because we want to recall the loaders
+    // on set methods, we must call the original cache setter method
+    const proxyCache = new Proxy(cache.current, {
+      get(target, prop: keyof Cache) {
+        if (typeof target[prop] === 'function') {
+          return (...args: any[]) => {
+            if (prop.startsWith('set')) {
+              return (target[prop] as Function).apply(target, args)
+            }
+            return undefined
+          }
+        }
+        return target[prop]
+      },
+    })
+    return loadRouter(router, dataContext.current, proxyCache)
+  }, [router])
+
   return (
-    <RouterContext.Provider value={{ router, navigate }}>
+    <RouterContext.Provider value={{ router, navigate, revalidateTree }}>
       <OutletContext.Provider
         value={{
           tree: treeInfo.tree!,
@@ -85,6 +107,11 @@ export const Router: FC<RouterProps> = ({ router }) => {
       </OutletContext.Provider>
     </RouterContext.Provider>
   )
+}
+
+const loadRouter = async (router: RouterObj<TRouteProps>, dataContext: DataContext<any>, cache: Cache) => {
+  const request = getCurrentBrowserURLRequest()
+  return await router.onRequest(request, cache, dataContext)
 }
 
 const getCurrentBrowserURLRequest = () => {
@@ -108,13 +135,13 @@ const promiseMaps: Record<
   }
 > = {}
 
-function useRouteLoader<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache, navigate: NavigateFn): T | void {
+function routeLoadedSuspense<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache, navigate: NavigateFn): T | void {
   const { url: matchedUrl } = route.parsePath(params)
 
   const cachedData = cache.getLoaderCache(route.getId(), matchedUrl)
   const promiseKey = `${route.getId()}-${matchedUrl}`
 
-  if (!cachedData) {
+  if (!cachedData && !promiseMaps[promiseKey]) {
     let resolve = (value: unknown) => {},
       reject = (reason: unknown) => {}
     const promise = new Promise((r, rr) => {
@@ -127,47 +154,37 @@ function useRouteLoader<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>
       resolve,
     }
     // set hook to notify when data has fetched.
-    cache.onDataCached(
-      'loader',
-      route.getId(),
-      matchedUrl,
-      data => {
-        resolve(data)
-        delete promiseMaps[promiseKey]
-      },
-      true,
-    )
-    // async call load route
-    loadRoute(route, params, dataContext, cache).catch(e => {
-      if (e instanceof Response) {
-        if (isRedirectResponse(e)) {
-          navigate(e.headers.get('Location') || e.url, { replace: true })
-          return
-        }
-      }
-      const error = new SuspenseError(e)
-      cache.setLoaderCache(route.getId(), matchedUrl, error)
-      reject(error)
+    cache.hookOnce('loader', route.getId(), matchedUrl, data => {
+      resolve(data)
       delete promiseMaps[promiseKey]
     })
+    // async call load route
+    // loadRoute(route, params, dataContext, cache).catch(e => {
+    //   if (e instanceof Response) {
+    //     if (isRedirectResponse(e)) {
+    //       navigate(e.headers.get('Location') || e.url, { replace: true })
+    //       return
+    //     }
+    //   }
+    //   const error = new SuspenseError(e)
+    //   cache.setLoaderCache(route.getId(), matchedUrl, error)
+    //   reject(error)
+    //   delete promiseMaps[promiseKey]
+    // })
   }
 
-  if (cachedData) {
-    // todo: fix loop erroring
-    if (cachedData instanceof SuspenseError) {
-      throw cachedData.value
-    }
-    // async call load meta
-    loadRouteMeta(route, params, dataContext, cache)
-    return cachedData as T
-  } else if (promiseMaps[promiseKey]) {
+  //   if (cachedData) {
+  //     // todo: fix loop erroring
+  //     // if (cachedData instanceof SuspenseError) {
+  //     //   throw cachedData.value
+  //     // }
+  //     // async call load meta
+  //     loadRouteMeta(route, params, dataContext, cache)
+  //     return cachedData as T
+  //   }
+  if (!cachedData && promiseMaps[promiseKey]) {
     throw promiseMaps[promiseKey].promise
   }
-}
-
-const loadRoute = async (route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache) => {
-  const request = getCurrentBrowserURLRequest()
-  return await route.onRequest(request, params, dataContext, cache)
 }
 
 const loadRouteMeta = async (route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache) => {
@@ -207,26 +224,47 @@ const RouteRenderer: FC = () => {
   const routeProps = route.getProps()
   const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
   const { navigate } = useContext(RouterContext)
-  const data = useRouteLoader(route, params, dataContext, cache, navigate)
-  if (!routeProps?.component) return null
 
+  routeLoadedSuspense(route, params, dataContext, cache, navigate)
+
+  if (!routeProps?.component) return null
   return (
     <OutletContext.Provider value={{ tree: theRestOfRoutes, params, dataContext, cache, level: level + 1, route }}>
-      <routeProps.component loaderData={data} />
+      <RouteComponent />
     </OutletContext.Provider>
   )
 }
 
-export const useLoaderData = () => {
-  const { route, params, cache } = useContext(OutletContext)
+const RouteComponent: FC = () => {
+  const { route, params, dataContext, cache } = useContext(OutletContext)
+  const routeProps = route!.getProps()!
+  const loaderData = useLoaderData()
 
+  useEffect(() => {
+    // todo: this should be improved, it has bug
+    loadRouteMeta(route!, params, dataContext, cache)
+  }, [])
+
+  if (routeProps.component) return <routeProps.component loaderData={loaderData} />
+  return null
+}
+
+export type GetLoaderData<RouteId extends AlsoAllowString<keyof RouteFilesByRouteId>> = RouteId extends keyof RouteFilesByRouteId
+  ? RouteFilesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult>
+    ? TLoaderResult
+    : unknown
+  : any
+
+export const useLoaderData = <RouteId extends AlsoAllowString<keyof RouteFilesByRouteId>>() => {
+  const { route, params, cache } = useContext(OutletContext)
   const { url } = route!.parsePath(params)
+
   const subscribe = (onStoreChange: () => void) => {
-    cache.onDataCached('loader', route!.getId(), url, onStoreChange)
+    cache.hook('loader', route!.getId(), url, onStoreChange)
     return () => cache.removeHook('loader', route!.getId(), url, onStoreChange)
   }
 
-  const getSnapshot = () => {
+  const getSnapshot = (): Promise<GetLoaderData<RouteId>> => {
     return cache.getLoaderCache(route!.getId(), url)
   }
 

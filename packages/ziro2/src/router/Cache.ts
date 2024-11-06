@@ -15,8 +15,11 @@ export class Cache {
     return JSON.stringify({ category, name, url })
   }
 
-  public onDataCached(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown, once: boolean = false) {
-    this.hooks[once ? 'hookOnce' : 'hook'](this.generateKey(category, name, url), callback)
+  public hookOnce(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown) {
+    this.hooks.hookOnce(this.generateKey(category, name, url), callback)
+  }
+  public hook(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown) {
+    this.hooks.hook(this.generateKey(category, name, url), callback)
   }
 
   public removeHook(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown) {
@@ -49,7 +52,11 @@ export class Cache {
   }
 
   clear(): void {
+    const tmpCache = this.cache.keys()
     this.cache.clear()
+    tmpCache.forEach(key => {
+      this.hooks.callHook(key)
+    })
   }
 
   serialize(): string {

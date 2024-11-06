@@ -1,7 +1,10 @@
 import { RouteProps } from 'ziro/router'
 import { Link, Outlet } from 'ziro2/react'
 
-export const loader = async () => ({})
+export const loader = async () => {
+  console.log('fetching root layout')
+  return {}
+}
 
 export default function MainLayout({ dataContext }: RouteProps<'/_layout'>) {
   return (
@@ -18,6 +21,9 @@ export default function MainLayout({ dataContext }: RouteProps<'/_layout'>) {
         </Link>
         <Link href="/dashboard" className="underline text-blue-500">
           Dashboard
+        </Link>
+        <Link href="/todo" className="underline text-blue-500">
+          Todos
         </Link>
       </div>
       <Outlet />

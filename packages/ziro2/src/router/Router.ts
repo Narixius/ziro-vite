@@ -59,8 +59,17 @@ export class Router<RouteProps = {}> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
     if (tree) {
       const actionRoute = tree[tree.length - 1]
-      // load each of the routes from the first one to the last one
-      const actionResult = await actionRoute.handleAction(request, params || {}, dataContext, cache)
+
+      // todo: load parent route middlewares, then load action route
+
+      let actionResult: any
+      try {
+        actionResult = await actionRoute.handleAction(request, params || {}, dataContext, cache)
+      } catch (err) {
+        actionResult = err
+      }
+
+      if (actionResult instanceof Response) return actionResult
       return createResponse(actionResult)
     }
     return createAbortResponse(404, 'Not Found')

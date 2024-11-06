@@ -1,13 +1,24 @@
-export const createJsonError = (obj: Record<string, any>, status: number = 400, init: ResponseInit = {}) => {
-  return new Response(JSON.stringify(obj), {
+export const createJsonError = (payload: Record<string, any>, status: number = 400, init: ResponseInit = {}) => {
+  const res = new Response(JSON.stringify(payload), {
     status,
     ...init,
     headers: {
-      'Content-Type': 'application/json',
       ...(init.headers || {}),
     },
   })
+  res.headers.set('Content-Type', 'application/json')
+  return res
 }
-export const JsonError = (obj: Record<string, any>, status: number = 400, init: ResponseInit = {}) => {
-  return createJsonError(obj, status, init)
+
+export class JsonError {
+  response: Response
+  constructor(private payload: Record<string, any>, private status: number = 400, private init: ResponseInit = {}) {
+    this.response = createJsonError(payload, status, init)
+  }
+  getPayload() {
+    return this.payload
+  }
+  extend(payload: Record<string, any>, status: number = this.status, init: ResponseInit = this.init) {
+    this.response = createJsonError(payload, status, init)
+  }
 }
