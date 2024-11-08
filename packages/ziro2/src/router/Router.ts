@@ -3,6 +3,7 @@ import { parseURL } from 'ufo'
 import { Cache } from './Cache'
 import { AnyRoute } from './Route'
 import { DataContext } from './RouteDataContext'
+import { wrapErrorAsResponse } from './utils'
 import { createAbortResponse } from './utils/abort'
 import { createResponse } from './utils/response'
 
@@ -44,6 +45,38 @@ export class Router<RouteProps = {}> {
     return dataContext
   }
 
+  async handleRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
+    const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
+    const routesStack: AnyRoute[] = []
+    let response = new Response()
+    if (tree) {
+      try {
+        for (let i = 0; i < tree.length; i++) {
+          const route = tree[i]
+          await route.onRequest(request, params || {}, dataContext, cache)
+          // stack the routes
+          routesStack.push(route)
+        }
+      } catch (e) {
+        if (e instanceof Response) {
+          response = e
+        }
+        if (e instanceof Error) {
+          response = wrapErrorAsResponse(e).response
+        }
+      }
+      // run middlewares on before esponse
+      while (routesStack.length > 0) {
+        const route = routesStack.pop()
+        if (route && route.onBeforeResponse) {
+          await route.onBeforeResponse(request, response, params || {}, dataContext, cache)
+        }
+      }
+    }
+
+    return response
+  }
+
   async onBeforeResponse(request: Request, response: Response, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
     if (tree) {
@@ -55,19 +88,20 @@ export class Router<RouteProps = {}> {
     }
   }
 
-  async handleAction(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
+  async handleAction(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
     if (tree) {
       const actionRoute = tree[tree.length - 1]
 
       // todo: load parent route middlewares, then load action route
 
-      let actionResult: any
-      try {
-        actionResult = await actionRoute.handleAction(request, params || {}, dataContext, cache)
-      } catch (err) {
-        actionResult = err
-      }
+      const actionResult = await actionRoute.handleAction(request, params || {}, dataContext, cache).catch(response => {
+        if (response instanceof Response) return response
+        if (response instanceof Error) {
+          return wrapErrorAsResponse(response).response
+        }
+        return response
+      })
 
       if (actionResult instanceof Response) return actionResult
       return createResponse(actionResult)

@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react'
-import { parseURL, stringifyParsedURL, withQuery } from 'ufo'
+import { withQuery } from 'ufo'
 import { z } from 'zod'
 import { AlsoAllowString } from '../../types'
 import { Action } from '../Action'
@@ -48,8 +48,25 @@ export const useAction = <
   const params = typeof url === 'string' ? {} : url.params
   const { router, revalidateTree } = useContext(RouterContext)
   const { cache } = useContext(OutletContext)
-  const submit = (body: TActionSchema) => {}
   const actionUrl = Route.fillRouteParams(routeId, params)
+  const submit = (body: TActionSchema) => {
+    const request = new Request(
+      new URL(
+        withQuery(actionUrl, {
+          action: action.toString(),
+        }),
+        window.location.origin,
+      ),
+      {
+        method: 'post',
+        body: JSON.stringify(body),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+    handleAction(request)
+  }
   const { navigate } = useContext(RouterContext)
   const formProps = {
     action: actionUrl,
@@ -66,64 +83,55 @@ export const useAction = <
         formData.append('__ex', pvOptions.exclude.join(','))
       }
 
-      const url = parseURL(
-        withQuery(actionUrl, {
-          action: action.toString(),
-        }),
+      const request = new Request(
+        new URL(
+          withQuery(actionUrl, {
+            action: action.toString(),
+          }),
+          window.location.origin,
+        ),
+        {
+          method: 'post',
+          body: formData,
+        },
       )
-      if (!url.host) {
-        url.host = window.location.origin
-      }
 
-      const request = new Request(stringifyParsedURL(url), {
-        method: 'post',
-        body: formData,
-      })
-
-      router
-        .handleAction(request, cache)
-        .catch(response => {
-          if (response instanceof Response) return response
-          if (response instanceof Error) {
-            return new Response(
-              JSON.stringify({
-                errors: {
-                  root: response.message,
-                },
-              }),
-              {
-                status: 400,
-              },
-            )
-          }
-          return response
-        })
-        .then(response => {
-          if (response instanceof Response) {
-            if (response && isRedirectResponse(response)) {
-              navigate(response.headers.get('Location') || response.url, { replace: true })
-              return
-            }
-            return response.json()
-          }
-        })
-        .then(data => {
-          if (data === undefined) return
-          if ('errors' in data) {
-            if ('input' in data) {
-              setDefaultValues(data.input)
-            }
-            return setErrors(data.errors)
-          }
-          setData(data)
-        })
-        .then(() => {
-          revalidateTree()
-        })
-        .finally(() => {
-          setIsPending(false)
-        })
+      handleAction(request)
     },
+  }
+  const handleAction = (request: Request) => {
+    router
+      .handleAction(request, cache)
+      .then(response => {
+        if (response instanceof Response) {
+          if (response && isRedirectResponse(response)) {
+            navigate(response.headers.get('Location') || response.url, { replace: true })
+            return
+          }
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            return response.json()
+          } else {
+            return response.text()
+          }
+        }
+      })
+      .then(data => {
+        if (data === undefined) return
+        if ('errors' in data) {
+          if ('input' in data) {
+            setDefaultValues(data.input)
+          }
+          return setErrors(data.errors)
+        }
+        setData(data)
+      })
+      .then(() => {
+        revalidateTree()
+      })
+      .finally(() => {
+        setIsPending(false)
+      })
   }
   const register = (inputName: keyof TActionSchema) => {
     return {

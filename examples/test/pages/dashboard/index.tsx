@@ -1,9 +1,9 @@
-import { serialize } from 'cookie-es'
 import { RouteProps, useAction } from 'ziro2/react'
 import { Action, LoaderArgs, redirect } from 'ziro2/router'
 import { z } from 'zod'
+import { authGuard } from '~/middlewares/auth'
 
-// export const middlewares = [authGuard]
+export const middlewares = [authGuard]
 
 export const loader = async (ctx: LoaderArgs<'/dashboard'>) => {
   console.log('fetching dashboard')
@@ -17,12 +17,14 @@ export const actions = {
   logout: new Action({
     input: z.any(),
     handler: async () => {
-      const headers = new Headers()
+      //   const headers = new Headers()
       // clear cookie
-      headers.set('auth', serialize('token', '', { expires: new Date(0) }))
-      return redirect('/auth', 301, {
-        headers,
-      })
+      //   headers.set('auth', serialize('token', '', { expires: new Date(0) }))
+      //   return redirect('/auth', 301, {
+      //     headers,
+      //   })
+      localStorage.removeItem('username')
+      return redirect('/auth')
     },
   }),
 }

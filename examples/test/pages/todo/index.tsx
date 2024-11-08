@@ -1,3 +1,4 @@
+import { ChangeEvent } from 'react'
 import { RouteProps, useAction } from 'ziro2/react'
 import { Action, MetaFn } from 'ziro2/router'
 import { z } from 'zod'
@@ -7,18 +8,18 @@ import { Input } from '~/components/ui/input'
 
 const todos: {
   title: string
+  isDone: boolean
 }[] = []
 
 export const loader = async () => {
-  console.log('loading todos...')
-  await new Promise(resolve => setTimeout(resolve, 2000))
+  await new Promise(resolve => setTimeout(resolve, 500))
   return {
-    todos: JSON.parse(JSON.stringify(todos)) as typeof todos,
+    list: JSON.parse(JSON.stringify(todos)) as typeof todos,
   }
 }
 export const meta: MetaFn<'/todo'> = async ({ loaderData }) => {
   return {
-    title: `${loaderData.todos.length} items in todo`,
+    title: `${loaderData.list.length} items in todo`,
   }
 }
 
@@ -29,7 +30,23 @@ export const actions = {
     }),
     async handler(body, ctx) {
       await new Promise(resolve => setTimeout(resolve, 500))
-      todos.push(body)
+      todos.push({
+        ...body,
+        isDone: false,
+      })
+      return {
+        ok: true,
+      }
+    },
+  }),
+  markTodo: new Action({
+    input: z.object({
+      index: z.coerce.number().min(0, 'This field is required'),
+      isDone: z.coerce.boolean(),
+    }),
+    async handler(body) {
+      console.log(body)
+      todos[body.index].isDone = body.isDone
       return {
         ok: true,
       }
@@ -39,19 +56,31 @@ export const actions = {
 
 export default function Todo(props: RouteProps<'/todo'>) {
   const addTodoAction = useAction('/todo', 'addTodo')
+  const markTodoAction = useAction('/todo', 'markTodo')
+  const markTodo = (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
+    markTodoAction.submit({ index, isDone: e.target.checked })
+  }
 
   return (
-    <div className="flex flex-col">
-      <h2>Todo app</h2>
-      <form {...addTodoAction.formProps}>
-        <Input {...addTodoAction.register('title')} invalid={!!addTodoAction.errors?.title} />
-        <ErrorMessage message={addTodoAction.errors?.title} />
+    <div className="flex flex-col mx-auto max-w-96 mt-10">
+      <form {...addTodoAction.formProps} className="flex gap-2 justify-start">
+        <div className="flex flex-col gap-1 flex-grow w-full">
+          <Input {...addTodoAction.register('title')} invalid={!!addTodoAction.errors?.title} />
+          <ErrorMessage message={addTodoAction.errors?.title} />
+        </div>
         <Button disabled={addTodoAction.isPending} type="submit">
           Add Todo
         </Button>
       </form>
-      {props.loaderData.todos.map(todo => {
-        return <div key={todo.title}>{todo.title}</div>
+      {props.loaderData.list.map((todo, index) => {
+        return (
+          <div key={index}>
+            <label className="flex gap-2">
+              <input type="checkbox" {...markTodoAction.register('isDone')} onChange={markTodo(index)} />
+              {todo.title}
+            </label>
+          </div>
+        )
       })}
     </div>
   )

@@ -22,3 +22,14 @@ export class JsonError {
     this.response = createJsonError(payload, status, init)
   }
 }
+
+export const wrapErrorAsResponse = (error: Error) => {
+  return new JsonError(
+    {
+      error: {
+        root: error.message,
+      },
+    },
+    400,
+  )
+}

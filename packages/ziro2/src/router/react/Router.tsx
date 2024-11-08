@@ -7,6 +7,7 @@ import { Cache } from '../Cache'
 import { AnyRoute } from '../Route'
 import { DataContext } from '../RouteDataContext'
 import { Router as RouterObj } from '../Router'
+import { isRedirectResponse } from '../utils/redirect'
 import { OutletContext } from './contexts/OutletContext'
 import { NavigateFn, RouterContext } from './contexts/RouterContext'
 
@@ -32,11 +33,20 @@ export const Router: FC<RouterProps> = ({ router }) => {
   const dataContext = useRef(new DataContext())
   const cache = useRef(new Cache())
 
+  const navigate = useCallback((to: string, options: { replace?: boolean }) => {
+    if (typeof window !== 'undefined') window.history[options.replace ? 'replaceState' : 'pushState']({}, '', to)
+    else {
+      //   startTransition(() => {
+      setUrl(to)
+      //   })
+    }
+  }, [])
+
   const treeInfo = useMemo(() => {
     routerHook.callHook('onUrlChange')
-    loadRouter(router, dataContext.current, cache.current)
+    loadRouter(router, dataContext.current, cache.current, navigate)
     return router.findRouteTree(url)
-  }, [url])
+  }, [url, navigate])
 
   const [, startTransition] = useTransition()
 
@@ -64,15 +74,6 @@ export const Router: FC<RouterProps> = ({ router }) => {
     })
   }, [])
 
-  const navigate = useCallback((to: string, options: { replace?: boolean }) => {
-    if (typeof window !== 'undefined') window.history[options.replace ? 'replaceState' : 'pushState']({}, '', to)
-    else {
-      //   startTransition(() => {
-      setUrl(to)
-      //   })
-    }
-  }, [])
-
   const revalidateTree = useCallback(() => {
     // proxy the cache, on get methods, return undefined because we want to recall the loaders
     // on set methods, we must call the original cache setter method
@@ -89,8 +90,8 @@ export const Router: FC<RouterProps> = ({ router }) => {
         return target[prop]
       },
     })
-    return loadRouter(router, dataContext.current, proxyCache)
-  }, [router])
+    return loadRouter(router, dataContext.current, proxyCache, navigate)
+  }, [router, navigate])
 
   return (
     <RouterContext.Provider value={{ router, navigate, revalidateTree }}>
@@ -109,9 +110,18 @@ export const Router: FC<RouterProps> = ({ router }) => {
   )
 }
 
-const loadRouter = async (router: RouterObj<TRouteProps>, dataContext: DataContext<any>, cache: Cache) => {
+const loadRouter = async (router: RouterObj<TRouteProps>, dataContext: DataContext<any>, cache: Cache, navigate: NavigateFn) => {
   const request = getCurrentBrowserURLRequest()
-  return await router.onRequest(request, cache, dataContext)
+  try {
+    const response = await router.handleRequest(request, cache, dataContext).catch(e => {
+      if (e instanceof Response && isRedirectResponse(e)) {
+        return e
+      }
+    })
+    if (response instanceof Response && isRedirectResponse(response)) navigate(response.headers.get('Location') || response.url, { replace: true })
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 const getCurrentBrowserURLRequest = () => {
