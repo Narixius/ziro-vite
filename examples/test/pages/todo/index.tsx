@@ -1,8 +1,8 @@
-import { ChangeEvent } from 'react'
 import { RouteProps, useAction } from 'ziro2/react'
 import { Action, MetaFn } from 'ziro2/router'
 import { z } from 'zod'
 import { Button } from '~/components/ui/button'
+import { Checkbox } from '~/components/ui/checkbox'
 import { ErrorMessage } from '~/components/ui/error-message'
 import { Input } from '~/components/ui/input'
 
@@ -57,8 +57,9 @@ export const actions = {
 export default function Todo(props: RouteProps<'/todo'>) {
   const addTodoAction = useAction('/todo', 'addTodo')
   const markTodoAction = useAction('/todo', 'markTodo')
-  const markTodo = (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
-    markTodoAction.submit({ index, isDone: e.target.checked })
+
+  const markTodo = (index: number) => (isDone: boolean) => {
+    markTodoAction.submit({ index, isDone })
   }
 
   return (
@@ -75,8 +76,8 @@ export default function Todo(props: RouteProps<'/todo'>) {
       {props.loaderData.list.map((todo, index) => {
         return (
           <div key={index}>
-            <label className="flex gap-2">
-              <input type="checkbox" {...markTodoAction.register('isDone')} onChange={markTodo(index)} />
+            <label className="flex gap-2 items-center">
+              <Checkbox {...markTodoAction.register('isDone')} onCheckedChange={markTodo(index)} />
               {todo.title}
             </label>
           </div>
