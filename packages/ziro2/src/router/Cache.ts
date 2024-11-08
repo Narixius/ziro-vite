@@ -67,7 +67,7 @@ export class Cache {
     return JSON.stringify(serializedCache)
   }
 
-  getMiddlewareCache(name: string): Promise<any | undefined> {
+  getMiddlewareCache(name: string): any | undefined {
     return this.get('middleware', name, '')
   }
 
@@ -75,7 +75,7 @@ export class Cache {
     this.set('middleware', name, '', value, ttl)
   }
 
-  getActionCache(name: string, url: string): Promise<any | undefined> {
+  getActionCache(name: string, url: string): any | undefined {
     return this.get('action', name, url)
   }
 
@@ -83,7 +83,7 @@ export class Cache {
     this.set('action', name, url, value, ttl)
   }
 
-  getLoaderCache(name: string, url: string): Promise<any | undefined> {
+  getLoaderCache(name: string, url: string): any | undefined {
     return this.get('loader', name, url)
   }
 

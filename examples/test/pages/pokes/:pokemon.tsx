@@ -1,6 +1,6 @@
-import { abort, ZiroRouteErrorComponent } from 'ziro/router'
+import { ZiroRouteErrorComponent } from 'ziro/router'
 import { RouteProps } from 'ziro2/react'
-import { LoaderArgs, MetaFn } from 'ziro2/router'
+import { abort, LoaderArgs, MetaFn } from 'ziro2/router'
 
 export const loader = async ({ params }: LoaderArgs<'/pokes/:pokemon'>) => {
   //   abort(400, 'Could not load pokemon')
@@ -9,7 +9,7 @@ export const loader = async ({ params }: LoaderArgs<'/pokes/:pokemon'>) => {
       if (response.ok) {
         return response.json()
       }
-      abort(response.status, 'Could not load pokemon')
+      throw abort(404, 'invalid pokemon')
     })
     .then(async data => {
       return {

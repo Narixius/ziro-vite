@@ -2,7 +2,6 @@ import { RouteProps } from 'ziro/router'
 import { Link, Outlet } from 'ziro2/react'
 
 export const loader = async () => {
-  console.log('fetching root layout')
   return {}
 }
 

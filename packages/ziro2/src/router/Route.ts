@@ -7,6 +7,7 @@ import { Cache } from './Cache'
 import { Middleware } from './Middleware'
 import { DataContext } from './RouteDataContext'
 import { RouteFilesByRouteId } from './Router'
+import { JsonError, wrapErrorAsResponse } from './utils'
 import { createAbortResponse } from './utils/abort'
 
 export type ParsePathParams<T extends string, TAcc = never> = T extends `${string}:${infer TPossiblyParam}`
@@ -143,12 +144,42 @@ export class Route<
 
     let data = cache?.getLoaderCache(this.id, matchedUrl) as TLoaderResult | undefined
     if (!data) {
-      data = await this.options.loader?.({
-        dataContext: dataContext.data,
-        params: params as RouteParams<RouteId>,
-        request,
-        head: dataContext.head,
-      })
+      data = await this.options
+        .loader?.({
+          dataContext: dataContext.data,
+          params: params as RouteParams<RouteId>,
+          request,
+          head: dataContext.head,
+        })
+        .catch(async e => {
+          let errorPayload = {}
+          if (e instanceof Error) {
+            errorPayload = wrapErrorAsResponse(e).getPayload()
+          }
+          if (e instanceof JsonError) {
+            errorPayload = e.getPayload()
+          }
+          // TODO: check response content
+          if (e instanceof Response) {
+            const res = e.clone()
+            if (res.headers.get('Content-Type')?.includes('application/json')) {
+              await res.json().then(data => {
+                errorPayload = data
+              })
+            } else if (res.headers.get('Content-Type')?.includes('text/plain')) {
+              await res.text().then(data => {
+                errorPayload = {
+                  errors: {
+                    root: data,
+                  },
+                }
+              })
+            }
+            // check for other content types
+          }
+          cache?.setLoaderCache(this.id, matchedUrl, errorPayload, Infinity)
+          throw e
+        })
     }
 
     // update the cache

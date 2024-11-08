@@ -26,7 +26,7 @@ export class JsonError {
 export const wrapErrorAsResponse = (error: Error) => {
   return new JsonError(
     {
-      error: {
+      errors: {
         root: error.message,
       },
     },

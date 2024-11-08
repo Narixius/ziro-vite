@@ -3,6 +3,7 @@ export const createAbortResponse = (status: number, statusText?: string | Record
   const body = isJson ? JSON.stringify(statusText) : statusText
   const headers = new Headers()
   if (isJson) headers.set('Content-Type', 'application/json')
+  else headers.set('Content-Type', 'text/plain')
   return new Response(body, { status, headers, statusText: !isJson ? statusText : '', ...init })
 }
 

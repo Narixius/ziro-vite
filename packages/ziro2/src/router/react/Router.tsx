@@ -142,6 +142,7 @@ const promiseMaps: Record<
     promise: Promise<any>
     resolve: (value: any) => void
     reject: (reason: unknown) => void
+    errorData?: any
   }
 > = {}
 
@@ -165,8 +166,14 @@ function routeLoadedSuspense<T>(route: AnyRoute<any, any, any, any, any, TRouteP
     }
     // set hook to notify when data has fetched.
     cache.hookOnce('loader', route.getId(), matchedUrl, data => {
+      console.log(data)
+      if ('errors' in data) {
+        // throw data
+        promiseMaps[promiseKey].errorData = data.errors
+      } else {
+        delete promiseMaps[promiseKey]
+      }
       resolve(data)
-      delete promiseMaps[promiseKey]
     })
     // async call load route
     // loadRoute(route, params, dataContext, cache).catch(e => {
@@ -183,15 +190,20 @@ function routeLoadedSuspense<T>(route: AnyRoute<any, any, any, any, any, TRouteP
     // })
   }
 
-  //   if (cachedData) {
-  //     // todo: fix loop erroring
-  //     // if (cachedData instanceof SuspenseError) {
-  //     //   throw cachedData.value
-  //     // }
-  //     // async call load meta
-  //     loadRouteMeta(route, params, dataContext, cache)
-  //     return cachedData as T
-  //   }
+  // if (cachedData) {
+  //   // todo: fix loop erroring
+  //   // if (cachedData instanceof SuspenseError) {
+  //   //   throw cachedData.value
+  //   // }
+  //   // async call load meta
+  //   loadRouteMeta(route, params, dataContext, cache)
+  //   return cachedData as T
+  // }
+
+  if (cachedData && promiseMaps[promiseKey] && promiseMaps[promiseKey].errorData) {
+    throw 'root' in promiseMaps[promiseKey].errorData ? new Error(promiseMaps[promiseKey].errorData.root) : promiseMaps[promiseKey].errorData
+  }
+
   if (!cachedData && promiseMaps[promiseKey]) {
     throw promiseMaps[promiseKey].promise
   }
@@ -217,7 +229,7 @@ export const Outlet: FC = () => {
 }
 
 const ErrorBoundaryFallback: FC<FallbackProps> = props => {
-  const { tree, ...rest } = useContext(OutletContext)
+  const { tree } = useContext(OutletContext)
   const route = tree[0]
   const routeProps = route!.getProps()
   useLayoutEffect(() => {

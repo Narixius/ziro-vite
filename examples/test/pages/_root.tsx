@@ -21,7 +21,6 @@ export const meta: MetaFn<'/_root'> = async ctx => {
 }
 
 export const loader = async (ctx: LoaderArgs<'/_root'>) => {
-  console.log('fetching root')
   return {
     version: 1.1,
   }
