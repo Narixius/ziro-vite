@@ -10,7 +10,6 @@ export const meta: MetaFn<'/_layout'> = async () => {
 }
 
 export const loader = async (options: LoaderArgs<'/pokes/_layout'>) => {
-  console.log('fetching pokes layout')
   const samplePokemons = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=4&offset=${Math.floor(Math.random() * 16)}`).then(r => r.json())
   //   await new Promise(resolve => setTimeout(resolve, 5000))
   return { pokemons: (samplePokemons.results as { name: string }[]).map(r => r.name) } as { pokemons: string[] }

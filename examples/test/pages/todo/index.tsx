@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { RouteProps, useAction } from 'ziro2/react'
 import { Action, MetaFn } from 'ziro2/router'
 import { z } from 'zod'
@@ -6,15 +7,16 @@ import { Checkbox } from '~/components/ui/checkbox'
 import { ErrorMessage } from '~/components/ui/error-message'
 import { Input } from '~/components/ui/input'
 
-const todos: {
+type TodoItem = {
   title: string
   isDone: boolean
-}[] = []
+}
 
 export const loader = async () => {
-  await new Promise(resolve => setTimeout(resolve, 500))
+  await new Promise(resolve => setTimeout(resolve, 200))
+  const todoList = JSON.parse(localStorage.getItem('todo') || '[]') as TodoItem[]
   return {
-    list: JSON.parse(JSON.stringify(todos)) as typeof todos,
+    list: todoList,
   }
 }
 export const meta: MetaFn<'/todo'> = async ({ loaderData }) => {
@@ -29,11 +31,13 @@ export const actions = {
       title: z.string().min(3, 'Title must be at least 3 characters'),
     }),
     async handler(body, ctx) {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      todos.push({
+      await new Promise(resolve => setTimeout(resolve, 200))
+      const todoList = JSON.parse(localStorage.getItem('todo') || '[]')
+      todoList.push({
         ...body,
         isDone: false,
       })
+      localStorage.setItem('todo', JSON.stringify(todoList))
       return {
         ok: true,
       }
@@ -45,8 +49,10 @@ export const actions = {
       isDone: z.coerce.boolean(),
     }),
     async handler(body) {
-      console.log(body)
-      todos[body.index].isDone = body.isDone
+      const todoList = JSON.parse(localStorage.getItem('todo') || '[]')
+      todoList[body.index].isDone = body.isDone
+      console.log(todoList)
+      localStorage.setItem('todo', JSON.stringify(todoList))
       return {
         ok: true,
       }
@@ -55,7 +61,12 @@ export const actions = {
 }
 
 export default function Todo(props: RouteProps<'/todo'>) {
-  const addTodoAction = useAction('/todo', 'addTodo')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const addTodoAction = useAction('/todo', 'addTodo', {
+    onSuccess() {
+      inputRef.current!.value = ''
+    },
+  })
   const markTodoAction = useAction('/todo', 'markTodo')
 
   const markTodo = (index: number) => (isDone: boolean) => {
@@ -66,7 +77,7 @@ export default function Todo(props: RouteProps<'/todo'>) {
     <div className="flex flex-col mx-auto max-w-96 mt-10">
       <form {...addTodoAction.formProps} className="flex gap-2 justify-start">
         <div className="flex flex-col gap-1 flex-grow w-full">
-          <Input {...addTodoAction.register('title')} invalid={!!addTodoAction.errors?.title} />
+          <Input {...addTodoAction.register('title')} ref={inputRef} invalid={!!addTodoAction.errors?.title} />
           <ErrorMessage message={addTodoAction.errors?.title} />
         </div>
         <Button disabled={addTodoAction.isPending} type="submit">
@@ -77,7 +88,7 @@ export default function Todo(props: RouteProps<'/todo'>) {
         return (
           <div key={index}>
             <label className="flex gap-2 items-center">
-              <Checkbox {...markTodoAction.register('isDone')} onCheckedChange={markTodo(index)} />
+              <Checkbox disabled={markTodoAction.isPending} {...markTodoAction.register('isDone')} checked={todo.isDone} onCheckedChange={markTodo(index)} />
               {todo.title}
             </label>
           </div>

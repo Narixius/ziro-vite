@@ -6,7 +6,6 @@ import { authGuard } from '~/middlewares/auth'
 export const middlewares = [authGuard]
 
 export const loader = async (ctx: LoaderArgs<'/dashboard'>) => {
-  console.log('fetching dashboard')
   await new Promise(resolve => setTimeout(resolve, 500))
   return {
     user: localStorage.getItem('username'),

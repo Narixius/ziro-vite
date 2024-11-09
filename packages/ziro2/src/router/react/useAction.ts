@@ -36,6 +36,7 @@ export const useAction = <
   action: TActionName,
   options: {
     preserveValues?: boolean | TPreserveValues<TActionFields>
+    onSuccess?: (data: TActionResult) => void
   } = {
     preserveValues: true,
   },
@@ -77,7 +78,7 @@ export const useAction = <
       const formData = new FormData((e.target as HTMLFormElement).elements.length > 0 ? (e.target as HTMLFormElement) : undefined)
 
       const pvEnabled = typeof options?.preserveValues === 'boolean' ? options?.preserveValues : true
-      const pvOptions = (typeof options?.preserveValues === 'boolean' ? {} : options?.preserveValues) as TPreserveValues<TActionFields>
+      const pvOptions = (typeof options?.preserveValues === 'boolean' ? {} : options?.preserveValues || {}) as TPreserveValues<TActionFields>
       formData.append('__pv', String(Number(pvEnabled)))
       if (pvEnabled && pvOptions.exclude) {
         formData.append('__ex', pvOptions.exclude.join(','))
@@ -124,6 +125,7 @@ export const useAction = <
           }
           return setErrors(data.errors)
         }
+        options.onSuccess && options.onSuccess(data)
         setData(data)
       })
       .then(() => {
