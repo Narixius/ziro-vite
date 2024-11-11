@@ -1,11 +1,8 @@
-import { RouteProps } from 'ziro/router'
-import { Link, Outlet } from 'ziro2/react'
+import { FC } from 'react'
+import { ErrorBoundaryProps, Link, Outlet, RouteProps } from 'ziro2/react'
+import { MetaFn } from 'ziro2/router'
 
-export const loader = async () => {
-  return {}
-}
-
-export default function MainLayout({ dataContext }: RouteProps<'/_layout'>) {
+export default function MainLayout(props: RouteProps<'/_layout'>) {
   return (
     <div>
       <div className="flex gap-2">
@@ -28,4 +25,23 @@ export default function MainLayout({ dataContext }: RouteProps<'/_layout'>) {
       <Outlet />
     </div>
   )
+}
+
+export const meta: MetaFn<'/_layout'> = async ({ loaderData }) => {
+  return {
+    title: `Root layout`,
+  }
+}
+
+export const loader = async () => {
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  return {}
+}
+
+export const Loading = () => {
+  return <span>Loading root layout</span>
+}
+
+export const ErrorBoundary: FC<ErrorBoundaryProps> = props => {
+  return <span>{props.error.message}</span>
 }

@@ -2,11 +2,14 @@ import defu from 'defu'
 import { writeFileSync } from 'node:fs'
 import { joinURL } from 'ufo'
 import { createUnplugin } from 'unplugin'
+import { AppContext } from '../cli/commands/shared'
 import { generateManifest, GenerateManifestOptions, generateRoutesTypings, generateServerRouterCode } from '../generator'
+import { Router } from '../router'
 
 export type ZiroOptions = {
   pagesDir?: string
   manifestDirPath?: string
+  mode?: 'spa' | 'ssr'
 }
 
 const generateManifestFilesChain = async (manifestDirPath: string, manifestOptions: GenerateManifestOptions) => {
@@ -18,19 +21,28 @@ const generateManifestFilesChain = async (manifestDirPath: string, manifestOptio
       return manifest
     })
     .then(async manifest => {
-      await generateServerRouterCode(manifestDirPath, manifest).then(code => {
-        writeFileSync(joinURL(manifestDirPath, 'router.server.ts'), code, {
+      await generateRoutesTypings(manifestDirPath, manifest).then(code => {
+        writeFileSync(joinURL(manifestDirPath, 'routes.d.ts'), code, {
           encoding: 'utf8',
         })
       })
       return manifest
     })
     .then(async manifest => {
-      await generateRoutesTypings(manifestDirPath, manifest).then(code => {
-        writeFileSync(joinURL(manifestDirPath, 'routes.d.ts'), code, {
+      await generateServerRouterCode(manifestDirPath, manifest).then(code => {
+        writeFileSync(joinURL(manifestDirPath, 'router.server.ts'), code, {
           encoding: 'utf8',
         })
       })
+
+      if (!AppContext.getContext().loadServerRouter)
+        AppContext.getContext().loadServerRouter = async () => {
+          AppContext.getContext().router = (await AppContext.getContext().vite.ssrLoadModule(joinURL(manifestDirPath, 'router.server.ts'))).default as Router
+        }
+
+      if (AppContext.getContext().router && AppContext.getContext().loadServerRouter) AppContext.getContext().loadServerRouter()
+
+      return manifest
     })
 }
 
@@ -38,6 +50,7 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
   const options = defu(_options, {
     pagesDir: 'pages',
     manifestDirPath: '.ziro',
+    mode: 'ssr',
   })
   const cwd = process.cwd()
   let manifestDirPath = joinURL(cwd, options.manifestDirPath)
@@ -52,12 +65,28 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
     name: 'ziro',
     vite: {
       async configureServer(server) {
-        manifestDirPath = joinURL(server.config.root, options.manifestDirPath)
-        pagesDirPath = joinURL(server.config.root, options.pagesDir)
-        await generateRouteFiles()
         server.watcher.on('all', async (eventName, filepath) => {
           if (!filepath.startsWith(manifestDirPath)) await generateRouteFiles()
         })
+      },
+      config(config, env) {
+        return {
+          ...config,
+          optimizeDeps: {
+            include: ['react', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom/client'],
+          },
+          esbuild: {
+            jsx: 'automatic',
+          },
+          ssr: {
+            external: ['ziro2'],
+          },
+        }
+      },
+      async configResolved(config) {
+        manifestDirPath = joinURL(config.root, options.manifestDirPath)
+        pagesDirPath = joinURL(config.root, options.pagesDir)
+        await generateRouteFiles()
       },
       transformIndexHtml() {
         return [
@@ -78,15 +107,14 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
       },
       load(id) {
         if (id === '/@ziro/client-entry.jsx') {
-          return `import { startTransition } from 'react'
+          return `
+import { startTransition } from 'react'
 import { hydrateRoot, createRoot } from 'react-dom/client'
 import { Router } from 'ziro2/react'
 import router from '/.ziro/router.server.ts'
 
-const root = createRoot(document.querySelector("#root"))
 startTransition(() => {
-  root.render(<Router router={router} />)
-//   hydrateRoot(document, <Router router={router} />)
+  hydrateRoot(document, <Router router={router} />)
 })`
         }
       },

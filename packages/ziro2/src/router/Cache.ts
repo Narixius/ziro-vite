@@ -8,7 +8,12 @@ export class Cache {
   private hooks = createHooks()
 
   constructor() {
-    this.cache = new Map()
+    if (typeof window !== 'undefined' && (window as any).__routerCache) {
+      const serializedCache = (window as any).__routerCache
+      this.cache = new Map(Object.entries(serializedCache))
+    } else {
+      this.cache = new Map()
+    }
   }
 
   private generateKey(category: CacheCategories, name: string, url: string): string {
@@ -26,22 +31,23 @@ export class Cache {
     this.hooks.removeHook(this.generateKey(category, name, url), callback)
   }
 
-  private set(category: CacheCategories, name: string, url: string, value: any, ttl: number = Infinity): void {
+  private set(category: CacheCategories, name: string, url: string, value: any, ttl: number = Infinity, status: CacheStatus = 'success'): void {
     const expiry = Date.now() + ttl
     const key = this.generateKey(category, name, url)
-    this.cache.set(key, { value, expiry, status: 'success' })
+    this.cache.set(key, { value, expiry, status })
     this.hooks.callHook(this.generateKey(category, name, url), value)
   }
 
   private get(category: CacheCategories, name: string, url: string): any | undefined {
     const key = this.generateKey(category, name, url)
     const cachedItem = this.cache.get(key)
+
     if (!cachedItem) return undefined
 
-    if (Date.now() > cachedItem.expiry) {
-      this.cache.delete(key)
-      return undefined
-    }
+    // if (Date.now() > cachedItem.expiry) {
+    //   this.cache.delete(key)
+    //   return undefined
+    // }
 
     return cachedItem.value
   }
@@ -87,7 +93,7 @@ export class Cache {
     return this.get('loader', name, url)
   }
 
-  setLoaderCache(name: string, url: string, value: any, ttl: number = Infinity): void {
-    this.set('loader', name, url, value, ttl)
+  setLoaderCache(name: string, url: string, value: any, ttl: number = Infinity, status: CacheStatus = 'success'): void {
+    this.set('loader', name, url, value, ttl, status)
   }
 }

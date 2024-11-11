@@ -16,12 +16,6 @@ export const actions = {
   logout: new Action({
     input: z.any(),
     handler: async () => {
-      //   const headers = new Headers()
-      // clear cookie
-      //   headers.set('auth', serialize('token', '', { expires: new Date(0) }))
-      //   return redirect('/auth', 301, {
-      //     headers,
-      //   })
       localStorage.removeItem('username')
       return redirect('/auth')
     },

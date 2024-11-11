@@ -1,5 +1,5 @@
-import { ZiroRouteErrorComponent } from 'ziro/router'
-import { RouteProps } from 'ziro2/react'
+import { FC } from 'react'
+import { ErrorBoundaryProps, RouteProps } from 'ziro2/react'
 import { abort, LoaderArgs, MetaFn } from 'ziro2/router'
 
 export const loader = async ({ params }: LoaderArgs<'/pokes/:pokemon'>) => {
@@ -31,7 +31,7 @@ export const meta: MetaFn<'/pokes/:pokemon'> = async ({ loaderData }) => {
   }
 }
 
-export default function SingleBlogPage({ loaderData }: RouteProps<'/pokes/:pokemon'>) {
+export default function PokemonPage({ loaderData }: RouteProps<'/pokes/:pokemon'>) {
   return (
     <div>
       <p>{loaderData.name}</p>
@@ -40,7 +40,7 @@ export default function SingleBlogPage({ loaderData }: RouteProps<'/pokes/:pokem
   )
 }
 
-export const ErrorBoundary: ZiroRouteErrorComponent = ({ error, resetErrorBoundary }) => {
+export const ErrorBoundary: FC<ErrorBoundaryProps> = ({ error, resetErrorBoundary }) => {
   return (
     <div>
       <span className="text-red-800">{error.message}</span>

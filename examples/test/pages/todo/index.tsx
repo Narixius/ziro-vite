@@ -1,3 +1,4 @@
+import { TrashIcon } from 'lucide-react'
 import { useRef } from 'react'
 import { RouteProps, useAction } from 'ziro2/react'
 import { Action, MetaFn } from 'ziro2/router'
@@ -12,9 +13,12 @@ type TodoItem = {
   isDone: boolean
 }
 
+const todos: TodoItem[] = []
+
 export const loader = async () => {
   await new Promise(resolve => setTimeout(resolve, 200))
-  const todoList = JSON.parse(localStorage.getItem('todo') || '[]') as TodoItem[]
+  //   const todoList = JSON.parse(localStorage.getItem('todo') || '[]') as TodoItem[]
+  const todoList = todos
   return {
     list: todoList,
   }
@@ -32,12 +36,11 @@ export const actions = {
     }),
     async handler(body, ctx) {
       await new Promise(resolve => setTimeout(resolve, 200))
-      const todoList = JSON.parse(localStorage.getItem('todo') || '[]')
+      const todoList = todos
       todoList.push({
         ...body,
         isDone: false,
       })
-      localStorage.setItem('todo', JSON.stringify(todoList))
       return {
         ok: true,
       }
@@ -49,25 +52,34 @@ export const actions = {
       isDone: z.coerce.boolean(),
     }),
     async handler(body) {
-      const todoList = JSON.parse(localStorage.getItem('todo') || '[]')
+      const todoList = todos
       todoList[body.index].isDone = body.isDone
-      console.log(todoList)
-      localStorage.setItem('todo', JSON.stringify(todoList))
       return {
         ok: true,
       }
     },
   }),
+  deleteTodo: new Action({
+    input: z.object({
+      index: z.coerce.number().min(0, 'This field is required'),
+    }),
+    async handler(body) {
+      const todoList = todos
+      todoList.splice(body.index, 1)
+      return { ok: true }
+    },
+  }),
 }
 
 export default function Todo(props: RouteProps<'/todo'>) {
-  const inputRef = useRef<HTMLInputElement>(null)
   const addTodoAction = useAction('/todo', 'addTodo', {
     onSuccess() {
       inputRef.current!.value = ''
     },
   })
   const markTodoAction = useAction('/todo', 'markTodo')
+  const deleteTodoAction = useAction('/todo', 'deleteTodo')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const markTodo = (index: number) => (isDone: boolean) => {
     markTodoAction.submit({ index, isDone })
@@ -86,11 +98,26 @@ export default function Todo(props: RouteProps<'/todo'>) {
       </form>
       {props.loaderData.list.map((todo, index) => {
         return (
-          <div key={index}>
-            <label className="flex gap-2 items-center">
-              <Checkbox disabled={markTodoAction.isPending} {...markTodoAction.register('isDone')} checked={todo.isDone} onCheckedChange={markTodo(index)} />
-              {todo.title}
-            </label>
+          <div key={index} className="group">
+            <div className="flex justify-between gap-2 items-center min-h-10">
+              <label className="flex gap-2 items-center flex-grow">
+                <Checkbox disabled={markTodoAction.isPending} {...markTodoAction.register('isDone')} checked={todo.isDone} onCheckedChange={markTodo(index)} />
+                {todo.title}
+              </label>
+
+              <Button
+                size="icon"
+                variant="ghost"
+                className="hidden group-hover:flex"
+                onClick={() => {
+                  deleteTodoAction.submit({
+                    index,
+                  })
+                }}
+              >
+                <TrashIcon size="16" />
+              </Button>
+            </div>
           </div>
         )
       })}

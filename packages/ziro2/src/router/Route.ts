@@ -177,7 +177,7 @@ export class Route<
             }
             // check for other content types
           }
-          cache?.setLoaderCache(this.id, matchedUrl, errorPayload, Infinity)
+          cache?.setLoaderCache(this.id, matchedUrl, errorPayload, Infinity, 'error')
           throw e
         })
     }

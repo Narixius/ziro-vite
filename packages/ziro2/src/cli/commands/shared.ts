@@ -4,6 +4,7 @@ import { Listener } from 'listhen'
 import { ViteDevServer } from 'vite'
 import { ziroTitleText } from '../../../constraints.js'
 import { Router } from '../../router/Router.js'
+import { ZiroOptions } from '../../vite/plugin.js'
 
 export const sharedContext = {
   version: 'N/A',
@@ -19,6 +20,8 @@ interface IAppContext {
   h3: H3App
   listener: Listener
   vite: ViteDevServer
+  options: ZiroOptions
+  loadServerRouter: () => Promise<void>
 }
 
 export class AppContext {

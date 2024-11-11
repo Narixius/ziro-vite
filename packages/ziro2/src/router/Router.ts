@@ -14,14 +14,18 @@ export class Router<RouteProps = {}> {
   tree = rou3.createRouter<AnyRoute<any, any, any, any, any, RouteProps>[]>()
 
   constructor(private baseUrl?: string) {}
-  addRoute(route: AnyRoute<any, any, any, any, any, RouteProps>) {
+  addRoute(route: AnyRoute<string, any, any, any, any, RouteProps>) {
     let tree = [route]
     while (true) {
       if (!tree[0].getParent()) break
       const parentRoute = tree[0].getParent()
       if (parentRoute) tree.unshift(parentRoute)
     }
-    rou3.addRoute(this.tree, '', route.getId(), tree)
+    let routePath = route.getId()
+    if (route.getId().endsWith('_layout') || route.getId().endsWith('_root')) {
+      routePath = route.getId().replace(/\/(_layout|_root)$/, '/**')
+    }
+    rou3.addRoute(this.tree, '', routePath, tree)
   }
 
   findRouteTree(path: string) {

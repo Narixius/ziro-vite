@@ -12,6 +12,7 @@ export type RouteFileInfo = {
   hasErrorBoundary: boolean
   hasActions: boolean
   hasMiddleware: boolean
+  hasLayout: boolean
 }
 
 export const getRouteFileInfo = async (filepath: string): Promise<RouteFileInfo> => {
@@ -27,6 +28,7 @@ export const getRouteFileInfo = async (filepath: string): Promise<RouteFileInfo>
       hasLoadingComponent: false,
       hasMeta: false,
       hasMiddleware: false,
+      hasLayout: false,
     }
     const [_, exports] = await parse(moduleEsm.code)
     exports.forEach(exp => {
@@ -37,6 +39,7 @@ export const getRouteFileInfo = async (filepath: string): Promise<RouteFileInfo>
       if (exp.n === 'Loading') r.hasLoadingComponent = true
       if (exp.n === 'ErrorBoundary') r.hasErrorBoundary = true
       if (exp.n === 'middlewares') r.hasMiddleware = true
+      if (exp.n === 'Layout') r.hasLayout = true
     })
     r.index = !getFilename(filepath)?.startsWith('_root') && !getFilename(filepath)?.startsWith('_layout')
     return r

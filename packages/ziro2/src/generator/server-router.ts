@@ -33,6 +33,7 @@ ${[
     routeManifest.routeInfo.hasComponent ? `	component: ${importName}.default` : '',
     routeManifest.routeInfo.hasErrorBoundary ? `	ErrorBoundary: ${importName}.ErrorBoundary` : '',
     routeManifest.routeInfo.hasLoadingComponent ? `	LoadingComponent: ${importName}.Loading` : '',
+    routeManifest.routeInfo.hasLayout ? `	Layout: ${importName}.Layout` : '',
   ]
     .filter(Boolean)
     .join(',\n')}
@@ -40,9 +41,14 @@ ${[
 ]
   .filter(Boolean)
   .join(',\n')}\n})\n`
-    if (routeManifest.routeInfo.index) {
+    // if (routeManifest.routeInfo.index) {
+    if (routeId !== '/_root' || (routeId === '/_root' && !manifest['/_layout'])) {
       code += `router.addRoute(${routeVariableName})\n`
     }
+    // }
+    // if (routeManifest.routeInfo.index) {
+    // code += `router.addRoute(${routeVariableName})\n`
+    //   }
     code += '\n'
   }
   code += `export default router\n`

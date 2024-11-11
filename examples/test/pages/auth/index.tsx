@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { guestGuard, login } from '@/middlewares/auth'
+import { guestGuard } from '@/middlewares/auth'
 import { useAction } from 'ziro2/react'
 import { Action, MetaFn, redirect } from 'ziro2/router'
 import { z } from 'zod'
@@ -27,13 +27,8 @@ export const actions = {
       //   await new Promise(resolve => setTimeout(resolve, 1000))
       if (input.username[0] == 'a' && input.password[0] == 'a') {
         await new Promise(resolve => setTimeout(resolve, 500))
-        const token = await login({ username: input.username })
-        const headers = new Headers()
-        headers.set('token', token)
         localStorage.setItem('username', input.username)
-        return redirect('/dashboard', {
-          headers,
-        })
+        return redirect('/dashboard')
       }
       throw new Error('Invalid credentials')
     },
