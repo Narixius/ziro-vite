@@ -41,13 +41,11 @@ export class Middleware<TDataContextType = any, TOnRequestResult = {}> {
           head: dataContext.head,
         })
         .then(data => {
-          if (data) {
-            dataContext.data = {
-              ...dataContext.data,
-              ...(cachedData || {}),
-            }
-            cache?.setMiddlewareCache(this.name, data, Infinity)
+          dataContext.data = {
+            ...dataContext.data,
+            ...(data || {}),
           }
+          cache?.setMiddlewareCache(this.name, data, Infinity)
         })
   }
   async onBeforeResponse(request: Request, response: Response, params: Record<string, string> = {}, dataContext: DataContext<TDataContextType>, cache?: Cache) {

@@ -252,32 +252,32 @@ describe('Router', () => {
   })
 
   it('should call the root loader when loading the root route', async () => {
-    await router.onRequest(new Request('http://localhost/'))
+    await router.handleRequest(new Request('http://localhost/'))
     expect(rootLoader).toHaveBeenCalled()
   })
 
   it('should call the homepage loader when loading the homepage route', async () => {
-    await router.onRequest(new Request('http://localhost/'))
+    await router.handleRequest(new Request('http://localhost/'))
     expect(homepageLoader).toHaveBeenCalled()
   })
 
   it('should call the about loader when loading the about route', async () => {
-    await router.onRequest(new Request('http://localhost/about'))
+    await router.handleRequest(new Request('http://localhost/about'))
     expect(aboutLoader).toHaveBeenCalled()
   })
 
   it('should call the contact loader when loading the contact route', async () => {
-    await router.onRequest(new Request('http://localhost/contact'))
+    await router.handleRequest(new Request('http://localhost/contact'))
     expect(contactLoader).toHaveBeenCalled()
   })
 
   it('should call the single blog loader when loading the single blog route', async () => {
-    await router.onRequest(new Request('http://localhost/blog/123'))
+    await router.handleRequest(new Request('http://localhost/blog/123'))
     expect(singleBlogLoader).toHaveBeenCalled()
   })
 
   it('should not call any loader for an unknown route', async () => {
-    await router.onRequest(new Request('http://localhost/unknown'))
+    await router.handleRequest(new Request('http://localhost/unknown'))
     expect(rootLoader).not.toHaveBeenCalled()
     expect(homepageLoader).not.toHaveBeenCalled()
     expect(aboutLoader).not.toHaveBeenCalled()
@@ -286,7 +286,7 @@ describe('Router', () => {
   })
 
   it('should call the homepage loader when loading the homepage route and print the parameters', async () => {
-    await router.onRequest(new Request('http://localhost/'))
+    await router.handleRequest(new Request('http://localhost/'))
     expect(homepageLoader).toHaveBeenCalled()
     // @ts-ignore
     expect(homepageLoader.mock.calls[0][0].dataContext).toHaveProperty('data')
@@ -295,7 +295,7 @@ describe('Router', () => {
   it('should cache the homepage loader data', async () => {
     const cacheSpy = vi.spyOn(cache, 'setLoaderCache')
     const req = new Request('http://localhost/')
-    await router.onRequest(req, cache)
+    await router.handleRequest(req, cache)
     expect(cacheSpy).toHaveBeenCalledWith(homepageRoute.getId(), req.url, expect.any(Object), Infinity)
   })
 
@@ -303,21 +303,21 @@ describe('Router', () => {
     const cachedData = { data: 'cachedData' }
     const req = new Request('http://localhost/')
     cache.setLoaderCache(homepageRoute.getId(), req.url, cachedData, Infinity)
-    await router.onRequest(req, cache)
+    await router.handleRequest(req, cache)
     expect(homepageLoader).not.toHaveBeenCalled()
   })
 
   it('should use the cache for the homepage route', async () => {
     const revalidateSpy = vi.spyOn(cache, 'setLoaderCache')
-    await router.onRequest(new Request('http://localhost/'), cache)
-    await router.onRequest(new Request('http://localhost/'), cache)
+    await router.handleRequest(new Request('http://localhost/'), cache)
+    await router.handleRequest(new Request('http://localhost/'), cache)
     expect(revalidateSpy).toHaveBeenCalledTimes(2)
   })
 
   it('should not set cache running load twice with same cache', async () => {
     const cacheSpy = vi.spyOn(cache, 'setLoaderCache')
-    await router.onRequest(new Request('http://localhost/'), cache)
-    await router.onRequest(new Request('http://localhost/'), cache)
+    await router.handleRequest(new Request('http://localhost/'), cache)
+    await router.handleRequest(new Request('http://localhost/'), cache)
     expect(cacheSpy).toHaveBeenCalledTimes(2)
   })
 
@@ -344,7 +344,7 @@ describe('Router', () => {
   })
 
   it('should call the correct loader for nested routes', async () => {
-    await router.onRequest(new Request('http://localhost/blog/123'))
+    await router.handleRequest(new Request('http://localhost/blog/123'))
     expect(blogLayoutLoader).toHaveBeenCalled()
     expect(singleBlogLoader).toHaveBeenCalled()
   })
@@ -352,7 +352,7 @@ describe('Router', () => {
   it('should cache nested route data', async () => {
     const cacheSpy = vi.spyOn(cache, 'setLoaderCache')
     const req = new Request('http://localhost/blog/123')
-    await router.onRequest(req, cache)
+    await router.handleRequest(req, cache)
     expect(cacheSpy).toHaveBeenCalledWith(singleBlogRoute.getId(), req.url, expect.any(Object), Infinity)
   })
 
@@ -360,17 +360,17 @@ describe('Router', () => {
     const cachedData = { data: 'cachedData' }
     const req = new Request('http://localhost/blog/123')
     cache.setLoaderCache(singleBlogRoute.getId(), req.url, cachedData, Infinity)
-    await router.onRequest(req, cache)
+    await router.handleRequest(req, cache)
     expect(singleBlogLoader).not.toHaveBeenCalled()
   })
 
   it('should call the auth loader when loading the auth route', async () => {
-    await router.onRequest(new Request('http://localhost/auth'))
+    await router.handleRequest(new Request('http://localhost/auth'))
     expect(authLoader).toHaveBeenCalled()
   })
 
   it('should call the dashboard loader when loading the dashboard route if authenticated', async () => {
-    await router.onRequest(
+    await router.handleRequest(
       new Request('http://localhost/dashboard', {
         headers: {
           authorization: 'Bearer token',
@@ -382,13 +382,13 @@ describe('Router', () => {
   })
 
   it('should throw an error when loading the dashboard route if not authenticated', async () => {
-    await expect(router.onRequest(new Request('http://localhost/dashboard'))).rejects.toThrow('User not authenticated')
+    await expect(router.handleRequest(new Request('http://localhost/dashboard'))).rejects.toThrow('User not authenticated')
     expect(true).toBe(true)
   })
 
   it('should redirect to the correct URL for the redirect route', async () => {
     try {
-      await router.onRequest(new Request('http://localhost/redirect-test'))
+      await router.handleRequest(new Request('http://localhost/redirect-test'))
     } catch (e) {
       expect(e).instanceOf(Response)
       expect((e as Response).headers.get('Location')).equal('http://example.com')
@@ -397,7 +397,7 @@ describe('Router', () => {
 
   it('should abort with 404 status and message for /abort/404', async () => {
     try {
-      await router.onRequest(new Request('http://localhost/abort/404'))
+      await router.handleRequest(new Request('http://localhost/abort/404'))
     } catch (e) {
       expect(e).toBeInstanceOf(Response)
       expect((e as Response).status).toBe(404)
@@ -407,7 +407,7 @@ describe('Router', () => {
 
   it('should abort with 404 status and JSON message for /abort/404-json', async () => {
     try {
-      await router.onRequest(new Request('http://localhost/abort/404-json'))
+      await router.handleRequest(new Request('http://localhost/abort/404-json'))
     } catch (e) {
       expect(e).toBeInstanceOf(Response)
       expect((e as Response).status).toBe(404)
@@ -418,7 +418,7 @@ describe('Router', () => {
 
   it('should throw a JsonError for the json-error-test route', async () => {
     try {
-      await router.onRequest(new Request('http://localhost/json-error-test'))
+      await router.handleRequest(new Request('http://localhost/json-error-test'))
     } catch (e) {
       expect(e).toBeInstanceOf(Response)
       expect((e as Response).status).toBe(400)
@@ -429,7 +429,7 @@ describe('Router', () => {
 
   it('should return the correct title and meta for headTestRoute', async () => {
     const dataContext = new DataContext()
-    await router.onRequest(new Request('http://localhost/head/testTitle/testDescription'), cache, dataContext)
+    await router.handleRequest(new Request('http://localhost/head/testTitle/testDescription'), cache, dataContext)
     const { headTags } = await renderSSRHead(dataContext.head)
     expect(headTags).toContain('<title>testTitle</title>')
     expect(headTags).toContain('<meta name="description" content="testDescription">')
@@ -437,21 +437,21 @@ describe('Router', () => {
 
   it('should return the correct title for headTestChildRoute', async () => {
     const dataContext = new DataContext()
-    await router.onRequest(new Request('http://localhost/head/testTitle/testDescription/override'), cache, dataContext)
+    await router.handleRequest(new Request('http://localhost/head/testTitle/testDescription/override'), cache, dataContext)
     const { headTags } = await renderSSRHead(dataContext.head)
     expect(headTags).toContain('<title>overridden</title>')
   })
 
   it('should return the correct props for propsTestRoute', async () => {
     const dataContext = new DataContext()
-    await router.onRequest(new Request('http://localhost/props-test'), cache, dataContext)
+    await router.handleRequest(new Request('http://localhost/props-test'), cache, dataContext)
     expect(propsTestRoute.getProps()).toEqual({ customProp: 'customValue' })
   })
 
   it('it should load middleware data from cache', async () => {
     const middlewareHandlerSpy = vi.spyOn(dataFetchingMiddleware.handlers, 'onRequest')
-    await router.onRequest(new Request('http://localhost/data-fetching'), cache)
-    await router.onRequest(new Request('http://localhost/data-fetching/child'), cache)
+    await router.handleRequest(new Request('http://localhost/data-fetching'), cache)
+    await router.handleRequest(new Request('http://localhost/data-fetching/child'), cache)
     expect(middlewareHandlerSpy).toHaveBeenCalledTimes(1)
   })
 
@@ -479,7 +479,7 @@ describe('Router', () => {
     const dataContext = new DataContext()
     const req = new Request('http://localhost/response-time-route')
     const res = new Response()
-    await router.onRequest(req, cache, dataContext)
+    await router.handleRequest(req, cache, dataContext)
     await router.onBeforeResponse(req, res, cache, dataContext)
     expect(res.headers.get('X-Response-Time')).toBeDefined()
     expect(parseInt(res.headers.get('X-Response-Time')!)).toBeLessThan(1001)
@@ -608,7 +608,7 @@ describe('Router', () => {
     })
 
     await router.handleAction(req, cache, dataContext)
-    await router.onRequest(req, cache, dataContext)
+    await router.handleRequest(req, cache, dataContext)
     // TODO: check the serializer
     console.log(cache.serialize())
   })

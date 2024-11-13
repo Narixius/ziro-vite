@@ -28,15 +28,15 @@ export type AnyRoute<
   TParent extends AnyRoute = any,
   TProps = any,
 > = Route<RouteId, TLoaderResult, TActions, TMiddlewares, TParent, TProps, any, any>
-export type GetRouteDataContext<TParent> = TParent extends Route<any, any, any, any, any, any, any, infer TParentDataContextToChild> ? TParentDataContextToChild : {}
+export type GetRouteDataContextByParent<TParent> = TParent extends Route<any, any, any, any, any, any, any, infer TParentDataContextToChild> ? TParentDataContextToChild : {}
 
-type RouteContext<RouteId extends keyof RouteFilesByRouteId> = RouteFilesByRouteId[RouteId]['dataContext']
-export type LoaderArgs<RouteId extends keyof RouteFilesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
-export type ActionArgs<RouteId extends keyof RouteFilesByRouteId> = { request: Request; dataContext: RouteContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
+export type GetRouteDataContext<RouteId extends keyof RouteFilesByRouteId> = RouteFilesByRouteId[RouteId]['dataContext']
+export type LoaderArgs<RouteId extends keyof RouteFilesByRouteId> = { request: Request; dataContext: GetRouteDataContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
+export type ActionArgs<RouteId extends keyof RouteFilesByRouteId> = { request: Request; dataContext: GetRouteDataContext<RouteId>; head: DataContext['head']; params: RouteParams<RouteId> }
 
 export type MetaArgs<RouteId extends keyof RouteFilesByRouteId> = {
   request: Request
-  dataContext: RouteContext<RouteId>
+  dataContext: GetRouteDataContext<RouteId>
   head: DataContext['head']
   params: RouteParams<RouteId>
   loaderData: RouteFilesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
@@ -58,7 +58,7 @@ export class Route<
   TMiddlewares extends Middleware<TDataContext, any>[] = [],
   TParent extends AnyRoute | undefined = undefined,
   TProps = {},
-  TDataContext = GetRouteDataContext<TParent> & IntersectionOfMiddlewaresResult<TMiddlewares>,
+  TDataContext = GetRouteDataContextByParent<TParent> & IntersectionOfMiddlewaresResult<TMiddlewares>,
   TDataContextToChild = TDataContext & TLoaderResult,
 > {
   private paramsKeys: string[] = []

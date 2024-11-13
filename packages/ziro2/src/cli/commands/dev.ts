@@ -35,6 +35,7 @@ const devCommand = defineCommand({
   async run({ args: { host, port } }) {
     const app = createApp()
     AppContext.getContext().h3 = app
+    await configureDevServer()
 
     listen(toNodeListener(app), {
       clipboard: false,
@@ -42,26 +43,24 @@ const devCommand = defineCommand({
       public: host,
       port,
       autoClose: true,
-    })
-      .then(async server => {
-        AppContext.getContext().listener = server
-        console.log()
-        console.log(`  ${colors.green(`✦`)} ${colors.dim(`Server is running at:`)}`)
-        const maxTypeLength = Math.max(...(await server.getURLs()).map(serverUrl => serverUrl.type.length), 'network'.length) + 1
-        ;(await server.getURLs()).forEach(serverUrl => {
-          const paddedType = serverUrl.type.padEnd(maxTypeLength)
-          console.log(`  ${colors.blue('⦿')} ${colors.dim(upperFirst(paddedType))}: ${colors.whiteBright(colors.bold(colors.underline(serverUrl.url)))}`)
-        })
-        if (!host) console.log(`  ${colors.dim('𐄂')} ${colors.dim('Network'.padEnd(maxTypeLength) + ':')} ${colors.dim('use --host to expose network access')}`)
-        console.log()
+    }).then(async server => {
+      AppContext.getContext().listener = server
+      console.log()
+      console.log(`  ${colors.green(`✦`)} ${colors.dim(`Server is running at:`)}`)
+      const maxTypeLength = Math.max(...(await server.getURLs()).map(serverUrl => serverUrl.type.length), 'network'.length) + 1
+      ;(await server.getURLs()).forEach(serverUrl => {
+        const paddedType = serverUrl.type.padEnd(maxTypeLength)
+        console.log(`  ${colors.blue('⦿')} ${colors.dim(upperFirst(paddedType))}: ${colors.whiteBright(colors.bold(colors.underline(serverUrl.url)))}`)
       })
-      .then(runDevServer)
+      if (!host) console.log(`  ${colors.dim('𐄂')} ${colors.dim('Network'.padEnd(maxTypeLength) + ':')} ${colors.dim('use --host to expose network access')}`)
+      console.log()
+    })
   },
 })
 
 export default devCommand
 
-export const runDevServer = async () => {
+export const configureDevServer = async () => {
   const vite = await createServer({
     server: { middlewareMode: true },
     appType: 'custom',
@@ -78,16 +77,43 @@ const renderer = eventHandler(
     const dataContext = new DataContext()
     const cache = new Cache()
 
-    // console.log(await AppContext.getContext().vite.transformIndexHtml(request.url, ''))
+    // partially render the route on the server to catch any error statuses
+    const res = await AppContext.getContext().router.partiallyHandleRequest(request, cache, dataContext)
+    if (res.status !== 200) return res
 
+    // console.log(await AppContext.getContext().vite.transformIndexHtml(request.url, ''))
     const stream = await renderToReadableStream(
       createElement(Router, {
         initialUrl: request.url,
         router: AppContext.getContext().router,
         dataContext,
         cache,
+        // inject head from here
+        // head: `
+        // 		<script
+        // 		type="module"
+        // 		dangerouslySetInnerHTML={{
+        // 		  __html: `
+        // import RefreshRuntime from "/@react-refresh"
+        // RefreshRuntime.injectIntoGlobalHook(window)
+        // window.$RefreshReg$ = () => {}
+        // window.$RefreshSig$ = () => (type) => type
+        // window.__vite_plugin_react_preamble_installed__ = true`,
+        // 		}}
+        // 	  ></script>
+        // 	  <script type="module" src="/@vite/client"></script>
+        // 	  <script type="module" src="/@ziro/client-entry.jsx"></script>`
       }),
+      {
+        onError(error, errorInfo) {
+          console.error(error)
+          console.error(errorInfo)
+        },
+      },
     )
+
+    // if streaming is not activated
+    // await stream.allReady
 
     return new Response(stream, {
       headers: { 'content-type': 'text/html' },

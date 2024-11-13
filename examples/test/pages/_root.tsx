@@ -1,5 +1,5 @@
-import { FC, PropsWithChildren, Suspense } from 'react'
-import { Meta, Outlet, RouteProps } from 'ziro2/react'
+import { FC, PropsWithChildren } from 'react'
+import { Head, Outlet, RouteProps } from 'ziro2/react'
 import { MetaFn } from 'ziro2/router'
 import { requestLogger } from '~/middlewares/logger'
 import baseStyle from './styles.css?url'
@@ -29,31 +29,20 @@ export default function Root(props: RouteProps<'/_root'>) {
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
     <html>
-      <head>
-        <Suspense>
-          <Meta
-            fallbackHead={{
-              title: 'Z۰RO APP',
-            }}
-          />
-        </Suspense>
+      <Head
+        fallbackMeta={{
+          title: 'Z۰RO App',
+          link: [
+            {
+              href: baseStyle,
+              rel: 'stylesheet',
+            },
+          ],
+        }}
+      >
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href={baseStyle} />
-        <script
-          type="module"
-          dangerouslySetInnerHTML={{
-            __html: `
-import RefreshRuntime from "/@react-refresh"
-RefreshRuntime.injectIntoGlobalHook(window)
-window.$RefreshReg$ = () => {}
-window.$RefreshSig$ = () => (type) => type
-window.__vite_plugin_react_preamble_installed__ = true`,
-          }}
-        ></script>
-        <script type="module" src="/@vite/client"></script>
-        <script type="module" src="/@ziro/client-entry.jsx"></script>
-      </head>
+      </Head>
       <body>{children}</body>
     </html>
   )

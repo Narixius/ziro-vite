@@ -36,19 +36,6 @@ export class Router<RouteProps = {}> {
     }
   }
 
-  async onRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
-    const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
-    if (tree) {
-      // load each of the routes from the first one to the last one
-      for (let i = 0; i < tree.length; i++) {
-        const route = tree[i]
-        await route.onRequest(request, params || {}, dataContext, cache)
-      }
-    }
-
-    return dataContext
-  }
-
   async handleRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
     const routesStack: AnyRoute[] = []
@@ -58,6 +45,42 @@ export class Router<RouteProps = {}> {
         for (let i = 0; i < tree.length; i++) {
           const route = tree[i]
           await route.onRequest(request, params || {}, dataContext, cache)
+          // stack the routes
+          routesStack.push(route)
+        }
+      } catch (e) {
+        if (e instanceof Response) {
+          response = e
+        }
+        if (e instanceof Error) {
+          response = wrapErrorAsResponse(e).response
+        }
+      }
+      // run middlewares on before esponse
+      while (routesStack.length > 0) {
+        const route = routesStack.pop()
+        if (route && route.onBeforeResponse) {
+          await route.onBeforeResponse(request, response, params || {}, dataContext, cache)
+        }
+      }
+    }
+
+    return response
+  }
+
+  async partiallyHandleRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
+    const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
+    const routesStack: AnyRoute[] = []
+    let response = new Response()
+    if (tree) {
+      try {
+        for (let i = 0; i < tree.length; i++) {
+          const route = tree[i]
+          if (i === tree.length - 1) {
+            await route.onRequest(request, params as any, dataContext, cache)
+          } else {
+            await route.loadMiddlewaresOnRequest(request, params as any, dataContext, cache)
+          }
           // stack the routes
           routesStack.push(route)
         }

@@ -5,7 +5,7 @@ import { parseURL } from 'ufo'
 import { RouteFilesByRouteId } from 'ziro2/router'
 import { AlsoAllowString } from '../../types'
 import { Cache } from '../Cache'
-import { AnyRoute } from '../Route'
+import { AnyRoute, GetRouteDataContext } from '../Route'
 import { DataContext } from '../RouteDataContext'
 import { Router as RouterObj } from '../Router'
 import { isRedirectResponse } from '../utils/redirect'
@@ -14,12 +14,13 @@ import { NavigateFn, RouterContext } from './contexts/RouterContext'
 
 export type RouteProps<RouteId extends keyof RouteFilesByRouteId> = {
   loaderData: RouteFilesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
+  dataContext: GetRouteDataContext<RouteId>
 }
 
 export type ErrorBoundaryProps = FallbackProps
 
 export type TRouteProps = {
-  component?: FC<{ loaderData: any }>
+  component?: FC<{ loaderData: any; dataContext: any }>
   LoadingComponent?: FC
   ErrorBoundary?: FC<FallbackProps>
   Layout?: FC<PropsWithChildren>
@@ -149,8 +150,6 @@ export function routeLoadedSuspense<T>(route: AnyRoute<any, any, any, any, any, 
     const promise = new Promise((r, rr) => {
       resolve = r
       rr = reject
-    }).then(() => {
-      console.log(route.getId(), 'resolved')
     })
     promiseMaps[promiseKey] = {
       promise,
@@ -191,11 +190,15 @@ export const Outlet: FC = () => {
 
   // ---
   if (!route) {
-    if (lastRoute?.getId().endsWith('_layout') || lastRoute?.getId().endsWith('_root')) {
-      throw new Error('Page not found!')
-    }
+    // render error boundary with error 404
     return null
   }
+  //   if (!route) {
+  //     if (lastRoute?.getId().endsWith('_layout') || lastRoute?.getId().endsWith('_root')) {
+  //       throw new Error('Page not found!')
+  //     }
+  //     return null
+  //   }
   // ---
 
   const routeProps = route.getProps()
@@ -245,12 +248,12 @@ const RouteRenderer: FC = () => {
 }
 
 const RouteComponent: FC = () => {
-  const { route } = useContext(OutletContext)
+  const { route, dataContext } = useContext(OutletContext)
   const routeProps = route!.getProps()!
   const loaderData = useLoaderData()
 
   if (!routeProps.component) return null
-  return <routeProps.component loaderData={loaderData} />
+  return <routeProps.component loaderData={loaderData} dataContext={dataContext.data} />
 }
 
 export type GetLoaderData<RouteId extends AlsoAllowString<keyof RouteFilesByRouteId>> = RouteId extends keyof RouteFilesByRouteId
