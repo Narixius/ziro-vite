@@ -1,11 +1,13 @@
 import { defineCommand } from 'citty'
 import { colors } from 'consola/utils'
+import { getPort } from 'get-port-please'
 import { createApp, eventHandler, fromNodeMiddleware, fromWebHandler, toNodeListener } from 'h3'
 import { listen } from 'listhen'
 import { upperFirst } from 'lodash-es'
 import { createElement } from 'react'
 import { renderToReadableStream } from 'react-dom/server.browser'
 import { createServer } from 'vite'
+import yoctoSpinner from 'yocto-spinner'
 import { Cache, DataContext } from '../../router'
 import { Router } from '../../router/react'
 import { AppContext, printZiroHeader } from './shared.js'
@@ -35,22 +37,34 @@ const devCommand = defineCommand({
   async run({ args: { host, port } }) {
     const app = createApp()
     AppContext.getContext().h3 = app
-    await configureDevServer()
+
+    console.log()
+    const spinner = yoctoSpinner({
+      text: `${colors.dim(`Starting server...`)}`,
+      spinner: {
+        interval: 80,
+        frames: [`  ${colors.yellow(`⦾`)}`, `  ${colors.yellow(`⦿`)}`],
+      },
+    }).start()
+    await configureDevServer(parseInt(port))
+    spinner.stop()
 
     listen(toNodeListener(app), {
       clipboard: false,
       showURL: false,
       public: host,
-      port,
+      port: {
+        port: parseInt(port),
+        verbose: false,
+      },
       autoClose: true,
     }).then(async server => {
       AppContext.getContext().listener = server
-      console.log()
-      console.log(`  ${colors.green(`✦`)} ${colors.dim(`Server is running at:`)}`)
+      console.log(`  ${colors.green(`⦿`)} ${colors.dim(`Server is running at:`)}`)
       const maxTypeLength = Math.max(...(await server.getURLs()).map(serverUrl => serverUrl.type.length), 'network'.length) + 1
       ;(await server.getURLs()).forEach(serverUrl => {
         const paddedType = serverUrl.type.padEnd(maxTypeLength)
-        console.log(`  ${colors.blue('⦿')} ${colors.dim(upperFirst(paddedType))}: ${colors.whiteBright(colors.bold(colors.underline(serverUrl.url)))}`)
+        console.log(`  ${colors.blueBright('⦿')} ${colors.dim(upperFirst(paddedType))}: ${colors.whiteBright(colors.bold(colors.underline(serverUrl.url)))}`)
       })
       if (!host) console.log(`  ${colors.dim('𐄂')} ${colors.dim('Network'.padEnd(maxTypeLength) + ':')} ${colors.dim('use --host to expose network access')}`)
       console.log()
@@ -60,9 +74,17 @@ const devCommand = defineCommand({
 
 export default devCommand
 
-export const configureDevServer = async () => {
+export const configureDevServer = async (port: number) => {
   const vite = await createServer({
-    server: { middlewareMode: true },
+    server: {
+      middlewareMode: true,
+      hmr: {
+        port: await getPort({
+          portRange: [port + 100, port + 105],
+        }),
+      },
+    },
+    clearScreen: false,
     appType: 'custom',
   })
   AppContext.getContext().vite = vite

@@ -67,6 +67,7 @@
     "defu": "^6.1.4",
     "es-module-lexer": "^1.5.4",
     "fast-glob": "^3.3.2",
+    "get-port-please": "^3.1.2",
     "h3": "^1.12.0",
     "hookable": "^5.5.3",
     "html-react-parser": "^5.1.18",
@@ -85,6 +86,7 @@
     "unhead": "^1.9.16",
     "unimport": "^3.10.0",
     "unplugin": "^1.14.1",
+    "yocto-spinner": "^0.1.1",
     "zod": ""
   }
 }

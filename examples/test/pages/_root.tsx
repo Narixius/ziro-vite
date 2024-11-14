@@ -42,6 +42,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link href={baseStyle} rel="stylesheet" />
+        <script type="module" src="/@vite/client"></script>
         {/* <script
           type="module"
           dangerouslySetInnerHTML={{
@@ -52,7 +53,6 @@ window.$RefreshSig$ = () => (type) => type
 window.__vite_plugin_react_preamble_installed__ = true`,
           }}
         ></script>
-        <script type="module" src="/@vite/client"></script>
         <script type="module" src="/@ziro/client-entry.jsx"></script> */}
       </Head>
       <Body>{children}</Body>
