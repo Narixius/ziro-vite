@@ -85,7 +85,9 @@ const renderer = eventHandler(
     // partially render the route on the server to catch any error statuses
     const res = await AppContext.getContext().router.partiallyHandleRequest(request, cache, dataContext)
     if (res.status !== 200) return res
+
     // console.log(await AppContext.getContext().vite.transformIndexHtml(request.url, ''))
+
     const stream = await renderToReadableStream(
       createElement(Router, {
         initialUrl: request.url,

@@ -117,7 +117,6 @@ export class Router<RouteProps = {}> {
 
   async handleAction(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
-
     if (tree) {
       const actionRoute = tree[tree.length - 1]
       // todo: load parent route middlewares, then load action route

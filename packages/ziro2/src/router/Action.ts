@@ -46,7 +46,6 @@ export class Action<TInput extends z.ZodSchema = z.ZodSchema, TResult = void> {
             cache.setActionCache(actionName, parseURL(request.url).pathname, await res.text(), Infinity, cacheStatus)
           }
         }
-        console.log(result)
         return result
       })
       .catch(e => {

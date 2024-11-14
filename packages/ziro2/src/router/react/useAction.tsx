@@ -65,6 +65,7 @@ export const useAction = <
 
   const handleAction = useCallback(
     (request: Request) => {
+      // todo: call server to set cookies maybe?!
       router
         .handleAction(request, cache)
         .then(response => {
@@ -82,7 +83,7 @@ export const useAction = <
           }
         })
         .then(data => {
-          if (data === undefined) return
+          if (!data) return
           if ('errors' in data) {
             if ('input' in data) {
               setDefaultValues(data.input)
@@ -122,12 +123,13 @@ export const useAction = <
       setIsPending(true)
       setErrors(undefined)
       const formData = new FormData((e.target as HTMLFormElement).elements.length > 0 ? (e.target as HTMLFormElement) : undefined)
-      formData.append('__action', String(action))
+
+      if (!formData.get('__action')) formData.append('__action', String(action))
 
       const pvEnabled = typeof options?.preserveValues === 'boolean' ? options?.preserveValues : true
       const pvOptions = (typeof options?.preserveValues === 'boolean' ? {} : options?.preserveValues || {}) as TPreserveValues<TActionFields>
-      formData.append('__pv', String(Number(pvEnabled)))
-      if (pvEnabled && pvOptions.exclude) {
+      if (!formData.get('__pv')) formData.append('__pv', String(Number(pvEnabled)))
+      if (!formData.get('__ex') && pvEnabled && pvOptions.exclude) {
         formData.append('__ex', pvOptions.exclude.join(','))
       }
 

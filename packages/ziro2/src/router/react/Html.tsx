@@ -9,8 +9,32 @@ export const Html: FC<HTMLProps<HTMLHtmlElement>> = props => {
   return <html {...props} />
 }
 
-export const Body: FC<HTMLProps<HTMLBodyElement>> = props => {
-  return <body {...props} />
+export const Body: FC<HTMLProps<HTMLBodyElement>> = ({ children, ...props }) => {
+  return (
+    <body {...props}>
+      {children}
+      <Suspense>
+        <CacheSerializer />
+      </Suspense>
+    </body>
+  )
+}
+
+export const CacheSerializer: FC<PropsWithChildren> = () => {
+  const { dataContext, tree, params, cache, level } = useContext(OutletContext)
+  const route = tree[0]!
+  if (!route) return null
+  routeLoadedSuspense(route, params, dataContext, cache)
+  const cacheContent = `<script>window.__routerCache = ${cache.serialize()}</script>`
+  const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
+  return (
+    <Suspense fallback={parse(cacheContent)}>
+      <OutletContext.Provider value={{ tree: theRestOfRoutes, params, dataContext, cache, level: level + 1, route }}>
+        <CacheSerializer />
+      </OutletContext.Provider>
+      {theRestOfRoutes.length === 0 ? parse(cacheContent) : null}
+    </Suspense>
+  )
 }
 
 function createResource<T>(promise: Promise<T>) {
