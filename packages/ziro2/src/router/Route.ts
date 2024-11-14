@@ -1,6 +1,5 @@
 import { Head } from '@unhead/schema'
 import { omit } from 'lodash-es'
-import { parseQuery, parseURL } from 'ufo'
 import { AlsoAllowString } from '../types'
 import { Action } from './Action'
 import { Cache } from './Cache'
@@ -9,6 +8,7 @@ import { DataContext } from './RouteDataContext'
 import { RouteFilesByRouteId } from './Router'
 import { JsonError, wrapErrorAsResponse } from './utils'
 import { createAbortResponse } from './utils/abort'
+import { parseFormDataToObject } from './utils/multipart'
 
 export type ParsePathParams<T extends string, TAcc = never> = T extends `${string}:${infer TPossiblyParam}`
   ? TPossiblyParam extends `${infer TParam}/${infer TRest}`
@@ -204,22 +204,21 @@ export class Route<
   }
 
   async handleAction(request: Request, params: RouteParams<RouteId>, dataContext: DataContext<any>, cache: Cache) {
-    const query = parseQuery(String(parseURL(request.url).search))
-    const actionName = String(query.action)
+    const contentType = request.headers.get('content-type') || ''
+
+    let data
+    if (['multipart/form-data', 'application/x-www-form-urlencoded'].some(value => contentType.includes(value))) {
+      data = parseFormDataToObject(await request.formData())
+    } else if (contentType?.includes('application/json')) {
+      data = await request.json()
+    }
+
+    const actionName = data.__action
     const action = this.options.actions?.[actionName]
 
     if (action) {
       await this.loadMiddlewaresOnRequest(request, params, dataContext, cache)
-      return action.handle(
-        {
-          routeId: this.id,
-          actionName,
-        },
-        request,
-        params,
-        dataContext,
-        cache,
-      )
+      return action.handle(request, data, params, dataContext, cache)
     }
 
     return createAbortResponse(404, 'Not Found')

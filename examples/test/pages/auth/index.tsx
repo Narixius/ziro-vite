@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { guestGuard } from '@/middlewares/auth'
+import { serialize } from 'cookie-es'
 import { useAction } from 'ziro2/react'
 import { Action, MetaFn, redirect } from 'ziro2/router'
 import { z } from 'zod'
@@ -8,7 +9,6 @@ import { Alert, AlertDescription } from '~/components/ui/alert'
 import { ErrorMessage } from '~/components/ui/error-message'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
-
 export const middlewares = [guestGuard]
 
 export const meta: MetaFn<'/auth'> = async () => {
@@ -27,8 +27,13 @@ export const actions = {
       //   await new Promise(resolve => setTimeout(resolve, 1000))
       if (input.username[0] == 'a' && input.password[0] == 'a') {
         await new Promise(resolve => setTimeout(resolve, 500))
-        localStorage.setItem('username', input.username)
-        return redirect('/dashboard')
+        const headers = new Headers()
+
+        headers.set('Set-Cookie', serialize('auth', input.username))
+
+        return redirect('/dashboard', 302, {
+          headers,
+        })
       }
       throw new Error('Invalid credentials')
     },
@@ -45,7 +50,7 @@ export const actions = {
 }
 
 export default function AuthPage() {
-  const loginAction = useAction('/auth', 'login', {
+  const { errors, formProps, register, isPending, Form } = useAction('/auth', 'login', {
     preserveValues: {
       enabled: true,
       exclude: ['password'],
@@ -59,26 +64,26 @@ export default function AuthPage() {
         <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form {...loginAction.formProps} className="flex flex-col gap-2">
+        <Form {...formProps} className="flex flex-col gap-2">
           <Label className="flex flex-col gap-0.5 text-gray-600">
             <span className="text-sm font-normal">Username</span>
-            <Input {...loginAction.register('username')} autoComplete="username" invalid={!!loginAction.errors?.username} />
-            <ErrorMessage message={loginAction.errors?.username} />
+            <Input {...register('username')} autoComplete="username" invalid={!!errors?.username} />
+            <ErrorMessage message={errors?.username} />
           </Label>
           <Label className="flex flex-col gap-0.5 text-gray-600">
             <span className="text-sm font-normal">Password</span>
-            <Input {...loginAction.register('password')} type="password" autoComplete="current-password" invalid={!!loginAction.errors?.password} />
-            <ErrorMessage message={loginAction.errors?.password} />
+            <Input {...register('password')} type="password" autoComplete="current-password" invalid={!!errors?.password} />
+            <ErrorMessage message={errors?.password} />
           </Label>
-          {!!loginAction.errors?.root && (
+          {!!errors?.root && (
             <Alert variant="destructive" className="my-2">
-              <AlertDescription>{loginAction.errors?.root}</AlertDescription>
+              <AlertDescription>{errors?.root}</AlertDescription>
             </Alert>
           )}
-          <Button disabled={loginAction.isPending} className="w-full" variant="default">
-            {loginAction.isPending ? 'Signing in...' : 'Sign in'}
+          <Button disabled={isPending} className="w-full" variant="default">
+            {isPending ? 'Signing in...' : 'Sign in'}
           </Button>
-        </form>
+        </Form>
       </CardContent>
     </Card>
   )

@@ -1,10 +1,10 @@
 import { omit } from 'lodash-es'
+import { parseURL } from 'ufo'
 import { z } from 'zod'
-import { Cache } from './Cache'
+import { Cache, CacheStatus } from './Cache'
 import { DataContext } from './RouteDataContext'
-import { JsonError } from './utils'
+import { JsonError, wrapErrorAsResponse } from './utils'
 import { createAbortResponse } from './utils/abort'
-import { parseFormDataToObject } from './utils/multipart'
 import { createValidationErrors } from './utils/validation'
 
 type ActionInfo = {
@@ -20,35 +20,46 @@ export class Action<TInput extends z.ZodSchema = z.ZodSchema, TResult = void> {
     },
   ) {}
 
-  async handle(actionInfo: ActionInfo, request: Request, params: Record<string, string | string[]>, dataContext: DataContext<any>, cache: Cache) {
-    const req = request.clone()
+  async handle(request: Request, data: any, params: Record<string, string | string[]>, dataContext: DataContext<any>, cache: Cache) {
+    const contentType = request.headers.get('content-type') || ''
 
-    const contentType = req.headers.get('content-type') || ''
-    let data
-    if (['multipart/form-data', 'application/x-www-form-urlencoded'].some(value => contentType.includes(value))) {
-      data = parseFormDataToObject(await req.formData())
-    } else if (contentType?.includes('application/json')) {
-      data = await req.json()
-    }
-
+    const actionName = data.__action
     const preseveValues = data.__pv === '1'
     const excludedFields = preseveValues ? (data.__ex || '').split(',') : []
 
-    const actionResult = await this.run(data, {
+    let cacheStatus: CacheStatus = 'success'
+    return await this.run(data, {
       dataContext,
       params,
-      request: request.clone(),
-      actionInfo,
+      request,
       cache,
       preseveValues,
       excludedFields,
     })
-    if (cache) cache.setActionCache(actionInfo.actionName, request.url, actionResult)
-    return actionResult
+      .then(async result => {
+        if (result instanceof Response) {
+          const res = result.clone()
+          if (res.status > 299) cacheStatus = 'error'
+          if (contentType.includes('application/json')) {
+            cache.setActionCache(actionName, parseURL(request.url).pathname, await res.json(), Infinity, cacheStatus)
+          } else {
+            cache.setActionCache(actionName, parseURL(request.url).pathname, await res.text(), Infinity, cacheStatus)
+          }
+        }
+        console.log(result)
+        return result
+      })
+      .catch(e => {
+        cacheStatus = 'error'
+        if (e instanceof Error) {
+          cache.setActionCache(actionName, parseURL(request.url).pathname, wrapErrorAsResponse(e).getPayload(), Infinity, cacheStatus)
+        }
+        return e
+      })
   }
   private async run(
     body: z.infer<TInput>,
-    ctx: { actionInfo: ActionInfo; request: Request; params: Record<string, string | string[]>; dataContext: DataContext; cache?: Cache; preseveValues: boolean; excludedFields?: string[] | string },
+    ctx: { request: Request; params: Record<string, string | string[]>; dataContext: DataContext; cache?: Cache; preseveValues: boolean; excludedFields?: string[] | string },
   ) {
     const validation = this.ctx.input.safeParse(body)
     const getInput = () => {

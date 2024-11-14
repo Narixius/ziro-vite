@@ -1,7 +1,7 @@
 import { createHooks } from 'hookable'
 
 type CacheCategories = 'loader' | 'middleware' | 'action'
-type CacheStatus = 'pending' | 'success' | 'error'
+export type CacheStatus = 'pending' | 'success' | 'error'
 
 export class Cache {
   private cache: Map<string, { value: any; expiry: number; status: CacheStatus }>
@@ -38,7 +38,7 @@ export class Cache {
     this.hooks.callHook(this.generateKey(category, name, url), value)
   }
 
-  private get(category: CacheCategories, name: string, url: string): any | undefined {
+  private get(category: CacheCategories, name: string, url: string, full: boolean = false): any | undefined {
     const key = this.generateKey(category, name, url)
     const cachedItem = this.cache.get(key)
 
@@ -48,8 +48,8 @@ export class Cache {
     //   this.cache.delete(key)
     //   return undefined
     // }
-
-    return cachedItem.value
+    if (!full) return cachedItem.value
+    return cachedItem
   }
 
   delete(category: CacheCategories, name: string, url: string): boolean {
@@ -81,12 +81,12 @@ export class Cache {
     this.set('middleware', name, '', value, ttl)
   }
 
-  getActionCache(name: string, url: string): any | undefined {
-    return this.get('action', name, url)
+  getActionCache(name: string, url: string, full: boolean = false): any | undefined {
+    return this.get('action', name, url, full)
   }
 
-  setActionCache(name: string, url: string, value: any, ttl: number = Infinity): void {
-    this.set('action', name, url, value, ttl)
+  setActionCache(name: string, url: string, value: any, ttl: number = Infinity, status: CacheStatus = 'success'): void {
+    this.set('action', name, url, value, ttl, status)
   }
 
   getLoaderCache(name: string, url: string): any | undefined {

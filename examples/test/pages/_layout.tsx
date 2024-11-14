@@ -34,7 +34,6 @@ export const meta: MetaFn<'/_layout'> = async ({ loaderData }) => {
 }
 
 export const loader = async () => {
-  await new Promise(resolve => setTimeout(resolve, 1000))
   return {}
 }
 

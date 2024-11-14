@@ -77,10 +77,14 @@ const renderer = eventHandler(
     const dataContext = new DataContext()
     const cache = new Cache()
 
+    if (request.method === 'POST') {
+      const actionResponse = await AppContext.getContext().router.handleAction(request, cache, dataContext)
+      if (request.headers.get('accept')?.includes('application/json') || String(actionResponse.status)[0] === '3') return actionResponse
+    }
+
     // partially render the route on the server to catch any error statuses
     const res = await AppContext.getContext().router.partiallyHandleRequest(request, cache, dataContext)
     if (res.status !== 200) return res
-
     // console.log(await AppContext.getContext().vite.transformIndexHtml(request.url, ''))
     const stream = await renderToReadableStream(
       createElement(Router, {
@@ -88,21 +92,6 @@ const renderer = eventHandler(
         router: AppContext.getContext().router,
         dataContext,
         cache,
-        // inject head from here
-        // head: `
-        // 		<script
-        // 		type="module"
-        // 		dangerouslySetInnerHTML={{
-        // 		  __html: `
-        // import RefreshRuntime from "/@react-refresh"
-        // RefreshRuntime.injectIntoGlobalHook(window)
-        // window.$RefreshReg$ = () => {}
-        // window.$RefreshSig$ = () => (type) => type
-        // window.__vite_plugin_react_preamble_installed__ = true`,
-        // 		}}
-        // 	  ></script>
-        // 	  <script type="module" src="/@vite/client"></script>
-        // 	  <script type="module" src="/@ziro/client-entry.jsx"></script>`
       }),
       {
         onError(error, errorInfo) {

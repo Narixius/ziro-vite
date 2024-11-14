@@ -117,19 +117,12 @@ export class Router<RouteProps = {}> {
 
   async handleAction(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
+
     if (tree) {
       const actionRoute = tree[tree.length - 1]
-
       // todo: load parent route middlewares, then load action route
 
-      const actionResult = await actionRoute.handleAction(request, params || {}, dataContext, cache).catch(response => {
-        if (response instanceof Response) return response
-        if (response instanceof Error) {
-          return wrapErrorAsResponse(response).response
-        }
-        return response
-      })
-
+      const actionResult = await actionRoute.handleAction(request, params || {}, dataContext, cache)
       if (actionResult instanceof Response) return actionResult
       return createResponse(actionResult)
     }
