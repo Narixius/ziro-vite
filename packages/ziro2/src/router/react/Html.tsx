@@ -26,7 +26,9 @@ export const CacheSerializer: FC<PropsWithChildren> = () => {
   if (!route) return null
   try {
     routeLoadedSuspense(route, params, dataContext, cache)
-  } catch (e) {}
+  } catch (e) {
+    if (e instanceof Promise) throw e
+  }
   const cacheContent = `<script>window.__routerCache = ${cache.serialize()}</script>`
   const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
   return (
@@ -96,7 +98,9 @@ export const Meta: FC<PropsWithChildren> = () => {
 
   try {
     routeLoadedSuspense(route, params, dataContext, cache)
-  } catch (e) {}
+  } catch (e) {
+    if (e instanceof Promise) throw e
+  }
 
   const tagsResource = createResource(renderSSRHead(dataContext.head))
 

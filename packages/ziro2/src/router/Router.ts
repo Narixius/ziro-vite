@@ -38,7 +38,6 @@ export class Router<RouteProps = {}> {
 
   async handleRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
-    const routesStack: AnyRoute[] = []
     let response = new Response()
     if (tree) {
       try {
@@ -46,7 +45,6 @@ export class Router<RouteProps = {}> {
           const route = tree[i]
           await route.onRequest(request, params || {}, dataContext, cache)
           // stack the routes
-          routesStack.push(route)
         }
       } catch (e) {
         if (e instanceof Response) {
@@ -57,10 +55,10 @@ export class Router<RouteProps = {}> {
         }
       }
       // run middlewares on before esponse
-      while (routesStack.length > 0) {
-        const route = routesStack.pop()
-        if (route && route.onBeforeResponse) {
-          await route.onBeforeResponse(request, response, params || {}, dataContext, cache)
+      while (dataContext.middlewaresStack.length > 0) {
+        const middleware = dataContext.middlewaresStack.pop()
+        if (middleware && middleware.onBeforeResponse) {
+          await middleware.onBeforeResponse(request, response, params || {}, dataContext, cache)
         }
       }
     }
@@ -68,10 +66,10 @@ export class Router<RouteProps = {}> {
     return response
   }
 
-  async partiallyHandleRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
+  // in partially handle request, we only load middlewares and the target route loader
+  // to have accurate response status code
+  async partiallyHandleRequest(request: Request, response: Response, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
-    const routesStack: AnyRoute[] = []
-    let response = new Response()
     if (tree) {
       try {
         for (let i = 0; i < tree.length; i++) {
@@ -81,8 +79,6 @@ export class Router<RouteProps = {}> {
           } else {
             await route.loadMiddlewaresOnRequest(request, params as any, dataContext, cache)
           }
-          // stack the routes
-          routesStack.push(route)
         }
       } catch (e) {
         if (e instanceof Response) {
@@ -92,12 +88,10 @@ export class Router<RouteProps = {}> {
           response = wrapErrorAsResponse(e).response
         }
       }
-      // run middlewares on before esponse
-      while (routesStack.length > 0) {
-        const route = routesStack.pop()
-        if (route && route.onBeforeResponse) {
-          await route.onBeforeResponse(request, response, params || {}, dataContext, cache)
-        }
+      // run middlewares on before response
+      while (dataContext.middlewaresStack.length > 0) {
+        const middleware = dataContext.middlewaresStack.pop()
+        if (middleware) await middleware.onBeforeResponse(request, response, params || {}, dataContext, cache)
       }
     }
 
@@ -117,14 +111,28 @@ export class Router<RouteProps = {}> {
 
   async handleAction(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
+    let actionResponse
     if (tree) {
-      const actionRoute = tree[tree.length - 1]
-      // todo: load parent route middlewares, then load action route
-
-      const actionResult = await actionRoute.handleAction(request, params || {}, dataContext, cache)
-      if (actionResult instanceof Response) return actionResult
-      return createResponse(actionResult)
+      for (let i = 0; i < tree.length; i++) {
+        const route = tree[i]
+        if (i !== tree.length - 1) {
+          route.loadMiddlewaresOnRequest(request, params || {}, dataContext)
+        } else {
+          actionResponse = await route.handleAction(request, params || {}, dataContext, cache)
+          if (!(actionResponse instanceof Response)) actionResponse = createResponse(actionResponse)
+        }
+      }
+    } else {
+      actionResponse = createAbortResponse(404, 'Not Found')
     }
-    return createAbortResponse(404, 'Not Found')
+
+    // run middlewares on before esponse
+    while (dataContext.middlewaresStack.length > 0) {
+      const middleware = dataContext.middlewaresStack.pop()
+      if (middleware && middleware.onBeforeResponse) {
+        await middleware.onBeforeResponse(request, actionResponse!, params || {}, dataContext, cache)
+      }
+    }
+    return actionResponse!
   }
 }

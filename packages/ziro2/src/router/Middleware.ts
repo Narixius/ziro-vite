@@ -45,7 +45,8 @@ export class Middleware<TDataContextType = any, TOnRequestResult = {}> {
             ...dataContext.data,
             ...(data || {}),
           }
-          cache?.setMiddlewareCache(this.name, data, Infinity)
+          dataContext.middlewaresStack.push(this)
+          cache?.setMiddlewareCache(this.name, data || {}, Infinity)
         })
   }
   async onBeforeResponse(request: Request, response: Response, params: Record<string, string> = {}, dataContext: DataContext<TDataContextType>, cache?: Cache) {

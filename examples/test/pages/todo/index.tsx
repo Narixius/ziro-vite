@@ -46,14 +46,13 @@ export const actions = {
       }
     },
   }),
-  markTodo: new Action({
+  toggleTodo: new Action({
     input: z.object({
       index: z.coerce.number().min(0, 'This field is required'),
-      isDone: z.coerce.boolean(),
     }),
     async handler(body) {
       const todoList = todos
-      todoList[body.index].isDone = body.isDone
+      todoList[body.index].isDone = !todoList[body.index].isDone
       return {
         ok: true,
       }
@@ -77,17 +76,13 @@ export default function Todo(props: RouteProps<'/todo'>) {
       inputRef.current!.value = ''
     },
   })
-  const markTodoAction = useAction('/todo', 'markTodo')
+  const toggleTodo = useAction('/todo', 'toggleTodo')
   const deleteTodoAction = useAction('/todo', 'deleteTodo')
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const markTodo = (index: number) => (isDone: boolean) => {
-    markTodoAction.submit({ index, isDone })
-  }
-
   return (
     <div className="flex flex-col mx-auto max-w-96 mt-10">
-      <form {...addTodoAction.formProps} className="flex gap-2 justify-start">
+      <addTodoAction.Form className="flex gap-2 justify-start">
         <div className="flex flex-col gap-1 flex-grow w-full">
           <Input {...addTodoAction.register('title')} ref={inputRef} invalid={!!addTodoAction.errors?.title} />
           <ErrorMessage message={addTodoAction.errors?.title} />
@@ -95,28 +90,24 @@ export default function Todo(props: RouteProps<'/todo'>) {
         <Button disabled={addTodoAction.isPending} type="submit">
           Add Todo
         </Button>
-      </form>
+      </addTodoAction.Form>
       {props.loaderData.list.map((todo, index) => {
         return (
           <div key={index} className="group">
             <div className="flex justify-between gap-2 items-center min-h-10">
-              <label className="flex gap-2 items-center flex-grow">
-                <Checkbox disabled={markTodoAction.isPending} {...markTodoAction.register('isDone')} checked={todo.isDone} onCheckedChange={markTodo(index)} />
-                {todo.title}
-              </label>
-
-              <Button
-                size="icon"
-                variant="ghost"
-                className="hidden group-hover:flex"
-                onClick={() => {
-                  deleteTodoAction.submit({
-                    index,
-                  })
-                }}
-              >
-                <TrashIcon size="16" />
-              </Button>
+              <toggleTodo.Form>
+                <label className="flex gap-2 items-center flex-grow">
+                  <input type="hidden" {...toggleTodo.register('index')} value={index} />
+                  <Checkbox type="submit" disabled={toggleTodo.isPending} checked={todo.isDone} />
+                  {todo.title}
+                </label>
+              </toggleTodo.Form>
+              <deleteTodoAction.Form>
+                <input type="hidden" value={index} {...deleteTodoAction.register('index')} />
+                <Button type="submit" size="icon" variant="ghost" className="hidden group-hover:flex">
+                  <TrashIcon size="16" />
+                </Button>
+              </deleteTodoAction.Form>
             </div>
           </div>
         )

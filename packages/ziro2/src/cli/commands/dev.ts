@@ -74,17 +74,24 @@ export const configureDevServer = async () => {
 
 const renderer = eventHandler(
   fromWebHandler(async request => {
-    const dataContext = new DataContext()
+    let dataContext = new DataContext()
     const cache = new Cache()
-
+    let responseStatus = 200
+    let responseStatusText = ''
     if (request.method === 'POST') {
       const actionResponse = await AppContext.getContext().router.handleAction(request, cache, dataContext)
-      if (request.headers.get('accept')?.includes('application/json') || String(actionResponse.status)[0] === '3') return actionResponse
+      if (actionResponse instanceof Response) {
+        responseStatus = actionResponse.status
+        responseStatusText = actionResponse.statusText
+      }
+      if (request.headers.get('accept')?.includes('application/json') || String(actionResponse.status)[0] === '3') {
+        return actionResponse
+      }
     }
 
     // partially render the route on the server to catch any error statuses
-    const res = await AppContext.getContext().router.partiallyHandleRequest(request, cache, dataContext)
-    if (res.status !== 200) return res
+    const res = await AppContext.getContext().router.partiallyHandleRequest(request, new Response(null, { status: responseStatus, statusText: responseStatusText }), cache, dataContext)
+    if (String(res.status)[0] === '3') return res
 
     // console.log(await AppContext.getContext().vite.transformIndexHtml(request.url, ''))
 
@@ -108,6 +115,8 @@ const renderer = eventHandler(
 
     return new Response(stream, {
       headers: { 'content-type': 'text/html' },
+      status: responseStatus,
+      statusText: responseStatusText,
     })
 
     // const ssrReady = await renderSSRHead(dataContext.head)
