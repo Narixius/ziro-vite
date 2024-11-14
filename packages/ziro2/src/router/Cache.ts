@@ -35,7 +35,7 @@ export class Cache {
     const expiry = Date.now() + ttl
     const key = this.generateKey(category, name, url)
     this.cache.set(key, { value, expiry, status })
-    this.hooks.callHook(this.generateKey(category, name, url), value)
+    this.hooks.callHook(key, value)
   }
 
   private get(category: CacheCategories, name: string, url: string, full: boolean = false): any | undefined {

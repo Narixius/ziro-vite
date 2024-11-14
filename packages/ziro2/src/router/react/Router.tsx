@@ -206,7 +206,7 @@ export const Outlet: FC = () => {
   // wrap route with suspense before load the route
   return (
     <Layout>
-      <Suspense fallback={<RouteLoading routeProps={routeProps!} />}>
+      <Suspense fallback={<RouteLoading routeProps={routeProps || {}} />}>
         <ErrorBoundary FallbackComponent={ErrorBoundaryFallback}>
           <RouteRenderer />
         </ErrorBoundary>

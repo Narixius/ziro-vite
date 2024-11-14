@@ -1,10 +1,10 @@
 import * as rou3 from 'rou3'
 import { parseURL } from 'ufo'
 import { Cache } from './Cache'
-import { AnyRoute } from './Route'
+import { AnyRoute, Route } from './Route'
 import { DataContext } from './RouteDataContext'
 import { wrapErrorAsResponse } from './utils'
-import { createAbortResponse } from './utils/abort'
+import { abort, createAbortResponse } from './utils/abort'
 import { createResponse } from './utils/response'
 
 export interface RoutesByRouteId {}
@@ -16,15 +16,21 @@ export class Router<RouteProps = {}> {
   constructor(private baseUrl?: string) {}
   addRoute(route: AnyRoute<string, any, any, any, any, RouteProps>) {
     let tree = [route]
+    let routePath = route.getId()
+    if (route.getId().endsWith('_layout') || route.getId().endsWith('_root')) {
+      routePath = route.getId().replace(/\/(_layout|_root)$/, '/**')
+      const notFoundRoute = new Route('notFound', {
+        loader: () => abort(404, 'Page Not Found'),
+      }) as AnyRoute
+      tree = [route, notFoundRoute]
+    }
+
     while (true) {
       if (!tree[0].getParent()) break
       const parentRoute = tree[0].getParent()
       if (parentRoute) tree.unshift(parentRoute)
     }
-    let routePath = route.getId()
-    if (route.getId().endsWith('_layout') || route.getId().endsWith('_root')) {
-      routePath = route.getId().replace(/\/(_layout|_root)$/, '/**')
-    }
+
     rou3.addRoute(this.tree, '', routePath, tree)
   }
 
@@ -116,7 +122,7 @@ export class Router<RouteProps = {}> {
       for (let i = 0; i < tree.length; i++) {
         const route = tree[i]
         if (i !== tree.length - 1) {
-          route.loadMiddlewaresOnRequest(request, params || {}, dataContext)
+          route.loadMiddlewaresOnRequest(request, params || {}, dataContext, cache)
         } else {
           actionResponse = await route.handleAction(request, params || {}, dataContext, cache)
           if (!(actionResponse instanceof Response)) actionResponse = createResponse(actionResponse)
@@ -126,7 +132,7 @@ export class Router<RouteProps = {}> {
       actionResponse = createAbortResponse(404, 'Not Found')
     }
 
-    // run middlewares on before esponse
+    // run middlewares on before response
     while (dataContext.middlewaresStack.length > 0) {
       const middleware = dataContext.middlewaresStack.pop()
       if (middleware && middleware.onBeforeResponse) {

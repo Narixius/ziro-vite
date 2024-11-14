@@ -81,7 +81,8 @@ export class Route<
   ) {
     this.paramsKeys = id.match(/:[a-zA-Z0-9]+/g) || []
   }
-  getId() {
+
+  getId(): string {
     return this.id
   }
   getParent() {

@@ -100,6 +100,7 @@ const renderer = eventHandler(
     const cache = new Cache()
     let responseStatus = 200
     let responseStatusText = ''
+
     if (request.method === 'POST') {
       const actionResponse = await AppContext.getContext().router.handleAction(request, cache, dataContext)
       if (actionResponse instanceof Response) {
@@ -114,6 +115,7 @@ const renderer = eventHandler(
     // partially render the route on the server to catch any error statuses
     const res = await AppContext.getContext().router.partiallyHandleRequest(request, new Response(null, { status: responseStatus, statusText: responseStatusText }), cache, dataContext)
     if (String(res.status)[0] === '3') return res
+    responseStatus = res.status
 
     // console.log(await AppContext.getContext().vite.transformIndexHtml(request.url, ''))
 

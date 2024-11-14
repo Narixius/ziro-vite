@@ -32,7 +32,11 @@ export class Middleware<TDataContextType = any, TOnRequestResult = {}> {
       return cachedData
     }
 
-    if (this.handlers?.onRequest)
+    if (!this.handlers.onRequest) {
+      cache?.setMiddlewareCache(this.name, {}, Infinity)
+    }
+
+    if (this.handlers.onRequest)
       await this.handlers
         .onRequest({
           dataContext: dataContext.data,
@@ -45,9 +49,10 @@ export class Middleware<TDataContextType = any, TOnRequestResult = {}> {
             ...dataContext.data,
             ...(data || {}),
           }
-          dataContext.middlewaresStack.push(this)
           cache?.setMiddlewareCache(this.name, data || {}, Infinity)
         })
+
+    dataContext.middlewaresStack.push(this)
   }
   async onBeforeResponse(request: Request, response: Response, params: Record<string, string> = {}, dataContext: DataContext<TDataContextType>, cache?: Cache) {
     if (this.handlers?.onBeforeResponse)
