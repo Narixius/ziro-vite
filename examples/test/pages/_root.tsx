@@ -1,5 +1,5 @@
 import { FC, PropsWithChildren } from 'react'
-import { Body, Head, Outlet, RouteProps } from 'ziro2/react'
+import { Body, Head, Html, Outlet, RouteProps } from 'ziro2/react'
 import { MetaFn } from 'ziro2/router'
 import { requestLogger } from '~/middlewares/logger'
 import baseStyle from './styles.css?url'
@@ -27,7 +27,7 @@ export default function Root(props: RouteProps<'/_root'>) {
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <html>
+    <Html>
       <Head
         fallbackMeta={{
           title: 'Z۰RO App',
@@ -56,7 +56,7 @@ window.__vite_plugin_react_preamble_installed__ = true`,
         <script type="module" src="/@ziro/client-entry.jsx"></script>
       </Head>
       <Body>{children}</Body>
-    </html>
+    </Html>
   )
 }
 

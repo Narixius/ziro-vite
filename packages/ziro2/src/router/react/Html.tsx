@@ -24,7 +24,9 @@ export const CacheSerializer: FC<PropsWithChildren> = () => {
   const { dataContext, tree, params, cache, level } = useContext(OutletContext)
   const route = tree[0]!
   if (!route) return null
-  routeLoadedSuspense(route, params, dataContext, cache)
+  try {
+    routeLoadedSuspense(route, params, dataContext, cache)
+  } catch (e) {}
   const cacheContent = `<script>window.__routerCache = ${cache.serialize()}</script>`
   const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
   return (
@@ -92,7 +94,10 @@ export const Meta: FC<PropsWithChildren> = () => {
   const route = tree[0]!
   if (!route) return null
 
-  routeLoadedSuspense(route, params, dataContext, cache)
+  try {
+    routeLoadedSuspense(route, params, dataContext, cache)
+  } catch (e) {}
+
   const tagsResource = createResource(renderSSRHead(dataContext.head))
 
   const TagsContent: React.FC = () => {
