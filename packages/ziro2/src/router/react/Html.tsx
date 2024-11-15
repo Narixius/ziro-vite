@@ -7,13 +7,13 @@ import { RouterContext } from './contexts/RouterContext'
 import { routeLoadedSuspense } from './Router'
 
 export const Html: FC<HTMLProps<HTMLHtmlElement>> = props => {
-  return <html {...props} />
+  return <html {...props} suppressHydrationWarning />
 }
 
 export const Body: FC<HTMLProps<HTMLBodyElement>> = ({ children, ...props }) => {
   const { layoutOptions } = useContext(RouterContext)
   return (
-    <body {...props}>
+    <body {...props} suppressHydrationWarning>
       {children}
       <Suspense>
         <CacheSerializer />
@@ -86,7 +86,7 @@ export const Head: FC<PropsWithChildren<{ fallbackMeta?: Unhead }> & HTMLProps<H
   }
 
   return (
-    <head>
+    <head suppressHydrationWarning>
       <Suspense fallback={<TagsContent />}>
         <Meta />
       </Suspense>
@@ -114,12 +114,12 @@ export const Meta: FC<PropsWithChildren> = () => {
     const tags = tagsResource.read()
     const route = tree[0]
     const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
+    const headMetaComponents = parse(tags.headTags)
     return (
-      <Suspense fallback={parse(tags.headTags)}>
+      <Suspense fallback={headMetaComponents}>
         <OutletContext.Provider value={{ tree: theRestOfRoutes, params, dataContext, cache, level: level + 1, route }}>
           <Meta />
         </OutletContext.Provider>
-        {theRestOfRoutes.length === 0 ? parse(tags.headTags) : null}
       </Suspense>
     )
   }
