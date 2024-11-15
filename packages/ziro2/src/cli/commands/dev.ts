@@ -2,6 +2,7 @@ import { defineCommand } from 'citty'
 import { colors } from 'consola/utils'
 import { getPort } from 'get-port-please'
 import { createApp, eventHandler, fromNodeMiddleware, fromWebHandler, toNodeListener } from 'h3'
+import parse from 'html-react-parser'
 import { listen } from 'listhen'
 import { upperFirst } from 'lodash-es'
 import { createElement } from 'react'
@@ -117,7 +118,10 @@ const renderer = eventHandler(
     if (String(res.status)[0] === '3') return res
     responseStatus = res.status
 
-    // console.log(await AppContext.getContext().vite.transformIndexHtml(request.url, ''))
+    const viteRenderedHtml = await AppContext.getContext().vite.transformIndexHtml(request.url, '<head></head><body></body>')
+
+    const headContent = viteRenderedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i)?.[1] || ''
+    const bodyContent = viteRenderedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || ''
 
     const stream = await renderToReadableStream(
       createElement(Router, {
@@ -125,6 +129,10 @@ const renderer = eventHandler(
         router: AppContext.getContext().router,
         dataContext,
         cache,
+        layoutOptions: {
+          body: parse(bodyContent),
+          head: parse(headContent),
+        },
       }),
       {
         onError(error, errorInfo) {

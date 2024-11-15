@@ -1,5 +1,5 @@
 import { createHooks } from 'hookable'
-import { FC, Fragment, PropsWithChildren, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { FC, Fragment, PropsWithChildren, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { parseURL } from 'ufo'
 import { RouteFilesByRouteId } from 'ziro2/router'
@@ -30,13 +30,17 @@ type RouterProps = {
   dataContext?: DataContext
   cache?: Cache
   initialUrl?: string
+  layoutOptions?: {
+    body?: ReactNode
+    head?: ReactNode
+  }
 }
 
 const routerHook = createHooks<{
   onUrlChange: () => void
 }>()
 
-export const Router: FC<RouterProps> = ({ router, ...props }) => {
+export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => {
   const [url, setUrl] = useState(props.initialUrl ? parseURL(props.initialUrl).pathname : typeof window !== 'undefined' ? window.location.pathname : '')
 
   const dataContext = useRef(props.dataContext || new DataContext())
@@ -94,7 +98,7 @@ export const Router: FC<RouterProps> = ({ router, ...props }) => {
   }, [router, navigate])
 
   return (
-    <RouterContext.Provider value={{ router, navigate, revalidateTree }}>
+    <RouterContext.Provider value={{ router, navigate, revalidateTree, layoutOptions }}>
       <OutletContext.Provider
         value={{
           tree: treeInfo.tree!,
@@ -189,10 +193,6 @@ export const Outlet: FC = () => {
   const route = tree[0]!
 
   // ---
-  if (!route) {
-    // render error boundary with error 404
-    return null
-  }
   //   if (!route) {
   //     if (lastRoute?.getId().endsWith('_layout') || lastRoute?.getId().endsWith('_root')) {
   //       throw new Error('Page not found!')
@@ -263,7 +263,7 @@ export type GetLoaderData<RouteId extends AlsoAllowString<keyof RouteFilesByRout
   : any
 
 export const useLoaderData = <RouteId extends AlsoAllowString<keyof RouteFilesByRouteId>>() => {
-  const { route, params, cache, dataContext } = useContext(OutletContext)
+  const { route, params, cache } = useContext(OutletContext)
   const { url } = route!.parsePath(params)
 
   const subscribe = (onStoreChange: () => void) => {
@@ -272,7 +272,6 @@ export const useLoaderData = <RouteId extends AlsoAllowString<keyof RouteFilesBy
   }
 
   const getSnapshot = (): Promise<GetLoaderData<RouteId>> => {
-    // loadRouteMeta(route!, params, dataContext, cache)
     return cache.getLoaderCache(route!.getId(), url)
   }
 

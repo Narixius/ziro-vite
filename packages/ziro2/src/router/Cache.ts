@@ -89,8 +89,8 @@ export class Cache {
     this.set('action', name, url, value, ttl, status)
   }
 
-  getLoaderCache(name: string, url: string): any | undefined {
-    return this.get('loader', name, url)
+  getLoaderCache(name: string, url: string, fullCache: boolean = false): any | undefined {
+    return this.get('loader', name, url, fullCache)
   }
 
   setLoaderCache(name: string, url: string, value: any, ttl: number = Infinity, status: CacheStatus = 'success'): void {

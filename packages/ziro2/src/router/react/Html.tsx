@@ -3,6 +3,7 @@ import { renderSSRHead } from '@unhead/ssr'
 import parse from 'html-react-parser'
 import { FC, HTMLProps, PropsWithChildren, Suspense, useContext, useMemo } from 'react'
 import { OutletContext } from './contexts/OutletContext'
+import { RouterContext } from './contexts/RouterContext'
 import { routeLoadedSuspense } from './Router'
 
 export const Html: FC<HTMLProps<HTMLHtmlElement>> = props => {
@@ -10,12 +11,14 @@ export const Html: FC<HTMLProps<HTMLHtmlElement>> = props => {
 }
 
 export const Body: FC<HTMLProps<HTMLBodyElement>> = ({ children, ...props }) => {
+  const { layoutOptions } = useContext(RouterContext)
   return (
     <body {...props}>
       {children}
       <Suspense>
         <CacheSerializer />
       </Suspense>
+      {layoutOptions?.body}
     </body>
   )
 }
@@ -23,6 +26,7 @@ export const Body: FC<HTMLProps<HTMLBodyElement>> = ({ children, ...props }) => 
 export const CacheSerializer: FC<PropsWithChildren> = () => {
   const { dataContext, tree, params, cache, level } = useContext(OutletContext)
   const route = tree[0]!
+  const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
   if (!route) return null
   try {
     routeLoadedSuspense(route, params, dataContext, cache)
@@ -30,7 +34,6 @@ export const CacheSerializer: FC<PropsWithChildren> = () => {
     if (e instanceof Promise) throw e
   }
   const cacheContent = `<script>window.__routerCache = ${cache.serialize()}</script>`
-  const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
   return (
     <Suspense fallback={parse(cacheContent)}>
       <OutletContext.Provider value={{ tree: theRestOfRoutes, params, dataContext, cache, level: level + 1, route }}>
@@ -68,6 +71,7 @@ function createResource<T>(promise: Promise<T>) {
 
 export const Head: FC<PropsWithChildren<{ fallbackMeta?: Unhead }> & HTMLProps<HTMLHeadElement>> = ({ fallbackMeta, children, ...props }) => {
   const { dataContext } = useContext(OutletContext)
+  const { layoutOptions } = useContext(RouterContext)
   if (dataContext.head) {
     dataContext.head.push(fallbackMeta || {}, {
       mode: 'server',
@@ -87,6 +91,7 @@ export const Head: FC<PropsWithChildren<{ fallbackMeta?: Unhead }> & HTMLProps<H
         <Meta />
       </Suspense>
       {children}
+      {layoutOptions?.head}
     </head>
   )
 }
