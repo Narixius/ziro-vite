@@ -7,6 +7,7 @@ import baseStyle from './styles.css?url'
 export const middlewares = [requestLogger]
 
 export const loader = async () => {
+  await new Promise(resolve => setTimeout(resolve, 1000))
   return {
     version: 1.1,
   }
@@ -51,4 +52,8 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
 // it will not rendering during ssr
 export const Loading = () => {
   return <span>Loading root...</span>
+}
+
+export const ErrorBoundary = () => {
+  return <span>root error boundary</span>
 }

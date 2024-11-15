@@ -137,11 +137,9 @@ const renderer = eventHandler(
       {
         onError(error, errorInfo) {
           console.error(error)
-          console.error(errorInfo)
         },
       },
     )
-
     // if streaming is not activated
     // await stream.allReady
 

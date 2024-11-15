@@ -1,5 +1,5 @@
 import { createHooks } from 'hookable'
-import { FC, Fragment, PropsWithChildren, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import React, { FC, Fragment, PropsWithChildren, ReactNode, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { parseURL } from 'ufo'
 import { RouteFilesByRouteId } from 'ziro2/router'
@@ -142,7 +142,7 @@ const promiseMaps: Record<
   }
 > = {}
 
-export function routeLoadedSuspense<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache): T | void {
+export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache): T | void {
   const { url: matchedUrl } = route.parsePath(params)
 
   const cachedData = cache.getLoaderCache(route.getId(), matchedUrl)
@@ -189,18 +189,9 @@ const loadRouteMeta = async (route: AnyRoute<any, any, any, any, any, TRouteProp
 }
 
 export const Outlet: FC = () => {
-  const { tree, route: lastRoute } = useContext(OutletContext)
+  const { tree } = useContext(OutletContext)
   const route = tree[0]!
-
-  // ---
-  //   if (!route) {
-  //     if (lastRoute?.getId().endsWith('_layout') || lastRoute?.getId().endsWith('_root')) {
-  //       throw new Error('Page not found!')
-  //     }
-  //     return null
-  //   }
-  // ---
-
+  if (!route) return null
   const routeProps = route.getProps()
   const Layout = routeProps?.Layout || Fragment
   // wrap route with suspense before load the route
@@ -216,28 +207,35 @@ export const Outlet: FC = () => {
 }
 
 const RouteLoading: FC<{ routeProps: TRouteProps }> = ({ routeProps }) => {
-  return routeProps.LoadingComponent ? <routeProps.LoadingComponent /> : <span></span>
+  return routeProps.LoadingComponent ? <routeProps.LoadingComponent /> : null
 }
+
+const canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement)
+
+const useLayoutEffect = canUseDOM ? React.useLayoutEffect : () => {}
 
 const ErrorBoundaryFallback: FC<FallbackProps> = props => {
   const { tree } = useContext(OutletContext)
   const route = tree[0]
+  if (!route) return null
   const routeProps = route!.getProps()
   useLayoutEffect(() => {
     routerHook.hookOnce('onUrlChange', props.resetErrorBoundary)
     return props.resetErrorBoundary
   }, [tree])
   // TODO: create default error boundary
-  return routeProps?.ErrorBoundary ? <routeProps.ErrorBoundary {...props} /> : <span>error</span>
+  if (routeProps?.ErrorBoundary) return <routeProps.ErrorBoundary {...props} />
+  throw props.error
 }
 
 const RouteRenderer: FC = () => {
   const { tree, params, dataContext, cache, level } = useContext(OutletContext)
   const route = tree[0]
+  if (!route) return null
   const routeProps = route.getProps()
   const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
 
-  routeLoadedSuspense(route, params, dataContext, cache)
+  routeLoaderSuspense(route, params, dataContext, cache)
 
   if (!routeProps?.component) return null
   return (
@@ -253,6 +251,7 @@ const RouteComponent: FC = () => {
   const loaderData = useLoaderData()
 
   if (!routeProps.component) return null
+
   return <routeProps.component loaderData={loaderData} dataContext={dataContext.data} />
 }
 

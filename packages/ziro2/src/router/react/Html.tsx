@@ -4,7 +4,7 @@ import parse from 'html-react-parser'
 import { FC, HTMLProps, PropsWithChildren, Suspense, useContext, useMemo } from 'react'
 import { OutletContext } from './contexts/OutletContext'
 import { RouterContext } from './contexts/RouterContext'
-import { routeLoadedSuspense } from './Router'
+import { routeLoaderSuspense } from './Router'
 
 export const Html: FC<HTMLProps<HTMLHtmlElement>> = props => {
   return <html {...props} suppressHydrationWarning />
@@ -29,7 +29,7 @@ export const CacheSerializer: FC<PropsWithChildren> = () => {
   const theRestOfRoutes = useMemo(() => tree?.slice(1, tree.length), [tree])
   if (!route) return null
   try {
-    routeLoadedSuspense(route, params, dataContext, cache)
+    routeLoaderSuspense(route, params, dataContext, cache)
   } catch (e) {
     if (e instanceof Promise) throw e
   }
@@ -102,7 +102,7 @@ export const Meta: FC<PropsWithChildren> = () => {
   if (!route) return null
 
   try {
-    routeLoadedSuspense(route, params, dataContext, cache)
+    routeLoaderSuspense(route, params, dataContext, cache)
   } catch (e) {
     if (e instanceof Promise) throw e
   }
