@@ -65,6 +65,7 @@ export const useAction = <
 
   const handleAction = useCallback(
     (request: Request) => {
+      setDefaultValues({})
       // todo: call server to set cookies maybe?!
       router
         .handleAction(request, cache)
@@ -140,7 +141,7 @@ export const useAction = <
 
       handleAction(request)
     },
-    [options, handleAction],
+    [options?.preserveValues, handleAction],
   )
 
   const formProps = useMemo(() => {
@@ -149,14 +150,14 @@ export const useAction = <
       method: 'post',
       encType: 'multipart/form-data',
       onSubmit,
-      options,
     }
-  }, [actionUrl, onSubmit, options])
+  }, [actionUrl, onSubmit])
+
+  const pvEnabled = useMemo(() => (typeof options?.preserveValues === 'boolean' ? options?.preserveValues : true), [options?.preserveValues])
+  const pvOptions = useMemo(() => (typeof options?.preserveValues === 'boolean' ? {} : options?.preserveValues || {}) as TPreserveValues<TActionFields>, [options?.preserveValues])
 
   const Form: FC<HTMLAttributes<HTMLFormElement>> = useCallback(
     ({ children, ...props }) => {
-      const pvEnabled = typeof options?.preserveValues === 'boolean' ? options?.preserveValues : true
-      const pvOptions = (typeof options?.preserveValues === 'boolean' ? {} : options?.preserveValues || {}) as TPreserveValues<TActionFields>
       return (
         <form {...formProps} {...props}>
           <input type="hidden" name="__action" value={String(action)} />
@@ -167,7 +168,7 @@ export const useAction = <
         </form>
       )
     },
-    [options, formProps],
+    [formProps, pvEnabled],
   )
 
   const register = (inputName: keyof TActionSchema) => {
