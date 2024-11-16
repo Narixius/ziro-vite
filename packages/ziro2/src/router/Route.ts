@@ -2,7 +2,7 @@ import { Head } from '@unhead/schema'
 import { omit } from 'lodash-es'
 import { AlsoAllowString } from '../types'
 import { Action } from './Action'
-import { Cache } from './Cache'
+import { Cache, CacheStatus } from './Cache'
 import { Middleware } from './Middleware'
 import { DataContext } from './RouteDataContext'
 import { RouteFilesByRouteId } from './Router'
@@ -144,6 +144,9 @@ export class Route<
     await this.loadMiddlewaresOnRequest(request, params as RouteParams<RouteId>, dataContext, cache)
 
     let data = cache?.getLoaderCache(this.id, matchedUrl) as TLoaderResult | undefined
+    let fullCachedData = cache?.getLoaderCache(this.id, matchedUrl, true)
+    let cacheStatus: CacheStatus = fullCachedData?.status || 'success'
+
     if (!data) {
       data = await this.options
         .loader?.({
@@ -153,6 +156,7 @@ export class Route<
           head: dataContext.head,
         })
         .catch(async e => {
+          cacheStatus = 'error'
           let errorPayload = {}
           if (e instanceof Error) {
             errorPayload = wrapErrorAsResponse(e).getPayload()
@@ -185,7 +189,7 @@ export class Route<
 
     // update the cache
     // if (data) {
-    cache?.setLoaderCache(this.id, matchedUrl, data || {}, Infinity)
+    cache?.setLoaderCache(this.id, matchedUrl, data || {}, Infinity, cacheStatus)
     // }
 
     await this.loadMeta(dataContext, request, params as RouteParams<RouteId>, cache)

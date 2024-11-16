@@ -145,7 +145,7 @@ const promiseMaps: Record<
 export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache): T | void {
   const { url: matchedUrl } = route.parsePath(params)
 
-  const cachedData = cache.getLoaderCache(route.getId(), matchedUrl)
+  const cachedData = cache.getLoaderCache(route.getId(), matchedUrl, true)
   const promiseKey = `${route.getId()}-${matchedUrl}`
 
   if (!cachedData && !promiseMaps[promiseKey]) {
@@ -176,11 +176,16 @@ export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, 
     throw 'root' in promiseMaps[promiseKey].errorData ? new Error(promiseMaps[promiseKey].errorData.root) : promiseMaps[promiseKey].errorData
   }
 
+  if (cachedData && cachedData.status === 'error' && 'errors' in cachedData.value) {
+    const errorData = cachedData.value.errors
+    throw 'root' in errorData ? new Error(errorData.root) : errorData
+  }
+
   if (!cachedData && promiseMaps[promiseKey]) {
     throw promiseMaps[promiseKey].promise
   }
 
-  return cachedData
+  return cachedData.value
 }
 
 const loadRouteMeta = async (route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache) => {
@@ -192,6 +197,7 @@ export const Outlet: FC = () => {
   const { tree } = useContext(OutletContext)
   const route = tree[0]!
   if (!route) return null
+
   const routeProps = route.getProps()
   const Layout = routeProps?.Layout || Fragment
   // wrap route with suspense before load the route

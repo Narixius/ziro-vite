@@ -7,7 +7,7 @@ import baseStyle from './styles.css?url'
 export const middlewares = [requestLogger]
 
 export const loader = async () => {
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  await new Promise(resolve => setTimeout(resolve, 500))
   return {
     version: 1.1,
   }
