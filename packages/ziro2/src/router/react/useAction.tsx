@@ -94,9 +94,7 @@ export const useAction = <
           options.onSuccess && options.onSuccess(data)
           setData(data)
         })
-        .then(() => {
-          revalidateTree()
-        })
+        .then(revalidateTree)
         .finally(() => {
           setIsPending(false)
         })

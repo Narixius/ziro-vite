@@ -8,6 +8,7 @@ const red = (str: string) => `\x1b[31m${str}\x1b[0m`
 const blue = (str: string) => `\x1b[94m${str}\x1b[0m`
 const green = (str: string) => `\x1b[32m${str}\x1b[0m`
 const cyan = (str: string) => `\x1b[36m${str}\x1b[0m`
+const dim = (str: string) => `\x1b[2m${str}\x1b[0m`
 
 const stripAnsi = (str: string) => str.replace(/\x1b\[[0-9;]*m/g, '')
 
@@ -45,7 +46,7 @@ export const requestLogger = new Middleware('request-logger', {
       const logString = `${getMethodColor(ctx.request.method)} ${pathname} ${responseTime}ms ${getBgColor(responseStatus)(String(' ' + responseStatus + ' '))} `
       const dotsLength = Math.max(0, LINE_WIDTH - stripAnsi(logString).length)
       const dots = '.'.repeat(dotsLength)
-      const log = `${getMethodColor(ctx.request.method)} ${pathname} ${dots} ${responseTime}ms ${getBgColor(responseStatus)(String(' ' + responseStatus + ' '))} `
+      const log = `${getMethodColor(ctx.request.method)} ${pathname} ${dim(dots)} ${dim(responseTime + 'ms')} ${getBgColor(responseStatus)(String(' ' + responseStatus + ' '))} `
       console.log(log)
     }
   },

@@ -1,5 +1,5 @@
 import { createHooks } from 'hookable'
-import React, { FC, Fragment, PropsWithChildren, ReactNode, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import React, { FC, Fragment, memo, PropsWithChildren, ReactNode, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { parseURL } from 'ufo'
 import { RouteFilesByRouteId } from 'ziro2/router'
@@ -40,41 +40,55 @@ const routerHook = createHooks<{
   onUrlChange: () => void
 }>()
 
-export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => {
+export const Router: FC<RouterProps> = memo(({ router, layoutOptions, ...props }) => {
   const [url, setUrl] = useState(props.initialUrl ? parseURL(props.initialUrl).pathname : typeof window !== 'undefined' ? window.location.pathname : '')
-
   const dataContext = useRef(props.dataContext || new DataContext())
   const cache = useRef(props.cache || new Cache())
+  const [isPending, startTransition] = useTransition()
 
   const navigate = useCallback((to: string, options: { replace?: boolean }) => {
-    if (typeof window !== 'undefined') window.history[options.replace ? 'replaceState' : 'pushState']({}, '', to)
-    else {
+    if (canUseDOM) {
+      let destinationUrl = parseURL(to)
+      const destination = destinationUrl.host !== window.location.host ? to : destinationUrl.pathname
+      window.history[options.replace ? 'replaceState' : 'pushState']({}, '', destination)
     }
   }, [])
+  const [treeInfo, setTreeInfo] = useState(router.findRouteTree(url))
 
-  const treeInfo = useMemo(() => {
+  useMemo(() => {
+    !canUseDOM && loadRouter(router, dataContext.current, cache.current, navigate, props.initialUrl)
+  }, [])
+
+  useEffect(() => {
+    const tree = router.findRouteTree(url)
+    setTreeInfo(tree)
+    loadRouter(router, dataContext.current, cache.current, navigate)
     routerHook.callHook('onUrlChange')
-    loadRouter(router, dataContext.current, cache.current, navigate, props.initialUrl)
-    return router.findRouteTree(url)
-  }, [url, navigate])
+  }, [url])
 
   useEffect(() => {
     window.history.pushState = new Proxy(window.history.pushState, {
       apply: (target, thisArg, argArray) => {
         // trigger here what you need
-        setUrl(argArray[2])
+        startTransition(() => {
+          setUrl(argArray[2])
+        })
         return target.apply(thisArg, argArray as [any, string, string?])
       },
     })
     window.history.replaceState = new Proxy(window.history.replaceState, {
       apply: (target, thisArg, argArray) => {
         // trigger here what you need
-        setUrl(argArray[2])
+        startTransition(() => {
+          setUrl(argArray[2])
+        })
         return target.apply(thisArg, argArray as [any, string, string?])
       },
     })
     window.addEventListener('popstate', e => {
-      setUrl(window.location.pathname)
+      startTransition(() => {
+        setUrl(window.location.pathname)
+      })
     })
   }, [])
 
@@ -85,7 +99,7 @@ export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => 
       get(target, prop: keyof Cache) {
         if (typeof target[prop] === 'function') {
           return (...args: any[]) => {
-            if (prop.startsWith('set')) {
+            if (prop.startsWith('set') || prop.startsWith('load')) {
               return (target[prop] as Function).apply(target, args)
             }
             return undefined
@@ -95,28 +109,34 @@ export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => 
       },
     })
     return loadRouter(router, dataContext.current, proxyCache, navigate)
-  }, [router, navigate])
+  }, [router])
+
+  const outletContextValue = useMemo(() => {
+    return {
+      tree: treeInfo.tree!,
+      params: treeInfo.params || {},
+      dataContext: dataContext.current,
+      cache: cache.current,
+      level: 0,
+    }
+  }, [treeInfo])
+
+  const routerContextValue = useMemo(() => {
+    return { router, navigate, revalidateTree, layoutOptions }
+  }, [revalidateTree, layoutOptions])
 
   return (
-    <RouterContext.Provider value={{ router, navigate, revalidateTree, layoutOptions }}>
-      <OutletContext.Provider
-        value={{
-          tree: treeInfo.tree!,
-          params: treeInfo.params || {},
-          dataContext: dataContext.current,
-          cache: cache.current,
-          level: 0,
-        }}
-      >
+    <RouterContext.Provider value={routerContextValue}>
+      <OutletContext.Provider value={outletContextValue}>
         <Outlet />
       </OutletContext.Provider>
     </RouterContext.Provider>
   )
-}
+})
 
 const loadRouter = async (router: RouterObj<TRouteProps>, dataContext: DataContext<any>, cache: Cache, navigate: NavigateFn, url?: string) => {
   const request = getCurrentBrowserURLRequest(url)
-  const response = await router.handleRequest(request, cache, dataContext).catch(e => {
+  const response = await router.handleRequest(request, new Response(), cache, dataContext).catch(e => {
     if (e instanceof Response && isRedirectResponse(e)) {
       return e
     }
@@ -255,7 +275,6 @@ const RouteComponent: FC = () => {
   const { route, dataContext } = useContext(OutletContext)
   const routeProps = route!.getProps()!
   const loaderData = useLoaderData()
-
   if (!routeProps.component) return null
 
   return <routeProps.component loaderData={loaderData} dataContext={dataContext.data} />

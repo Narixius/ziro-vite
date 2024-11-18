@@ -1,7 +1,6 @@
 import { MetaFn } from 'ziro2/router'
 
 export const loader = async () => {
-  await new Promise(resolve => setTimeout(resolve, 500))
   return {}
 }
 

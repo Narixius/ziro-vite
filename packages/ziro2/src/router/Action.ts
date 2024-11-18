@@ -41,9 +41,9 @@ export class Action<TInput extends z.ZodSchema = z.ZodSchema, TResult = void> {
           const res = result.clone()
           if (res.status > 299) cacheStatus = 'error'
           if (contentType.includes('application/json')) {
-            cache.setActionCache(actionName, parseURL(request.url).pathname, await res.json(), Infinity, cacheStatus)
+            cache.setActionCache(actionName, parseURL(request.url).pathname, await res.json(), cacheStatus)
           } else {
-            cache.setActionCache(actionName, parseURL(request.url).pathname, await res.text(), Infinity, cacheStatus)
+            cache.setActionCache(actionName, parseURL(request.url).pathname, await res.text(), cacheStatus)
           }
         }
         return result
@@ -51,7 +51,7 @@ export class Action<TInput extends z.ZodSchema = z.ZodSchema, TResult = void> {
       .catch(e => {
         cacheStatus = 'error'
         if (e instanceof Error) {
-          cache.setActionCache(actionName, parseURL(request.url).pathname, wrapErrorAsResponse(e).getPayload(), Infinity, cacheStatus)
+          cache.setActionCache(actionName, parseURL(request.url).pathname, wrapErrorAsResponse(e).getPayload(), cacheStatus)
         }
         return e
       })

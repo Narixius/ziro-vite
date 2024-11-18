@@ -113,13 +113,35 @@ const renderer = eventHandler(
       }
     }
 
+    const isRestRequest = request.headers.get('accept')?.includes('application/json')
+
+    const loaderResponse = new Response(null, { status: responseStatus, statusText: responseStatusText })
+    let res
+    switch (AppContext.getContext().options.routerOptions.mode) {
+      case 'ssr':
+        res = await AppContext.getContext().router.handleRequest(request, loaderResponse, cache, dataContext)
+        break
+      case 'partially-ssr':
+        if (isRestRequest) res = await AppContext.getContext().router.handleRequest(request, loaderResponse, cache, dataContext)
+        else res = await AppContext.getContext().router.partiallyHandleRequest(request, loaderResponse, cache, dataContext)
+        break
+      default:
+        res = loaderResponse
+        break
+    }
+
     // partially render the route on the server to catch any error statuses
-    const res = await AppContext.getContext().router.partiallyHandleRequest(request, new Response(null, { status: responseStatus, statusText: responseStatusText }), cache, dataContext)
     if (String(res.status)[0] === '3') return res
     responseStatus = res.status
 
+    if (isRestRequest) {
+      return new Response(cache.serialize(), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    }
     const viteRenderedHtml = await AppContext.getContext().vite.transformIndexHtml(request.url, '<head></head><body></body>')
-
     const headContent = viteRenderedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i)?.[1] || ''
     const bodyContent = viteRenderedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || ''
 

@@ -1,3 +1,4 @@
+import defu from 'defu'
 import * as rou3 from 'rou3'
 import { parseURL } from 'ufo'
 import { Cache } from './Cache'
@@ -10,10 +11,30 @@ import { createResponse } from './utils/response'
 export interface RoutesByRouteId {}
 export interface RouteFilesByRouteId {}
 
+type RouterMode = 'ssr' | 'csr' | 'partially-ssr'
+export type RouterOptions = {
+  /**
+   * Specifies the mode of the router.
+   *
+   * Available options:
+   * - `ssr`: Full Server-Side Rendering.
+   * - `csr`: Full Client-Side Rendering.
+   * - `partially-ssr`: Executes middlewares first, then streams route loaders.
+   *
+   * @default "partially-ssr"
+   */
+  mode: RouterMode
+}
 export class Router<RouteProps = {}> {
   tree = rou3.createRouter<AnyRoute<any, any, any, any, any, RouteProps>[]>()
+  private options: RouterOptions
+  private environment: 'browser' | 'server' = !!(typeof window !== 'undefined' && window.document && window.document.createElement) ? 'browser' : 'server'
 
-  constructor(private baseUrl?: string) {}
+  constructor(_options?: RouterOptions) {
+    this.options = defu(_options, {
+      mode: 'partially-ssr',
+    } as RouterOptions)
+  }
   addRoute(route: AnyRoute<string, any, any, any, any, RouteProps>) {
     let tree = [route]
     let routePath = route.getId()
@@ -35,16 +56,26 @@ export class Router<RouteProps = {}> {
   }
 
   findRouteTree(path: string) {
-    const tree = rou3.findRoute(this.tree, '', path)
+    const tree = rou3.findRoute(this.tree, '', String(path))
     return {
       tree: tree?.data,
       params: tree?.params,
     }
   }
 
-  async handleRequest(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
+  async handleRequest(request: Request, response: Response = new Response(), cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
-    let response = new Response()
+    if (this.environment === 'browser' && this.options.mode !== 'csr') {
+      request.headers.append('accept', 'application/json')
+      return fetch(request).then(async res => {
+        const data = await res.clone().json()
+        if (data) {
+          cache.load(data)
+        }
+        if (res.redirected) throw res
+        return res
+      })
+    }
     if (tree) {
       try {
         for (let i = 0; i < tree.length; i++) {
@@ -76,6 +107,7 @@ export class Router<RouteProps = {}> {
   // to have accurate response status code
   async partiallyHandleRequest(request: Request, response: Response, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
+
     if (tree) {
       try {
         for (let i = 0; i < tree.length; i++) {
@@ -117,6 +149,10 @@ export class Router<RouteProps = {}> {
 
   async handleAction(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
+    if (this.environment === 'browser' && this.options.mode !== 'csr') {
+      request.headers.append('accept', 'application/json')
+      return fetch(request)
+    }
     let actionResponse
     if (tree) {
       for (let i = 0; i < tree.length; i++) {

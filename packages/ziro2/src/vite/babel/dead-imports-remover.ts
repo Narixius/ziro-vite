@@ -1,6 +1,6 @@
 import { NodePath, PluginObj } from '@babel/core'
 import * as types from '@babel/types'
-import { ziroTitleText } from '../../../../ziro/constraints.js'
+import { ziroTitleText } from '../../../constraints'
 
 export default function (): PluginObj {
   const pluginName = `[${ziroTitleText}] dead-import-remover`

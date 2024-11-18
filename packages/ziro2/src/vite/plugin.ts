@@ -1,18 +1,23 @@
+import { transform } from '@babel/core'
 import defu from 'defu'
 import { writeFileSync } from 'node:fs'
 import { joinURL } from 'ufo'
 import { createUnplugin } from 'unplugin'
 import { AppContext } from '../cli/commands/shared'
 import { generateManifest, GenerateManifestOptions, generateRoutesTypings, generateServerRouterCode } from '../generator'
-import { Router } from '../router'
+import { generateClientRouterCode } from '../generator/client-router'
+import { isRouteRelatedFile } from '../generator/utils/route-files-utils'
+import { Router, RouterOptions } from '../router'
+import deadImportsRemover from './babel/dead-imports-remover'
+import serverCodeRemover from './babel/server-code-remover'
 
 export type ZiroOptions = {
   pagesDir?: string
   manifestDirPath?: string
-  mode?: 'spa' | 'ssr'
+  routerOptions?: RouterOptions
 }
 
-const generateManifestFilesChain = async (manifestDirPath: string, manifestOptions: GenerateManifestOptions) => {
+const generateManifestFilesChain = async (manifestDirPath: string, manifestOptions: GenerateManifestOptions, routerOptions: RouterOptions) => {
   return generateManifest(manifestOptions)
     .then(async manifest => {
       writeFileSync(joinURL(manifestDirPath, 'manifest.json'), JSON.stringify(manifest, null, 2), {
@@ -29,7 +34,16 @@ const generateManifestFilesChain = async (manifestDirPath: string, manifestOptio
       return manifest
     })
     .then(async manifest => {
-      await generateServerRouterCode(manifestDirPath, manifest).then(code => {
+      await generateClientRouterCode(manifestDirPath, manifest, routerOptions).then(code => {
+        writeFileSync(joinURL(manifestDirPath, 'router.client.ts'), code, {
+          encoding: 'utf8',
+        })
+      })
+
+      return manifest
+    })
+    .then(async manifest => {
+      await generateServerRouterCode(manifestDirPath, manifest, routerOptions).then(code => {
         writeFileSync(joinURL(manifestDirPath, 'router.server.ts'), code, {
           encoding: 'utf8',
         })
@@ -50,16 +64,23 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
   const options = defu(_options, {
     pagesDir: 'pages',
     manifestDirPath: '.ziro',
-    mode: 'ssr',
-  })
+    routerOptions: {
+      mode: 'partially-ssr',
+    },
+  } as Required<ZiroOptions>)
+  AppContext.getContext().options = options
   const cwd = process.cwd()
   let manifestDirPath = joinURL(cwd, options.manifestDirPath)
   let pagesDirPath = joinURL(cwd, options.pagesDir)
   const generateRouteFiles = async () => {
-    await generateManifestFilesChain(manifestDirPath, {
-      cwd,
-      pagesPath: options.pagesDir,
-    })
+    await generateManifestFilesChain(
+      manifestDirPath,
+      {
+        cwd,
+        pagesPath: options.pagesDir,
+      },
+      options.routerOptions,
+    )
   }
   return {
     name: 'ziro',
@@ -111,12 +132,34 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
 import { startTransition } from 'react'
 import { hydrateRoot, createRoot } from 'react-dom/client'
 import { Router } from 'ziro2/react'
-import router from '/.ziro/router.server.ts'
+import router from '/.ziro/router.client.ts'
 
 startTransition(() => {
   hydrateRoot(document, <Router router={router} />)
 })`
         }
+      },
+      transform(code, id, _options) {
+        const removeServerExports = ['ssr', 'partially-ssr'].includes(options.routerOptions.mode)
+        if (!removeServerExports) return code
+        if (_options && !_options.ssr && isRouteRelatedFile(pagesDirPath, id)) {
+          const res = transform(code, {
+            filename: id,
+            targets: {
+              esmodules: true,
+            },
+            plugins: [serverCodeRemover(), deadImportsRemover()],
+          })
+
+          return transform(res!.code!, {
+            filename: id,
+            targets: {
+              esmodules: true,
+            },
+            plugins: [deadImportsRemover()],
+          })!.code!
+        }
+        return code
       },
     },
   }

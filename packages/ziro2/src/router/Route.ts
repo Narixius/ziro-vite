@@ -53,7 +53,7 @@ export type IntersectionOfMiddlewaresResult<T extends readonly Middleware<any, a
 
 export class Route<
   RouteId extends AlsoAllowString<keyof RouteFilesByRouteId>,
-  TLoaderResult,
+  TLoaderResult = {},
   TActions extends Record<string, Action<any, any>> = {},
   TMiddlewares extends Middleware<TDataContext, any>[] = [],
   TParent extends AnyRoute | undefined = undefined,
@@ -182,14 +182,14 @@ export class Route<
             }
             // check for other content types
           }
-          cache?.setLoaderCache(this.id, matchedUrl, errorPayload, Infinity, 'error')
+          cache?.setLoaderCache(this.id, matchedUrl, errorPayload, 'error')
           throw e
         })
     }
 
     // update the cache
     // if (data) {
-    cache?.setLoaderCache(this.id, matchedUrl, data || {}, Infinity, cacheStatus)
+    cache?.setLoaderCache(this.id, matchedUrl, data || {}, cacheStatus)
     // }
 
     await this.loadMeta(dataContext, request, params as RouteParams<RouteId>, cache)

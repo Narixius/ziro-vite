@@ -1,5 +1,5 @@
 import { PluginObj } from '@babel/core'
-import { ziroTitleText } from '../../../../ziro/constraints.js'
+import { ziroTitleText } from '../../../constraints'
 
 const serverOnlyExports = ['loader', 'actions', 'middlewares']
 

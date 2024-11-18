@@ -33,7 +33,7 @@ export class Middleware<TDataContextType = any, TOnRequestResult = {}> {
     }
 
     if (!this.handlers.onRequest) {
-      cache?.setMiddlewareCache(this.name, {}, Infinity)
+      cache?.setMiddlewareCache(this.name, {})
     }
 
     if (this.handlers.onRequest)
@@ -49,7 +49,7 @@ export class Middleware<TDataContextType = any, TOnRequestResult = {}> {
             ...dataContext.data,
             ...(data || {}),
           }
-          cache?.setMiddlewareCache(this.name, data || {}, Infinity)
+          cache?.setMiddlewareCache(this.name, data || {})
         })
 
     dataContext.middlewaresStack.push(this)

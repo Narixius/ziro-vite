@@ -178,8 +178,10 @@ describe('generated codes from manifest', () => {
     ]
     vi.mocked(globSync).mockReturnValue(mockFiles)
     const manifest = await generateManifest(mockOptions)
-    const result = await generateServerRouterCode('/somewhere/cwd/.ziro/', manifest)
-    expect(result).toContain('const router = new Router()')
+    const result = await generateServerRouterCode('/somewhere/cwd/.ziro/', manifest, {
+      mode: 'partially-ssr',
+    })
+    expect(result).toContain('const router = new Router(')
     expect(result).toContain('new Route("/_root",')
     expect(result).toContain('new Route("/",')
     expect(result).toContain('new Route("/blog/_layout",')

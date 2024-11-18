@@ -2,9 +2,10 @@ import { createHooks } from 'hookable'
 
 type CacheCategories = 'loader' | 'middleware' | 'action'
 export type CacheStatus = 'pending' | 'success' | 'error'
+type CacheEntity = { value: any; status: CacheStatus }
 
 export class Cache {
-  private cache: Map<string, { value: any; expiry: number; status: CacheStatus }>
+  private cache: Map<string, CacheEntity>
   private hooks = createHooks()
 
   constructor() {
@@ -20,6 +21,15 @@ export class Cache {
     return JSON.stringify({ category, name, url })
   }
 
+  public load(data: Record<string, CacheEntity>) {
+    Object.keys(data).forEach(key => {
+      try {
+        const { category, name, url } = JSON.parse(key) as { category: CacheCategories; name: string; url: string }
+        this.set(category, name, url, data[key].value, data[key].status)
+      } catch (e) {}
+    })
+  }
+
   public hookOnce(category: CacheCategories, name: string, url: string, callback: (data: any) => unknown) {
     this.hooks.hookOnce(this.generateKey(category, name, url), callback)
   }
@@ -31,10 +41,9 @@ export class Cache {
     this.hooks.removeHook(this.generateKey(category, name, url), callback)
   }
 
-  private set(category: CacheCategories, name: string, url: string, value: any, ttl: number = Infinity, status: CacheStatus = 'success'): void {
-    const expiry = Date.now() + ttl
+  private set(category: CacheCategories, name: string, url: string, value: any, status: CacheStatus = 'success'): void {
     const key = this.generateKey(category, name, url)
-    this.cache.set(key, { value, expiry, status })
+    this.cache.set(key, { value, status })
     this.hooks.callHook(key, value)
   }
 
@@ -66,7 +75,7 @@ export class Cache {
   }
 
   serialize(): string {
-    const serializedCache: { [key: string]: { value: any; expiry: number } } = {}
+    const serializedCache: { [key: string]: { value: any } } = {}
     this.cache.forEach((value, key) => {
       serializedCache[key] = value
     })
@@ -77,23 +86,23 @@ export class Cache {
     return this.get('middleware', name, '')
   }
 
-  setMiddlewareCache(name: string, value: any, ttl: number = Infinity): void {
-    this.set('middleware', name, '', value, ttl)
+  setMiddlewareCache(name: string, value: any): void {
+    this.set('middleware', name, '', value)
   }
 
   getActionCache(name: string, url: string, full: boolean = false): any | undefined {
     return this.get('action', name, url, full)
   }
 
-  setActionCache(name: string, url: string, value: any, ttl: number = Infinity, status: CacheStatus = 'success'): void {
-    this.set('action', name, url, value, ttl, status)
+  setActionCache(name: string, url: string, value: any, status: CacheStatus = 'success'): void {
+    this.set('action', name, url, value, status)
   }
 
   getLoaderCache(name: string, url: string, fullCache: boolean = false): any | undefined {
     return this.get('loader', name, url, fullCache)
   }
 
-  setLoaderCache(name: string, url: string, value: any, ttl: number = Infinity, status: CacheStatus = 'success'): void {
-    this.set('loader', name, url, value, ttl, status)
+  setLoaderCache(name: string, url: string, value: any, status: CacheStatus = 'success'): void {
+    this.set('loader', name, url, value, status)
   }
 }

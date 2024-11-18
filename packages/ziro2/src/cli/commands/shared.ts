@@ -20,7 +20,7 @@ interface IAppContext {
   h3: H3App
   listener: Listener
   vite: ViteDevServer
-  options: ZiroOptions
+  options: Required<ZiroOptions>
   loadServerRouter: () => Promise<void>
 }
 
