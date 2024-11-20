@@ -19,6 +19,7 @@
 - **release:** V0.0.3 ([8be554e](https://github.com/narixius/ziro-vite/commit/8be554e))
 - **release:** V0.0.3 ([610397b](https://github.com/narixius/ziro-vite/commit/610397b))
 - **release:** V0.0.3 ([54c1490](https://github.com/narixius/ziro-vite/commit/54c1490))
+- **release:** V0.0.3 ([b8d16a5](https://github.com/narixius/ziro-vite/commit/b8d16a5))
 
 ### ❤️ Contributors
 

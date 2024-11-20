@@ -12,6 +12,7 @@
     "postbuild": "tsc-alias && ./post-build.sh",
     "test": "vitest",
     "coverage": "vitest run --coverage",
+    "prepublishOnly": "bun run build",
     "publish": "bunx changelogen --release --push && bun publish"
   },
   "bin": {
