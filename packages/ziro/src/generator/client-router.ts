@@ -7,11 +7,11 @@ export const generateClientRouterCode = async (manifestDirPath: string, manifest
   const imports: Import[] = [
     {
       name: 'Router',
-      from: 'ziro2/router',
+      from: 'ziro/router',
     },
     {
       name: 'Route',
-      from: 'ziro2/router',
+      from: 'ziro/router',
     },
     {
       name: 'lazy',

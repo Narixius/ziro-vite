@@ -207,7 +207,7 @@ describe('generated codes from manifest', () => {
     vi.mocked(globSync).mockReturnValue(mockFiles)
     const manifest = await generateManifest(mockOptions)
     const result = await generateRoutesTypings('/somewhere/cwd/.ziro/', manifest)
-    expect(result).toContain(`declare module 'ziro2/router'`)
+    expect(result).toContain(`declare module 'ziro/router'`)
     expect(result).toContain(`"/_root": Route<"/_root", {}, {}, [], undefined>`)
     expect(result).toContain(`"/": Route<"/", {}, {}, [], RouteFilesByRouteId["/_layout"]>`)
     expect(result).toContain(`"/_layout": Route<"/_layout", {}, {}, [], RouteFilesByRouteId["/_root"]>`)

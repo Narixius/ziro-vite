@@ -1,6 +1,6 @@
 import { FC } from 'react'
-import { ErrorBoundaryProps, RouteProps } from 'ziro2/react'
-import { abort, LoaderArgs, MetaFn } from 'ziro2/router'
+import { ErrorBoundaryProps, RouteProps } from 'ziro/react'
+import { abort, LoaderArgs, MetaFn } from 'ziro/router'
 
 export const loader = async ({ params }: LoaderArgs<'/pokes/:pokemon'>) => {
   //   abort(400, 'Could not load pokemon')

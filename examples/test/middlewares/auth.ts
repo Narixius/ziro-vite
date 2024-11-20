@@ -1,5 +1,5 @@
 import { parse } from 'cookie-es'
-import { Middleware, redirect } from 'ziro2/router'
+import { Middleware, redirect } from 'ziro/router'
 
 export const authGuard = new Middleware('AUTH-GUARD', {
   onRequest: async ({ request }) => {

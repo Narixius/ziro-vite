@@ -1,13 +1,12 @@
 import { serialize } from 'cookie-es'
-import { RouteProps, useAction } from 'ziro2/react'
-import { Action, LoaderArgs, redirect } from 'ziro2/router'
+import { RouteProps, useAction } from 'ziro/react'
+import { Action, LoaderArgs, redirect } from 'ziro/router'
 import { z } from 'zod'
 import { authGuard } from '~/middlewares/auth'
 
 export const middlewares = [authGuard]
 
 export const loader = async (ctx: LoaderArgs<'/dashboard'>) => {
-  await new Promise(resolve => setTimeout(resolve, 500))
   return {}
 }
 

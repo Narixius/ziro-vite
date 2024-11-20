@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "ziro2 dev",
+    "dev": "ziro dev",
     "dev:ziro": "nodemon -w '../../packages/' -x 'bun dev'",
-    "build": "ziro2 build",
+    "build": "ziro build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -26,7 +26,7 @@
     "react-dom": "18.3.1",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
-    "ziro2": "workspace:*",
+    "ziro": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {

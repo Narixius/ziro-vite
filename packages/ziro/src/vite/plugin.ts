@@ -1,6 +1,6 @@
 import { transform } from '@babel/core'
 import defu from 'defu'
-import { writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { joinURL } from 'ufo'
 import { createUnplugin } from 'unplugin'
 import { AppContext } from '../cli/commands/shared'
@@ -18,6 +18,9 @@ export type ZiroOptions = {
 }
 
 const generateManifestFilesChain = async (manifestDirPath: string, manifestOptions: GenerateManifestOptions, routerOptions: RouterOptions) => {
+  await mkdirSync(manifestDirPath, {
+    recursive: true,
+  })
   return generateManifest(manifestOptions)
     .then(async manifest => {
       writeFileSync(joinURL(manifestDirPath, 'manifest.json'), JSON.stringify(manifest, null, 2), {
@@ -100,7 +103,7 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
             jsx: 'automatic',
           },
           ssr: {
-            external: ['ziro2'],
+            external: ['ziro'],
           },
         }
       },
@@ -131,7 +134,7 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
           return `
 import { startTransition } from 'react'
 import { hydrateRoot, createRoot } from 'react-dom/client'
-import { Router } from 'ziro2/react'
+import { Router } from 'ziro/react'
 import router from '/.ziro/router.client.ts'
 
 startTransition(() => {

@@ -5,23 +5,23 @@ import { cl, generateImportName, getImportPath } from './utils/route-files-utils
 export const generateRoutesTypings = async (manifestDirPath: string, manifest: RoutesManifest) => {
   const imports: Import[] = [
     {
-      from: 'ziro2/router',
+      from: 'ziro/router',
       name: 'Route',
     },
     {
-      from: 'ziro2/router',
+      from: 'ziro/router',
       name: 'GetRouteDataContext',
     },
     {
-      from: 'ziro2/router',
+      from: 'ziro/router',
       name: 'IntersectionOfMiddlewaresResult',
     },
     {
-      from: 'ziro2/router',
+      from: 'ziro/router',
       name: 'LoaderReturnType',
     },
   ]
-  let code = `\ndeclare module 'ziro2/router' {\n  interface RouteFilesByRouteId {\n`
+  let code = `\ndeclare module 'ziro/router' {\n  interface RouteFilesByRouteId {\n`
   for (const [routeId, routeManifest] of Object.entries(manifest)) {
     const importName = generateImportName(routeManifest.routeInfo.filepath)
     imports.push({

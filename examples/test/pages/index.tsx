@@ -1,4 +1,4 @@
-import { MetaFn } from 'ziro2/router'
+import { MetaFn } from 'ziro/router'
 
 export const loader = async () => {
   return {}

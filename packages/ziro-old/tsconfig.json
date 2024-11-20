@@ -27,8 +27,5 @@
 		"rootDir": ".",
 		"outDir": "dist",
 		"jsx": "react-jsx"
-	},
-	"tsc-alias": {
-		"resolveFullPaths": true,
 	}
 }

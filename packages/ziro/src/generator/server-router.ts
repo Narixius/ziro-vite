@@ -7,11 +7,11 @@ export const generateServerRouterCode = async (manifestDirPath: string, manifest
   const imports: Import[] = [
     {
       name: 'Router',
-      from: 'ziro2/router',
+      from: 'ziro/router',
     },
     {
       name: 'Route',
-      from: 'ziro2/router',
+      from: 'ziro/router',
     },
   ]
   let code = `\nconst router = new Router(${JSON.stringify(routerOptions, undefined, 2)})\n\n`

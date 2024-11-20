@@ -1,8 +1,7 @@
 import { LoaderCircleIcon } from 'lucide-react'
 import { FC } from 'react'
-import { ErrorComponentProps, RouteProps } from 'ziro/router'
-import { Link, Outlet } from 'ziro2/react'
-import { LoaderArgs, MetaFn } from 'ziro2/router'
+import { ErrorBoundaryProps, Link, Outlet, RouteProps } from 'ziro/react'
+import { LoaderArgs, MetaFn } from 'ziro/router'
 export const meta: MetaFn<'/_layout'> = async () => {
   return {
     title: 'poks',
@@ -15,7 +14,7 @@ export const loader = async (options: LoaderArgs<'/pokes/_layout'>) => {
   return { pokemons: (samplePokemons.results as { name: string }[]).map(r => r.name) } as { pokemons: string[] }
 }
 
-export const ErrorBoundary: FC<ErrorComponentProps> = ({ error, status }) => {
+export const ErrorBoundary: FC<ErrorBoundaryProps> = ({ error }) => {
   return `${error.message}`
 }
 

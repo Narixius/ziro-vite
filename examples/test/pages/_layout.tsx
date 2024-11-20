@@ -1,6 +1,6 @@
 import { FC, PropsWithChildren } from 'react'
-import { ErrorBoundaryProps, Link, Outlet, RouteProps } from 'ziro2/react'
-import { MetaFn } from 'ziro2/router'
+import { ErrorBoundaryProps, Link, Outlet, RouteProps } from 'ziro/react'
+import { MetaFn } from 'ziro/router'
 
 export default function MainLayout(props: RouteProps<'/_layout'>) {
   return <Outlet />

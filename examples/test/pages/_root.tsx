@@ -1,6 +1,6 @@
 import { FC, PropsWithChildren } from 'react'
-import { Body, Head, Html, Outlet, RouteProps } from 'ziro2/react'
-import { MetaFn } from 'ziro2/router'
+import { Body, Head, Html, Outlet, RouteProps } from 'ziro/react'
+import { MetaFn } from 'ziro/router'
 import { requestLogger } from '~/middlewares/logger'
 import baseStyle from './styles.css?url'
 
