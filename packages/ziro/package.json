@@ -2,6 +2,10 @@
   "name": "ziro",
   "type": "module",
   "version": "0.0.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/narixius/ziro-vite.git"
+  },
   "scripts": {
     "dev": "tsc-watch --onSuccess \"bun run postbuild\"",
     "build": "tsc",
