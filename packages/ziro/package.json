@@ -1,32 +1,34 @@
 {
   "name": "ziro",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "dev": "tsc-watch --onSuccess \"bun run postbuild\"",
-    "prebuild": "chmod +x ./post-build.sh",
     "build": "tsc",
-    "postbuild": "./post-build.sh"
+    "postbuild": "tsc-alias && ./post-build.sh",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npx changelogen --release"
   },
   "bin": {
-    "ziro": "dist/cli/index.js"
+    "ziro": "dist/src/cli/index.js"
   },
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
     "./router": {
-      "types": "./dist/router/index.d.ts",
-      "import": "./dist/router/index.js"
+      "types": "./dist/src/router/index.d.ts",
+      "import": "./dist/src/router/index.js"
     },
-    "./router/client": {
-      "types": "./dist/router/client/index.d.ts",
-      "import": "./dist/router/client/index.js"
+    "./react": {
+      "types": "./dist/src/router/react/index.d.ts",
+      "import": "./dist/src/router/react/index.js"
     },
-    "./router/hooks": {
-      "types": "./dist/router/hooks/index.d.ts",
-      "import": "./dist/router/hooks/index.js"
+    "./generator": {
+      "types": "./dist/src/generator/index.d.ts",
+      "import": "./dist/src/generator.index.js"
+    },
+    "./vite": {
+      "types": "./dist/src/vite/plugin.d.ts",
+      "import": "./dist/src/vite/plugin.js"
     }
   },
   "main": "dist/index.js",
@@ -34,13 +36,17 @@
   "devDependencies": {
     "@antfu/ni": "^0.21.12",
     "@types/body-parser": "^1.19.5",
+    "@types/lodash-es": "^4.17.12",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
+    "@vitest/coverage-v8": "2.1.3",
+    "changelogen": "^0.5.7",
     "eslint": "^9.8.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "tsc-watch": "^6.2.0",
-    "tsup": "^8.2.4"
+    "tsup": "^8.2.4",
+    "vitest": "^2.1.2"
   },
   "peerDependencies": {
     "typescript": "^5.5.4",
@@ -56,8 +62,6 @@
     "@babel/node": "^7.25.0",
     "@babel/preset-react": "^7.24.7",
     "@babel/preset-typescript": "^7.24.7",
-    "@hiogawa/vite-plugin-ssr-css": "^0.0.1",
-    "@types/lodash-es": "^4.17.12",
     "@unhead/ssr": "^1.9.16",
     "citty": "^0.1.6",
     "consola": "^3.2.3",
@@ -65,19 +69,25 @@
     "defu": "^6.1.4",
     "es-module-lexer": "^1.5.4",
     "fast-glob": "^3.3.2",
+    "get-port-please": "^3.1.2",
     "h3": "^1.12.0",
     "hookable": "^5.5.3",
-    "html-react-parser": "^5.1.12",
+    "html-react-parser": "^5.1.18",
     "listhen": "^1.7.2",
     "lodash-es": "^4.17.21",
     "ofetch": "^1.3.4",
     "pkg-types": "^1.2.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-error-boundary": "^4.0.13",
     "rou3": "^0.5.1",
-    "superjson": "^2.2.1",
+    "tinyglobby": "^0.2.9",
+    "tsc-alias": "^1.8.10",
     "ufo": "^1.5.4",
     "unhead": "^1.9.16",
     "unimport": "^3.10.0",
+    "unplugin": "^1.14.1",
+    "yocto-spinner": "^0.1.1",
     "zod": ""
   }
 }
