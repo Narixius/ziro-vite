@@ -35,7 +35,7 @@ export const generateRoutesTypings = async (manifestDirPath: string, manifest: R
       `typeof ${importName}.actions`,
       `{}`,
     )}, ${cl(routeManifest.routeInfo.hasMiddleware, `typeof ${importName}.middlewares`, `[]`)}, ${routeManifest.parentId ? `RouteFilesByRouteId["${routeManifest.parentId}"]["route"]` : `undefined`}>,
-		dataContext: GetRouteDataContext<${routeManifest.parentId ? `RouteFilesByRouteId["${routeManifest.parentId}"]["route"]` : `undefined`}> & IntersectionOfMiddlewaresResult<${cl(
+		dataContext: ${routeManifest.parentId ? `GetRouteDataContext<"${routeManifest.parentId}">` : `{}`} & IntersectionOfMiddlewaresResult<${cl(
       routeManifest.routeInfo.hasMiddleware,
       `typeof ${importName}.middlewares`,
       `[]`,

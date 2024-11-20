@@ -1,6 +1,38 @@
 # Changelog
 
 
+## v0.0.12
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.11...v0.0.12)
+
+## v0.0.11
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.3...v0.0.11)
+
+### 🏡 Chore
+
+- **release:** V0.0.3 ([64a01d8](https://github.com/narixius/ziro-vite/commit/64a01d8))
+- Update package.json files to set ziro-old as private and modify publish script for ziro ([683b1db](https://github.com/narixius/ziro-vite/commit/683b1db))
+- Update changelog and revert package version to 0.0.2 ([5ccd8c7](https://github.com/narixius/ziro-vite/commit/5ccd8c7))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
+## v0.0.3
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.3...v0.0.3)
+
+### 🏡 Chore
+
+- **release:** V0.0.3 ([64a01d8](https://github.com/narixius/ziro-vite/commit/64a01d8))
+- Update package.json files to set ziro-old as private and modify publish script for ziro ([683b1db](https://github.com/narixius/ziro-vite/commit/683b1db))
+- Update changelog and revert package version to 0.0.2 ([5ccd8c7](https://github.com/narixius/ziro-vite/commit/5ccd8c7))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.2
 
 
