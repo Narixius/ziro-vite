@@ -1,14 +1,14 @@
 {
   "name": "ziro",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scripts": {
     "dev": "tsc-watch --onSuccess \"bun run postbuild\"",
     "build": "tsc",
     "postbuild": "tsc-alias && ./post-build.sh",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "prepublishOnly": "npx changelogen --release"
+    "publish": "npx changelogen --release --publish"
   },
   "bin": {
     "ziro": "dist/src/cli/index.js"
