@@ -1,7 +1,5 @@
 {
   "name": "ziro",
-  "version": "0.0.1",
-  "description": "",
   "private": true,
   "keywords": [],
   "author": "Nariman Movafaghi",
@@ -17,9 +15,5 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "lucide-react": "^0.408.0",
-    "zod": "^3.23.8"
   }
 }

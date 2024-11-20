@@ -1,6 +1,7 @@
 {
   "name": "ziro-old",
   "type": "module",
+  "private": true,
   "version": "0.0.1",
   "scripts": {
     "dev": "tsc-watch --onSuccess \"bun run postbuild\"",
