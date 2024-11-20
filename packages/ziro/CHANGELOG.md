@@ -15,6 +15,26 @@
 - **release:** V0.0.8 ([411558e](https://github.com/narixius/ziro-vite/commit/411558e))
 - **release:** Package version 0.0.2 ([1251b49](https://github.com/narixius/ziro-vite/commit/1251b49))
 - Repo url added to package.json ([9284c63](https://github.com/narixius/ziro-vite/commit/9284c63))
+- **release:** V0.0.3 ([9459839](https://github.com/narixius/ziro-vite/commit/9459839))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
+## v0.0.3
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.2...v0.0.3)
+
+### 🏡 Chore
+
+- **release:** V0.0.3 ([0dff2b0](https://github.com/narixius/ziro-vite/commit/0dff2b0))
+- **release:** V0.0.4 ([0559e21](https://github.com/narixius/ziro-vite/commit/0559e21))
+- **release:** V0.0.5 ([1c1b0c6](https://github.com/narixius/ziro-vite/commit/1c1b0c6))
+- **release:** V0.0.6 ([07f3935](https://github.com/narixius/ziro-vite/commit/07f3935))
+- **release:** V0.0.7 ([fbd38a2](https://github.com/narixius/ziro-vite/commit/fbd38a2))
+- **release:** V0.0.8 ([411558e](https://github.com/narixius/ziro-vite/commit/411558e))
+- **release:** Package version 0.0.2 ([1251b49](https://github.com/narixius/ziro-vite/commit/1251b49))
+- Repo url added to package.json ([9284c63](https://github.com/narixius/ziro-vite/commit/9284c63))
 
 ### ❤️ Contributors
 

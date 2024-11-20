@@ -12,7 +12,7 @@
     "postbuild": "tsc-alias && ./post-build.sh",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "publish": "bunx changelogen --release --push --publish"
+    "prepublishOnly": "bunx changelogen --release --push"
   },
   "bin": {
     "ziro": "dist/src/cli/index.js"
