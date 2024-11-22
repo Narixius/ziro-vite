@@ -9,6 +9,10 @@ export class Cache {
   private hooks = createHooks()
 
   constructor() {
+    this.cache = new Map()
+  }
+
+  public loadFromWindow() {
     if (typeof window !== 'undefined' && (window as any).__routerCache) {
       const serializedCache = (window as any).__routerCache
       this.cache = new Map(Object.entries(serializedCache))
@@ -17,7 +21,7 @@ export class Cache {
     }
   }
 
-  private generateKey(category: CacheCategories, name: string, url: string): string {
+  public generateKey(category: CacheCategories, name: string, url: string): string {
     return JSON.stringify({ category, name, url })
   }
 
@@ -44,8 +48,9 @@ export class Cache {
   private set(category: CacheCategories, name: string, url: string, value: any, status: CacheStatus = 'success'): void {
     const key = this.generateKey(category, name, url)
     this.cache.set(key, { value, status })
-    this.hooks.callHook(key, value)
   }
+
+  public callHook = this.hooks.callHook
 
   private get(category: CacheCategories, name: string, url: string, full: boolean = false): any | undefined {
     const key = this.generateKey(category, name, url)

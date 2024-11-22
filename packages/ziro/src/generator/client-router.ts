@@ -28,10 +28,13 @@ export const generateClientRouterCode = async (manifestDirPath: string, manifest
       as: importName,
       from: importPath,
     })
+    const isRoot = importName === 'pages_root'
+    const loadLazy = !isRoot
+
     code += `const ${routeVariableName} = new Route("${routeId}", {
 ${[
   routeManifest.parentId ? `  parent: ${generateImportName(manifest[routeManifest.parentId].routeInfo.filepath)}Route` : '',
-  routeManifest.routeInfo.hasLoader ? `  loader: ${routerOptions.mode === 'csr' ? `${importName}.loader` : `async ()=>{}`}` : ``,
+  routeManifest.routeInfo.hasLoader && routerOptions.mode === 'csr' ? `  loader: ${importName}.loader` : ``,
   routeManifest.routeInfo.hasActions && routerOptions.mode === 'csr' ? `  actions: ${importName}.actions` : ``,
   routeManifest.routeInfo.hasMiddleware && routerOptions.mode === 'csr' ? `  middlewares: ${importName}.middlewares` : ``,
   routeManifest.routeInfo.hasMeta ? `  meta: ${routerOptions.mode === 'csr' ? ` ${importName}.meta` : `(...args)=> import(${JSON.stringify(importPath)}).then(m=>m.meta(...args))`}` : ``,

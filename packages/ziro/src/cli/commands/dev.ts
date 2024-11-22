@@ -141,6 +141,7 @@ const renderer = eventHandler(
         },
       })
     }
+
     const viteRenderedHtml = await AppContext.getContext().vite.transformIndexHtml(request.url, '<head></head><body></body>')
     const headContent = viteRenderedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i)?.[1] || ''
     const bodyContent = viteRenderedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || ''
@@ -163,7 +164,7 @@ const renderer = eventHandler(
       },
     )
     // if streaming is not activated
-    // await stream.allReady
+    if (AppContext.getContext().options.routerOptions.mode === 'ssr') await stream.allReady
 
     return new Response(stream, {
       headers: { 'content-type': 'text/html' },

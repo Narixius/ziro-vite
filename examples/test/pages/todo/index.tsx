@@ -16,8 +16,6 @@ type TodoItem = {
 const todos: TodoItem[] = []
 
 export const loader = async () => {
-  await new Promise(resolve => setTimeout(resolve, 200))
-  //   const todoList = JSON.parse(localStorage.getItem('todo') || '[]') as TodoItem[]
   const todoList = todos
   return {
     list: todoList,

@@ -67,7 +67,7 @@ export class Router<RouteProps = {}> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
     if (this.environment === 'browser' && this.options.mode !== 'csr') {
       request.headers.append('accept', 'application/json')
-      return fetch(request).then(async res => {
+      await fetch(request).then(async res => {
         const data = await res.clone().json()
         if (data) {
           cache.load(data)
@@ -81,7 +81,6 @@ export class Router<RouteProps = {}> {
         for (let i = 0; i < tree.length; i++) {
           const route = tree[i]
           await route.onRequest(request, params || {}, dataContext, cache)
-          // stack the routes
         }
       } catch (e) {
         if (e instanceof Response) {
@@ -91,7 +90,7 @@ export class Router<RouteProps = {}> {
           response = wrapErrorAsResponse(e).response
         }
       }
-      // run middlewares on before esponse
+      // run middlewares on before response
       while (dataContext.middlewaresStack.length > 0) {
         const middleware = dataContext.middlewaresStack.pop()
         if (middleware && middleware.onBeforeResponse) {

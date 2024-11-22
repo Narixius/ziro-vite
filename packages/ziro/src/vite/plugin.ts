@@ -132,14 +132,17 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
       load(id) {
         if (id === '/@ziro/client-entry.jsx') {
           return `
-import { startTransition } from 'react'
-import { hydrateRoot, createRoot } from 'react-dom/client'
+import { startTransition, StrictMode } from 'react'
+import { hydrateRoot } from 'react-dom/client'
 import { Router } from 'ziro/react'
 import router from '/.ziro/router.client.ts'
 
-startTransition(() => {
-  hydrateRoot(document, <Router router={router} />)
-})`
+// startTransition(() => {
+  hydrateRoot(document,
+  <Router router={router}
+  />
+  )
+// })`
         }
       },
       transform(code, id, _options) {
