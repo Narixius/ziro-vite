@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.16
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.15...v0.0.16)
+
+### 🚀 Enhancements
+
+- Add links to not found pages in layout and improve error boundary cleanup ([e783b4b](https://github.com/narixius/ziro-vite/commit/e783b4b))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.15
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.14...v0.0.15)
