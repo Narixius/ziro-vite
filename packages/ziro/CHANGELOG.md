@@ -1,6 +1,20 @@
 # Changelog
 
 
+## v0.0.13
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.12...v0.0.13)
+
+### 🩹 Fixes
+
+- Route type generation ([b751e40](https://github.com/narixius/ziro-vite/commit/b751e40))
+- Data loading pipeline on server/client ([f5b6d7e](https://github.com/narixius/ziro-vite/commit/f5b6d7e))
+- Data loading server/client sync ([db82fee](https://github.com/narixius/ziro-vite/commit/db82fee))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.12
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.11...v0.0.12)
