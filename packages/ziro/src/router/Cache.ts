@@ -1,8 +1,9 @@
 import { createHooks } from 'hookable'
+import { pick } from 'lodash-es'
 
 type CacheCategories = 'loader' | 'middleware' | 'action'
 export type CacheStatus = 'pending' | 'success' | 'error'
-type CacheEntity = { value: any; status: CacheStatus }
+type CacheEntity = { value: any; status: CacheStatus; processed: boolean }
 
 export class Cache {
   private cache: Map<string, CacheEntity>
@@ -29,7 +30,7 @@ export class Cache {
     Object.keys(data).forEach(key => {
       try {
         const { category, name, url } = JSON.parse(key) as { category: CacheCategories; name: string; url: string }
-        this.set(category, name, url, data[key].value, data[key].status)
+        this.set(category, name, url, data[key].value, data[key].status, false)
       } catch (e) {}
     })
   }
@@ -45,9 +46,9 @@ export class Cache {
     this.hooks.removeHook(this.generateKey(category, name, url), callback)
   }
 
-  private set(category: CacheCategories, name: string, url: string, value: any, status: CacheStatus = 'success'): void {
+  private set(category: CacheCategories, name: string, url: string, value: any, status: CacheStatus = 'success', processed: boolean = true): void {
     const key = this.generateKey(category, name, url)
-    this.cache.set(key, { value, status })
+    this.cache.set(key, { value, status, processed })
   }
 
   public callHook = this.hooks.callHook
@@ -79,12 +80,12 @@ export class Cache {
     })
   }
 
-  serialize(): string {
+  serialize(): Record<string, any> {
     const serializedCache: { [key: string]: { value: any } } = {}
     this.cache.forEach((value, key) => {
-      serializedCache[key] = value
+      serializedCache[key] = pick(value, ['value', 'status'])
     })
-    return JSON.stringify(serializedCache)
+    return serializedCache
   }
 
   getMiddlewareCache(name: string): any | undefined {
@@ -103,11 +104,20 @@ export class Cache {
     this.set('action', name, url, value, status)
   }
 
-  getLoaderCache(name: string, url: string, fullCache: boolean = false): any | undefined {
+  getLoaderCache<IsFullCache extends boolean = false>(name: string, url: string, fullCache: IsFullCache = false as IsFullCache): IsFullCache extends true ? CacheEntity : any | undefined {
     return this.get('loader', name, url, fullCache)
   }
 
-  setLoaderCache(name: string, url: string, value: any, status: CacheStatus = 'success'): void {
-    this.set('loader', name, url, value, status)
+  setLoaderCache(name: string, url: string, value: any, status: CacheStatus = 'success', isProcessed: boolean = true): void {
+    this.set('loader', name, url, value, status, isProcessed)
+  }
+
+  updateProcessedStatus(category: CacheCategories, name: string, url: string, isProcessed: boolean): void {
+    const key = this.generateKey(category, name, url)
+    const cachedItem = this.cache.get(key)
+    if (cachedItem) {
+      cachedItem.processed = isProcessed
+      this.cache.set(key, cachedItem)
+    }
   }
 }

@@ -33,7 +33,6 @@ export const actions = {
       title: z.string().min(3, 'Title must be at least 3 characters'),
     }),
     async handler(body, ctx) {
-      await new Promise(resolve => setTimeout(resolve, 200))
       const todoList = todos
       todoList.push({
         ...body,

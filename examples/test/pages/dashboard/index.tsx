@@ -1,6 +1,6 @@
 import { serialize } from 'cookie-es'
 import { RouteProps, useAction } from 'ziro/react'
-import { Action, LoaderArgs, redirect } from 'ziro/router'
+import { Action, LoaderArgs, MetaFn, redirect } from 'ziro/router'
 import { z } from 'zod'
 import { authGuard } from '~/middlewares/auth'
 
@@ -8,6 +8,12 @@ export const middlewares = [authGuard]
 
 export const loader = async (ctx: LoaderArgs<'/dashboard'>) => {
   return {}
+}
+
+export const meta: MetaFn<'/dashboard'> = async () => {
+  return {
+    title: 'Dashboard',
+  }
 }
 
 export const actions = {

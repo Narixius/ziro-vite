@@ -26,7 +26,6 @@ export const actions = {
     async handler(input) {
       //   await new Promise(resolve => setTimeout(resolve, 1000))
       if (input.username[0] == 'a' && input.password[0] == 'a') {
-        await new Promise(resolve => setTimeout(resolve, 500))
         const headers = new Headers()
 
         headers.set('Set-Cookie', serialize('auth', input.username))

@@ -62,20 +62,25 @@ export class Router<RouteProps = {}> {
       params: tree?.params,
     }
   }
-
+  async handleRequestRemote(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
+    request.headers.append('accept', 'application/json')
+    await fetch(request).then(async res => {
+      const data = await res.clone().json()
+      if (data) {
+        cache.load(data.cache)
+        dataContext.chargedRouteMiddlewareMap = data.middlewares
+      }
+      if (res.redirected) throw res
+      return res
+    })
+  }
   async handleRequest(request: Request, response: Response = new Response(), cache: Cache = new Cache(), dataContext: DataContext = new DataContext()): Promise<Response> {
     const { tree, params } = this.findRouteTree(parseURL(request.url).pathname)
+
     if (this.environment === 'browser' && this.options.mode !== 'csr') {
-      request.headers.append('accept', 'application/json')
-      await fetch(request).then(async res => {
-        const data = await res.clone().json()
-        if (data) {
-          cache.load(data)
-        }
-        if (res.redirected) throw res
-        return res
-      })
+      await this.handleRequestRemote(request, cache, dataContext)
     }
+
     if (tree) {
       try {
         for (let i = 0; i < tree.length; i++) {

@@ -2,6 +2,7 @@ import { LoaderCircleIcon } from 'lucide-react'
 import { FC } from 'react'
 import { ErrorBoundaryProps, Link, Outlet, RouteProps } from 'ziro/react'
 import { LoaderArgs, MetaFn } from 'ziro/router'
+
 export const meta: MetaFn<'/_layout'> = async () => {
   return {
     title: 'poks',

@@ -7,9 +7,10 @@ import { listen } from 'listhen'
 import { upperFirst } from 'lodash-es'
 import { createElement } from 'react'
 import { renderToReadableStream } from 'react-dom/server.browser'
+import { parseURL } from 'ufo'
 import { createServer } from 'vite'
 import yoctoSpinner from 'yocto-spinner'
-import { Cache, DataContext } from '../../router'
+import { Cache, DataContext, Middleware } from '../../router'
 import { Router } from '../../router/react'
 import { AppContext, printZiroHeader } from './shared.js'
 
@@ -135,11 +136,23 @@ const renderer = eventHandler(
     responseStatus = res.status
 
     if (isRestRequest) {
-      return new Response(cache.serialize(), {
-        headers: {
-          'Content-Type': 'application/json',
+      return new Response(
+        JSON.stringify({
+          cache: cache.serialize(),
+          middlewares: Object.fromEntries(
+            AppContext.getContext()
+              ?.router?.findRouteTree(parseURL(request.url).pathname)
+              ?.tree?.map(route => {
+                return [route.getId(), ((route.getMiddlewares() as Middleware[]) || []).map(middleware => middleware.name)]
+              }) || [],
+          ),
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-      })
+      )
     }
 
     const viteRenderedHtml = await AppContext.getContext().vite.transformIndexHtml(request.url, '<head></head><body></body>')

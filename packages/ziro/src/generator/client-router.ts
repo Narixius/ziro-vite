@@ -28,8 +28,7 @@ export const generateClientRouterCode = async (manifestDirPath: string, manifest
       as: importName,
       from: importPath,
     })
-    const isRoot = importName === 'pages_root'
-    const loadLazy = !isRoot
+    // const isRoot = importName === 'pages_root'
 
     code += `const ${routeVariableName} = new Route("${routeId}", {
 ${[

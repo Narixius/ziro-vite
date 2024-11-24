@@ -1,6 +1,5 @@
 import { createHooks } from 'hookable'
-import { isEqual } from 'lodash-es'
-import React, { FC, Fragment, memo, PropsWithChildren, ReactNode, Suspense, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import React, { FC, Fragment, PropsWithChildren, ReactNode, Suspense, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { parseURL } from 'ufo'
 import { RouteFilesByRouteId } from 'ziro/router'
@@ -13,6 +12,7 @@ import { isRedirectResponse } from '../utils/redirect'
 import { OutletContext } from './contexts/OutletContext'
 import { NavigateFn, RouterContext } from './contexts/RouterContext'
 import { proxyHistoryApi } from './utils/browser-api-override'
+import { isRouterCompatibleUrl } from './utils/url-validation'
 
 export type RouteProps<RouteId extends keyof RouteFilesByRouteId> = {
   loaderData: RouteFilesByRouteId[RouteId]['route'] extends AnyRoute<any, infer TLoaderResult> ? TLoaderResult : unknown
@@ -69,42 +69,35 @@ const getCurrentBrowserURLRequest = (fullUrl?: string) => {
   return req
 }
 
-export const Router: FC<RouterProps> = memo(({ router, layoutOptions, ...props }) => {
-  const dataContext = useRef(props.dataContext || new DataContext())
-  const cache = useRef(props.cache || new Cache())
+const localCache = new Cache()
+const localDataContext = new DataContext()
+
+export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => {
+  const dataContext = useRef(props.dataContext || localDataContext)
+  const cache = useRef(props.cache || localCache)
 
   const url = props.initialUrl ? parseURL(props.initialUrl).pathname : typeof window !== 'undefined' ? window.location.pathname : ''
+
   const [treeInfo, setTreeInfo] = useState(router.findRouteTree(url))
 
   if (!canUseDOM) {
     loadClientRouter(router, dataContext.current, cache.current, navigate, props.initialUrl)
   }
 
-  const onUrlChanges = useCallback(
-    (url: string) => {
-      const currentUrlTreeInfo = router.findRouteTree(url)
-      if (currentUrlTreeInfo.tree !== treeInfo.tree || !isEqual(currentUrlTreeInfo.params, treeInfo.params)) {
-        console.log('changing url', new URL(url, window.location.origin).href)
-        setTreeInfo(currentUrlTreeInfo)
-        loadClientRouter(router, dataContext.current, cache.current, navigate, new URL(url, window.location.origin).href)
-        routerHook.callHook('onUrlChange')
-      }
-    },
-    [treeInfo],
-  )
+  const onUrlChanges = async (url: string) => {
+    const currentUrlTreeInfo = router.findRouteTree(url)
+    if (isRouterCompatibleUrl(url)) {
+      try {
+        await loadClientRouter(router, dataContext.current, cache.current, navigate, new URL(url, window.location.origin).href)
+      } catch (e) {}
+      dataContext.current.suspensePromiseStore = {}
+      setTreeInfo(currentUrlTreeInfo)
+    }
+  }
 
   useLayoutEffect(() => {
     // load cache
-    const tempCache = new Cache()
     cache.current.loadFromWindow()
-    const proxiedCache = new Proxy(tempCache, {
-      get(target: Cache, prop: keyof Cache, receiver: any) {
-        if (typeof target[prop] === 'function' && prop.startsWith('get')) {
-          return target[prop].bind(target)
-        }
-        return cache.current[prop].bind(cache.current)
-      },
-    })
     // load router using cached data
     loadClientRouter(router, dataContext.current, cache.current, navigate)
     // proxy the history api to trigger the onUrlChanges
@@ -116,6 +109,7 @@ export const Router: FC<RouterProps> = memo(({ router, layoutOptions, ...props }
   }, [router])
 
   const outletContextValue = useMemo(() => {
+    routerHook.callHook('onUrlChange')
     return {
       tree: treeInfo.tree!,
       params: treeInfo.params || {},
@@ -123,7 +117,7 @@ export const Router: FC<RouterProps> = memo(({ router, layoutOptions, ...props }
       cache: cache.current,
       level: 0,
     }
-  }, [treeInfo])
+  }, [treeInfo.tree, treeInfo.params])
 
   const routerContextValue = useMemo(() => {
     return { router, navigate, revalidateTree, layoutOptions }
@@ -136,7 +130,7 @@ export const Router: FC<RouterProps> = memo(({ router, layoutOptions, ...props }
       </OutletContext.Provider>
     </RouterContext.Provider>
   )
-})
+}
 
 export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, TRouteProps>, params: Record<string, string>, dataContext: DataContext<any>, cache: Cache): T | void {
   const { url: matchedUrl } = route.parsePath(params)
@@ -147,6 +141,7 @@ export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, 
   if (!promiseMaps[promiseKey]) {
     let resolve = (value: unknown) => {},
       reject = (reason: unknown) => {}
+
     const promise = new Promise(async (r, rr) => {
       resolve = (data: any) => {
         if ('errors' in data) {
@@ -154,16 +149,19 @@ export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, 
           promiseMaps[promiseKey].errorData = data.errors
         }
         promiseMaps[promiseKey].status = 'fetched'
+        promiseMaps[promiseKey].resolved = true
         r(data)
       }
       rr = reject
     })
-    if (cachedData && !canUseDOM) {
+
+    if (cachedData && (!canUseDOM || cachedData.processed)) {
       promiseMaps[promiseKey] = {
         promise,
         reject,
         resolve,
         status: 'fetched',
+        resolved: true,
       }
     } else {
       promiseMaps[promiseKey] = {
@@ -171,16 +169,16 @@ export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, 
         reject,
         resolve,
         status: 'pending',
+        resolved: false,
       }
-      //   if (canUseDOM)
-      // set hook to notify when data has fetched.
       cache.hookOnce('loader', route.getId(), matchedUrl, data => {
         resolve(data)
       })
     }
   }
 
-  if (promiseMaps[promiseKey].status !== 'fetched') {
+  if (promiseMaps[promiseKey].status !== 'fetched' || (canUseDOM && !cachedData.processed)) {
+    // console.log(matchedUrl, 'suspended', promiseMaps[promiseKey].resolved)
     throw promiseMaps[promiseKey].promise
   }
 
@@ -192,7 +190,11 @@ export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, 
       const errorData = cachedData.value.errors
       throw 'root' in errorData ? new Error(errorData.root) : errorData
     }
-    if (cachedData) return cachedData.value
+
+    if (cachedData) {
+      //   console.log(matchedUrl, 'fetched', promiseKey)
+      return cachedData.value
+    }
   }
 }
 
@@ -241,7 +243,12 @@ const ErrorBoundaryFallback: FC<FallbackProps> = props => {
     return props.resetErrorBoundary
   }, [tree])
   // TODO: create default error boundary
-  if (routeProps?.ErrorBoundary) return <routeProps.ErrorBoundary {...props} />
+  if (routeProps?.ErrorBoundary)
+    return (
+      <Suspense>
+        <routeProps.ErrorBoundary {...props} />
+      </Suspense>
+    )
   throw props.error
 }
 

@@ -1,6 +1,5 @@
 import { Head } from '@unhead/schema'
 import { omit } from 'lodash-es'
-import { createServerHead } from 'unhead'
 import { AlsoAllowString } from '../types'
 import { Action } from './Action'
 import { Cache, CacheStatus } from './Cache'
@@ -83,6 +82,10 @@ export class Route<
     this.paramsKeys = id.match(/:[a-zA-Z0-9]+/g) || []
   }
 
+  getMiddlewares() {
+    return this.options.middlewares
+  }
+
   getId(): string {
     return this.id
   }
@@ -118,15 +121,8 @@ export class Route<
           head: dataContext.head,
         })
         .then(head => {
+          //   console.log('rendering meta', this.getId(), head)
           dataContext.head.push(head)
-
-          const d = createServerHead()
-          d.push({
-            title: 'yo',
-            titleTemplate(title) {
-              return `${title} | template`
-            },
-          })
         })
     }
   }
@@ -151,6 +147,16 @@ export class Route<
     const { params, url: matchedUrl } = this.parsePath(fullParams)
 
     await this.loadMiddlewaresOnRequest(request, params as RouteParams<RouteId>, dataContext, cache)
+
+    const middlewares = dataContext.chargedRouteMiddlewareMap[this.getId()]
+    if (middlewares && middlewares.length) {
+      middlewares.forEach(middlewareName => {
+        dataContext.data = {
+          ...dataContext.data,
+          ...(cache?.getMiddlewareCache(middlewareName) || {}),
+        }
+      })
+    }
 
     let data = cache?.getLoaderCache(this.id, matchedUrl) as TLoaderResult | undefined
 
@@ -197,20 +203,18 @@ export class Route<
         })
     }
 
-    // update the cache
-    // if (data) {
-    cache?.setLoaderCache(this.id, matchedUrl, data || {}, cacheStatus)
-    // }
+    cache?.setLoaderCache(this.id, matchedUrl, data || {}, cacheStatus, false)
 
     await this.loadMeta(dataContext, request, params as RouteParams<RouteId>, cache)
 
+    cache?.updateProcessedStatus('loader', this.id, matchedUrl, true)
+
     // update the data context
-    // if (data) {
     dataContext.data = {
       ...dataContext.data,
       ...(data || {}),
     }
-    // }
+
     cache.callHook(cache.generateKey('loader', this.id, matchedUrl), data || {})
     return data
   }
