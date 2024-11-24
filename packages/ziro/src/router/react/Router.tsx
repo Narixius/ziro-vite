@@ -238,10 +238,12 @@ const ErrorBoundaryFallback: FC<FallbackProps> = props => {
   const route = tree[0]
   if (!route) return null
   const routeProps = route!.getProps()
+
   useLayoutEffect(() => {
     routerHook.hookOnce('onUrlChange', props.resetErrorBoundary)
-    return props.resetErrorBoundary
+    return () => routerHook.removeHook('onUrlChange', props.resetErrorBoundary)
   }, [tree])
+
   // TODO: create default error boundary
   if (routeProps?.ErrorBoundary)
     return (
@@ -249,6 +251,7 @@ const ErrorBoundaryFallback: FC<FallbackProps> = props => {
         <routeProps.ErrorBoundary {...props} />
       </Suspense>
     )
+
   throw props.error
 }
 

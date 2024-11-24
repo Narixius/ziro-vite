@@ -25,6 +25,12 @@ export const Layout: FC<PropsWithChildren> = props => {
         <Link href="/todo" className="underline text-blue-500">
           Todos
         </Link>
+        <Link href="/not-found" className="underline text-blue-500">
+          not found page
+        </Link>
+        <Link href="/not-found2" className="underline text-blue-500">
+          not found page 2
+        </Link>
       </div>
       {props.children}
     </div>
