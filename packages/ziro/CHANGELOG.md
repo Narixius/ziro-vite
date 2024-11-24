@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v0.0.14
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.13...v0.0.14)
+
+### 🩹 Fixes
+
+- Not found route error ([7142d1d](https://github.com/narixius/ziro-vite/commit/7142d1d))
+
+### 🏡 Chore
+
+- Update changelog for v0.0.13 and bump version to 0.0.13 ([4fda40f](https://github.com/narixius/ziro-vite/commit/4fda40f))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.13
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.12...v0.0.13)
