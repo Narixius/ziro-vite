@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.15
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.14...v0.0.15)
+
+### 🏡 Chore
+
+- Update changelog for v0.0.14 and bump version to 0.0.14 ([4d0119f](https://github.com/narixius/ziro-vite/commit/4d0119f))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.14
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.13...v0.0.14)

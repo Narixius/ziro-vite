@@ -1,7 +1,7 @@
 {
   "name": "ziro",
   "type": "module",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,7 +13,7 @@
     "postbuild": "tsc-alias && ./post-build.sh",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "pre-publish": "bun run build && bunx changelogen --release",
+    "pre-publish": "bun run build && bunx changelogen --release --push",
     "publish-package": "bun run pre-publish && bun publish"
   },
   "bin": {
