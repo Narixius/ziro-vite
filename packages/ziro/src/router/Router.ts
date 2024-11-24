@@ -41,7 +41,7 @@ export class Router<RouteProps = {}> {
     if (route.getId().endsWith('_layout') || route.getId().endsWith('_root')) {
       routePath = route.getId().replace(/\/(_layout|_root)$/, '/**')
       const notFoundRoute = new Route('notFound', {
-        loader: () => abort(404, 'Page Not Found'),
+        loader: async () => abort(404, 'Page Not Found'),
       }) as AnyRoute
       tree = [route, notFoundRoute]
     }
