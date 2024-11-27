@@ -90,6 +90,7 @@ export const configureDevServer = async (port: number) => {
     appType: 'custom',
   })
   AppContext.getContext().vite = vite
+  await AppContext.getContext().generateRouteFiles()
   await AppContext.getContext().loadServerRouter()
   const h3 = AppContext.getContext().h3
   h3.use(fromNodeMiddleware(vite.middlewares))

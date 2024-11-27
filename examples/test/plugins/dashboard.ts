@@ -26,7 +26,6 @@ export const dashboard = new Plugin<Config>(
   'dashboard',
   {
     registerRoutes(config) {
-      console.log(config)
       return [
         {
           routeId: config.dashboardPath || '/x-dashboard',
@@ -36,7 +35,6 @@ export const dashboard = new Plugin<Config>(
     },
   },
   {
-    configName: 'dashboard',
-    configPath: 'configs/dashboard',
+    configPath: 'configs/dashboard.ts',
   },
 )

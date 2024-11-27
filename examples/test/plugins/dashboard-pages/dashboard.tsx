@@ -1,10 +1,8 @@
-import { MetaFn } from 'ziro/router'
-
 export default function dashboardPage() {
-  return <span>dashboard baby</span>
+  return <span>dashboard babyfasdf</span>
 }
 
-export const meta: MetaFn<'/x-dashboard'> = async () => {
+export const meta = async () => {
   return {
     title: 'dashboard',
   }

@@ -64,6 +64,7 @@ export class Router<RouteProps = {}> {
   }
   async handleRequestRemote(request: Request, cache: Cache = new Cache(), dataContext: DataContext = new DataContext()) {
     request.headers.append('accept', 'application/json')
+    request.headers.append('X-ZIRO-Resolve-Remote-Data', '1')
     await fetch(request).then(async res => {
       const data = await res.clone().json()
       if (data) {

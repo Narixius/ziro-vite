@@ -81,8 +81,11 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
   let manifestDirPath = joinURL(cwd, options.manifestDirPath)
   let pagesDirPath = joinURL(cwd, options.pagesDir)
   const generateRouteFiles = async () => {
-    const pluginsContext = options.plugins.reduce<PluginContext>((ctx, plugin) => {
-      const config = {} // loading plugin config here
+    const pluginsContext = await options.plugins.reduce<Promise<PluginContext>>(async (ctx, plugin) => {
+      const config = await AppContext.getContext()
+        .vite.ssrLoadModule(plugin.bootstrapConfig.configPath!)
+        .then(m => m.config)
+
       return {
         ...ctx,
         [plugin.key]: {
@@ -90,7 +93,7 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
           config,
         },
       }
-    }, {})
+    }, {} as Promise<PluginContext>)
 
     await generateManifestFilesChain(
       manifestDirPath,
@@ -113,6 +116,7 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
       config(config, env) {
         return {
           ...config,
+          logLevel: 'warn',
           optimizeDeps: {
             include: ['react', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom/client'],
           },
@@ -127,7 +131,7 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
       async configResolved(config) {
         manifestDirPath = joinURL(config.root, options.manifestDirPath)
         pagesDirPath = joinURL(config.root, options.pagesDir)
-        await generateRouteFiles()
+        AppContext.getContext().generateRouteFiles = generateRouteFiles
       },
       transformIndexHtml() {
         return [

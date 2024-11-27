@@ -22,6 +22,7 @@ interface IAppContext {
   vite: ViteDevServer
   options: Required<ZiroOptions>
   loadServerRouter: () => Promise<void>
+  generateRouteFiles: () => Promise<void>
 }
 
 export class AppContext {

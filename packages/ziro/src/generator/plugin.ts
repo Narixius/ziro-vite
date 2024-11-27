@@ -3,7 +3,6 @@ type PluginOptions<TConfig> = {
 }
 
 type PluginBootstrapConfig = {
-  configName?: string
   configPath?: string
 }
 

@@ -38,7 +38,7 @@ export const requestLogger = new Middleware('request-logger', {
     ctx.dataContext.responseTime = Date.now()
   },
   async onBeforeResponse(ctx) {
-    if (import.meta.env.SSR) {
+    if (import.meta.env.SSR && !ctx.request.headers.get('X-ZIRO-Resolve-Remote-Data')) {
       const responseTime = Date.now() - ctx.dataContext.responseTime
       const pathname = new URL(ctx.request.url).pathname
       const responseStatus = ctx.response.status
