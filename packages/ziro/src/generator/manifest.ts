@@ -1,8 +1,9 @@
 import defu from 'defu'
 import { pathToFileURL } from 'node:url'
 import { joinURL } from 'ufo'
+import { PluginContext } from '../vite/plugin'
 import { getRouteFileInfo, RouteFileInfo } from './utils/es-module-lexer'
-import { findRouteFiles, generateRouterPath, getImportPath } from './utils/route-files-utils'
+import { findRouteFiles, generateRouterPath, getImportPath, sortRoutes } from './utils/route-files-utils'
 
 export type GenerateManifestOptions = {
   cwd?: string
@@ -13,6 +14,7 @@ export type RouteManifest = {
   id: string
   parentId?: string
   routeInfo: RouteFileInfo
+  plugin?: string
 }
 
 export type RoutesManifest = {
@@ -61,22 +63,53 @@ function assignParentIds(manifest: RoutesManifest): RoutesManifest {
   return updatedManifest
 }
 
-export const generateManifest = async (_options: GenerateManifestOptions) => {
+export const generateManifest = async (_options: GenerateManifestOptions, pluginContext: PluginContext) => {
   const options = defu(_options, {
     cwd: pathToFileURL(process.cwd()).href,
     pagesPath: 'pages',
   })
   const pagesDirFullPath = joinURL(options.cwd, options.pagesPath)
-  const routeFiles = findRouteFiles(options)
+  let routeFiles = findRouteFiles(options)
+  const routesPluginsMap: {
+    [routeId: string]: {
+      routeId: string
+      filePath: string
+      plugin: string
+    }
+  } = {}
+  // register plugin routes
+  Object.keys(pluginContext).forEach(pluginKey => {
+    const plugin = pluginContext[pluginKey]
+    if (plugin.routes) {
+      plugin.routes.forEach(route => {
+        routesPluginsMap[route.filePath] = {
+          routeId: route.routeId,
+          plugin: pluginKey,
+          filePath: route.filePath,
+        }
+      })
+      routeFiles.push(...plugin.routes.map(r => r.filePath))
+    }
+  })
+
+  routeFiles = routeFiles.sort(sortRoutes)
 
   let manifest = await routeFiles.reduce(async (routesMapPromise, routeId) => {
     const routesMap = await routesMapPromise
-    const routeInfo = await getRouteFileInfo(routeId)
-    const routeImportPath = getImportPath(pagesDirFullPath, routeId)
-    const id = routeInfo.index ? generateRouterPath(joinURL('/', routeImportPath)) : joinURL('/', routeImportPath)
+    const routePlugin = routesPluginsMap[routeId]
+    let filePath = routeId
+    if (routePlugin) {
+      routeId = routePlugin.routeId
+      filePath = routePlugin.filePath
+    }
+    const routeInfo = await getRouteFileInfo(filePath)
+    const routeImportPath = getImportPath(pagesDirFullPath, filePath)
+    const id = routePlugin ? routePlugin.routeId : routeInfo.index ? generateRouterPath(joinURL('/', routeImportPath)) : joinURL('/', routeImportPath)
+
     routesMap[id] = {
       id,
       routeInfo,
+      plugin: !!routePlugin ? routePlugin.plugin : undefined,
     }
     return routesMap
   }, {} as Promise<Record<string, RouteManifest>>)

@@ -33,7 +33,7 @@
     },
     "./generator": {
       "types": "./dist/src/generator/index.d.ts",
-      "import": "./dist/src/generator.index.js"
+      "import": "./dist/src/generator/index.js"
     },
     "./vite": {
       "types": "./dist/src/vite/plugin.d.ts",

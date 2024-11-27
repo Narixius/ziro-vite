@@ -122,7 +122,7 @@ describe('generateManifest', () => {
       '/somewhere/cwd/pages/blog/admin/rest/:slug.tsx',
     ]
     vi.mocked(globSync).mockReturnValue(mockFiles)
-    const result = await generateManifest(mockOptions)
+    const result = await generateManifest(mockOptions, {})
     expect(result['/_root']).toEqual({
       id: '/_root',
       parentId: undefined,
@@ -177,7 +177,7 @@ describe('generated codes from manifest', () => {
       '/somewhere/cwd/pages/blog/admin/rest/:slug.tsx',
     ]
     vi.mocked(globSync).mockReturnValue(mockFiles)
-    const manifest = await generateManifest(mockOptions)
+    const manifest = await generateManifest(mockOptions, {})
     const result = await generateServerRouterCode('/somewhere/cwd/.ziro/', manifest, {
       mode: 'partially-ssr',
     })
@@ -205,7 +205,7 @@ describe('generated codes from manifest', () => {
       '/somewhere/cwd/pages/blog/admin/rest/:slug.tsx',
     ]
     vi.mocked(globSync).mockReturnValue(mockFiles)
-    const manifest = await generateManifest(mockOptions)
+    const manifest = await generateManifest(mockOptions, {})
     const result = await generateRoutesTypings('/somewhere/cwd/.ziro/', manifest)
     expect(result).toContain(`declare module 'ziro/router'`)
     expect(result).toContain(`"/_root": Route<"/_root", {}, {}, [], undefined>`)

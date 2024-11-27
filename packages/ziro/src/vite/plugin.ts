@@ -6,6 +6,7 @@ import { createUnplugin } from 'unplugin'
 import { AppContext } from '../cli/commands/shared'
 import { generateManifest, GenerateManifestOptions, generateRoutesTypings, generateServerRouterCode } from '../generator'
 import { generateClientRouterCode } from '../generator/client-router'
+import { Plugin } from '../generator/plugin'
 import { isRouteRelatedFile } from '../generator/utils/route-files-utils'
 import { Router, RouterOptions } from '../router'
 import deadImportsRemover from './babel/dead-imports-remover'
@@ -15,13 +16,16 @@ export type ZiroOptions = {
   pagesDir?: string
   manifestDirPath?: string
   routerOptions?: RouterOptions
+  plugins?: Plugin<any>[]
 }
 
-const generateManifestFilesChain = async (manifestDirPath: string, manifestOptions: GenerateManifestOptions, routerOptions: RouterOptions) => {
+export type PluginContext = { [key: string]: { routes: { routeId: string; filePath: string }[]; config: any } }
+
+const generateManifestFilesChain = async (manifestDirPath: string, manifestOptions: GenerateManifestOptions, pluginContext: PluginContext, routerOptions: RouterOptions) => {
   await mkdirSync(manifestDirPath, {
     recursive: true,
   })
-  return generateManifest(manifestOptions)
+  return generateManifest(manifestOptions, pluginContext)
     .then(async manifest => {
       writeFileSync(joinURL(manifestDirPath, 'manifest.json'), JSON.stringify(manifest, null, 2), {
         encoding: 'utf8',
@@ -70,18 +74,31 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
     routerOptions: {
       mode: 'partially-ssr',
     },
+    plugins: [],
   } as Required<ZiroOptions>)
   AppContext.getContext().options = options
   const cwd = process.cwd()
   let manifestDirPath = joinURL(cwd, options.manifestDirPath)
   let pagesDirPath = joinURL(cwd, options.pagesDir)
   const generateRouteFiles = async () => {
+    const pluginsContext = options.plugins.reduce<PluginContext>((ctx, plugin) => {
+      const config = {} // loading plugin config here
+      return {
+        ...ctx,
+        [plugin.key]: {
+          routes: plugin.options.registerRoutes?.(config) || [],
+          config,
+        },
+      }
+    }, {})
+
     await generateManifestFilesChain(
       manifestDirPath,
       {
         cwd,
         pagesPath: options.pagesDir,
       },
+      pluginsContext,
       options.routerOptions,
     )
   }
