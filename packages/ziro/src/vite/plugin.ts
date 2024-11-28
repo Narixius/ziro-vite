@@ -19,7 +19,7 @@ export type ZiroOptions = {
   plugins?: Plugin<any>[]
 }
 
-export type PluginContext = { [key: string]: { routes: { routeId: string; filePath: string }[]; config: any } }
+export type PluginContext = { [key: string]: { routes: { routeId: string; filePath: string }[]; config: any; configPath: string } }
 
 const generateManifestFilesChain = async (manifestDirPath: string, manifestOptions: GenerateManifestOptions, pluginContext: PluginContext, routerOptions: RouterOptions) => {
   await mkdirSync(manifestDirPath, {
@@ -50,7 +50,7 @@ const generateManifestFilesChain = async (manifestDirPath: string, manifestOptio
       return manifest
     })
     .then(async manifest => {
-      await generateServerRouterCode(manifestDirPath, manifest, routerOptions).then(code => {
+      await generateServerRouterCode(manifestDirPath, manifest, pluginContext, routerOptions).then(code => {
         writeFileSync(joinURL(manifestDirPath, 'router.server.ts'), code, {
           encoding: 'utf8',
         })
@@ -91,6 +91,7 @@ const ZiroUnplugin = createUnplugin<Partial<ZiroOptions> | undefined>(_options =
         [plugin.key]: {
           routes: plugin.options.registerRoutes?.(config) || [],
           config,
+          configPath: plugin.bootstrapConfig.configPath!,
         },
       }
     }, {} as Promise<PluginContext>)

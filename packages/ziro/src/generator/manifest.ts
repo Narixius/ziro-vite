@@ -111,6 +111,7 @@ export const generateManifest = async (_options: GenerateManifestOptions, plugin
       routeInfo,
       plugin: !!routePlugin ? routePlugin.plugin : undefined,
     }
+
     return routesMap
   }, {} as Promise<Record<string, RouteManifest>>)
 
