@@ -1,38 +1,49 @@
 \documentclass{article}
+
+\usepackage{graphicx}
 \usepackage{amsmath}
-\usepackage{arabtex}
-\usepackage{utf8}
 \usepackage{blindtext}
 \usepackage{titlesec}
 \usepackage{subfiles}
-\usepackage{graphicx}
-\usepackage{xcolor}
 \usepackage{soul}
+\usepackage{minted}
+\usepackage{xcolor}
+\usepackage[colorlinks=true, linkcolor=black, citecolor=blue, urlcolor=blue]{hyperref}
+
+\titleformat{\subsection}
+  {\normalfont\bfseries\fontsize{12}{14}\selectfont}
+  {\thesubsection}{0.4em}{}
+
+
 
 \sethlcolor{yellow}
-
 \setlength{\parskip}{1em}
 
-\setcode{utf8}
+\setminted{
+    style=xcode,
+    fontsize=\footnotesize,
+    frame=single,
+    framesep=10pt,
+    linenos=false,
+    fontfamily=tt,
+}
+
 \author{Nariman Movaffaghi \\[0.4em]
 Supervisor: Soroush Vedaei}
-
 \title{Progressive SSR Framework: Ziro}
-
 \date{\small \today}
 
-
 \begin{document}
+
 \maketitle
 
 \begin{center}
-	\vspace{0em}
+    \vspace{0em}
     \includegraphics[width=0.2\textwidth]{bihe-logo.png} \\[1em]
 \end{center}
 
+
 \pagebreak
-
-
 
 \tableofcontents
 \pagebreak

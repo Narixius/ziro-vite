@@ -1,8 +1,16 @@
-\contentsline {section}{\numberline {1}Abstract}{3}{}%
-\contentsline {section}{\numberline {2}Introduction}{4}{}%
-\contentsline {section}{\numberline {3}Literature Review}{6}{}%
-\contentsline {section}{\numberline {4}Methodology}{7}{}%
-\contentsline {section}{\numberline {5}Theses}{8}{}%
-\contentsline {section}{\numberline {6}Technical Specifications}{9}{}%
-\contentsline {section}{\numberline {7}Results}{10}{}%
-\contentsline {section}{\numberline {8}Future Works}{11}{}%
+\contentsline {section}{\numberline {1}Abstract}{3}{section.1}%
+\contentsline {section}{\numberline {2}Introduction}{4}{section.2}%
+\contentsline {section}{\numberline {3}Literature Review}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Evolution of Web Technologies}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}The Rise of Server-Side Rendering (SSR) Frameworks}{6}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Review of Key SSR Frameworks}{7}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}The Market Landscape of SSR Frameworks}{9}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Why Market Metrics Matter}{10}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Evolution of Hosting Solutions and Their Impact on SSR}{10}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Ziro’s Position: A Foundation for Modern Web Development}{11}{subsection.3.7}%
+\contentsline {subsection}{\numberline {3.8}Conclusion}{13}{subsection.3.8}%
+\contentsline {section}{\numberline {4}Methodology}{15}{section.4}%
+\contentsline {section}{\numberline {5}Theses}{16}{section.5}%
+\contentsline {section}{\numberline {6}Technical Specifications}{17}{section.6}%
+\contentsline {section}{\numberline {7}Results}{18}{section.7}%
+\contentsline {section}{\numberline {8}Future Works}{19}{section.8}%
