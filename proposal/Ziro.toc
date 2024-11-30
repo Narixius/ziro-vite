@@ -20,6 +20,10 @@
 \contentsline {subsection}{\numberline {4.8}Improving and Refining the Framework}{18}{subsection.4.8}%
 \contentsline {subsection}{\numberline {4.9}Results of the Development Process}{18}{subsection.4.9}%
 \contentsline {section}{\numberline {5}Theses}{19}{section.5}%
-\contentsline {section}{\numberline {6}Technical Specifications}{20}{section.6}%
-\contentsline {section}{\numberline {7}Results}{21}{section.7}%
-\contentsline {section}{\numberline {8}Future Works}{22}{section.8}%
+\contentsline {subsection}{\numberline {5.1}The Problem: Repetitive and Time-Consuming Tasks}{19}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Modularity and Plugin-Driven Design}{19}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Addressing Today’s Web Development Needs}{20}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Ziro’s Contribution to Web Development}{21}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Technical Specifications}{23}{section.6}%
+\contentsline {section}{\numberline {7}Results}{24}{section.7}%
+\contentsline {section}{\numberline {8}Future Works}{25}{section.8}%
