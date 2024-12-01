@@ -9,12 +9,20 @@
 \usepackage{minted}
 \usepackage{xcolor}
 \usepackage[colorlinks=true, linkcolor=black, citecolor=blue, urlcolor=blue]{hyperref}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage{caption}
+
+\newcommand{\cc}[1]{\colorbox{gray!20}{\texttt{\small #1}}}
+
+\captionsetup[figure]{font=small, skip=2pt}
 
 \titleformat{\subsection}
   {\normalfont\bfseries\fontsize{12}{14}\selectfont}
   {\thesubsection}{0.4em}{}
 
-
+\linespread{1.1}
 
 \sethlcolor{yellow}
 \setlength{\parskip}{1em}
@@ -24,13 +32,13 @@
     fontsize=\footnotesize,
     frame=single,
     framesep=10pt,
-    linenos=false,
+    linenos=true,
     fontfamily=tt,
 }
 
 \author{Nariman Movaffaghi \\[0.4em]
 Supervisor: Soroush Vedaei}
-\title{Progressive SSR Framework: Ziro}
+\title{Ziro: A Modular SSR Framework}
 \date{\small \today}
 
 \begin{document}

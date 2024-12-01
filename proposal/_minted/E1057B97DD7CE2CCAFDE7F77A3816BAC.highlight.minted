@@ -1,0 +1,34 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{Route}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Action}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/router\PYGZsq{}}\PYG{p}{;}
+\PYG{k}{import}\PYG{+w}{ }\PYG{n+nx}{z}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}zod\PYGZsq{}}
+
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{todos}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{p}{]}
+
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{meta}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k}{async}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{loaderData}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{k}{return}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nx}{title}\PYG{o}{:}\PYG{+w}{ }\PYG{l+s+sb}{`}\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{loaderData}\PYG{p}{.}\PYG{n+nx}{todos}\PYG{p}{.}\PYG{n+nx}{length}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{ items in list | To\PYGZhy{}Do App}\PYG{l+s+sb}{`}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n+nx}{description}\PYG{o}{:}\PYG{+w}{ }\PYG{l+s+sb}{`}\PYG{l+s+sb}{Track your tasks for free!}\PYG{l+s+sb}{`}\PYG{p}{,}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}\PYG{p}{;}
+
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{loader}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k}{async}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{k}{return}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{todos}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{actions}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nx}{addTodo}\PYG{o}{:}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Action}\PYG{p}{(}\PYG{p}{\PYGZob{}}
+\PYG{+w}{      }\PYG{n+nx}{input}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{z}\PYG{p}{.}\PYG{n+nx}{object}\PYG{p}{(}\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n+nx}{title}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{z}\PYG{p}{.}\PYG{n+nx}{string}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n+nx}{min}\PYG{p}{(}\PYG{l+m+mf}{1}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}Title is required\PYGZsq{}}\PYG{p}{)}
+\PYG{+w}{      }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{,}
+\PYG{+w}{      }\PYG{k}{async}\PYG{+w}{ }\PYG{n+nx}{handler}\PYG{p}{(}\PYG{n+nx}{body}\PYG{p}{)}\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n+nx}{todos}\PYG{p}{.}\PYG{n+nx}{push}\PYG{p}{(}\PYG{n+nx}{body}\PYG{p}{)}\PYG{p}{;}
+\PYG{+w}{      }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}\PYG{p}{)}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{todoRoute}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Route}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}/todo\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{n+nx}{meta}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nx}{loader}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nx}{actions}
+\PYG{p}{\PYGZcb{}}\PYG{p}{)}
+\end{MintedVerbatim}

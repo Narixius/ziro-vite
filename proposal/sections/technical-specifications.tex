@@ -1,3 +1,489 @@
 \section{Technical Specifications} % 10 pages
 
+
+\subsection{Understanding the Router and Route Structure}
+
+Ziro's router is a fundamental component that handles routing and the organization of routes and endpoints in an application. It plays a crucial role in navigating between different parts of an application, ensuring data flows seamlessly, and integrating various elements such as middleware, actions, and components. Understanding the router and route structure in Ziro is essential for developing and maintaining applications efficiently.
+
+\subsubsection{Overview of the Router's Role and Structure}
+The router in Ziro manages the definitions of all routes, making sure that each route is properly configured to handle requests and load data. The router tree is built on top of the \textbf{rou3}\footnote{\url{https://unjs.io/packages/radix3}} library, a lightweight and fast router for JavaScript based on a radix tree structure. This library provides an efficient way to manage and traverse routes.
+
+\subsubsection{What is a Radix Tree?}
+A radix tree (or prefix tree) is a type of data structure that is particularly well-suited for handling route paths. Each route is stored as a sequence of characters in the tree, allowing for efficient prefix matching and lookup. This structure is ideal for route trees as it reduces the number of comparisons needed when finding a specific route and supports hierarchical relationships.
+
+\subsubsection{Main Properties of a Route}
+\begin{itemize}
+	\item \textbf{id}: The path of the route also acts as the identifier because it is unique.
+	\item \textbf{parent}: The parent route.
+	\item \textbf{loader}: A function or method responsible for loading data needed by the route.
+	\item \textbf{middlewares}: Functions that run before the route loader and actions to perform tasks such as authentication, data validation, or request modification.
+	\item \textbf{actions}: Functions that handle post requests, often used in handling form requests.
+	\item \textbf{meta}: Metadata associated with the route, used for SEO.
+	\item \textbf{props}: Properties that relates to the route. Often used for storing the rendering-related data, including the main \texttt{Component}, \texttt{ErrorBoundary}, and \texttt{Loading} components (in React concept).
+\end{itemize}
+
+\subsubsection{Parent-Child Route Relationships}
+Routes in Ziro can have parent-child relationships that help structure the application in a nested way. For example, a layout route has some sub-routes that inherit the data from the parent, allowing for shared layouts, middleware and loading data. This nesting supports complex page structures and maintains consistent data flow across different parts of the application.
+
+\pagebreak
+
+\subsubsection{Example of a Basic Router and Route Definition}
+Consider the following example of how a router with different routes are defined in Ziro:
+
+\begin{figure}[h!]
+\begin{minted}{javascript}
+import { Route, Router } from 'ziro/router';
+
+const router = new Router()
+
+const rootRoute = new Route("_root", {
+  loader: async () => {
+    return fetch("https://api.example.com/data").then(res => res.json())
+  }
+});
+
+const indexRoute = new Route("/", {
+  parent: rootRoute,
+  loader: async () => {
+    return fetch("https://api.example.com/index").then(res => res.json())
+  }
+});
+router.addRoute(indexRoute)
+
+export default router;
+\end{minted}
+\caption{Example of a Basic Router and Route Definition}
+\end{figure}
+
+In this example, the router is created (line 3), and two routes (\cc{rootRoute} and \cc{indexRoute}) are defined. Only the \cc{indexRoute} is added to the router as it is the main route visible to users. The routes ending with \cc{\_root} and \cc{\_layout} are considered non-viewable routes and serve as wrappers around other routes. When the router is called to find the route tree for a specific request, such as the "/" endpoint, it should return an array with the \cc{rootRoute} as the first item and the \cc{indexRoute} as the second item. This calculation occurs via the \cc{addRoute} method, which builds the route tree recursively, traversing the parent property until it reaches undefined and adds the route array as the value of the radix tree for the given endpoint.
+
+\pagebreak
+
+\subsubsection*{Minimal Example of How the Router Creates the Radix Tree}
+\begin{figure}[h!]
+\begin{minted}{javascript}
+import * as rou3 from 'rou3'
+
+class Router {
+  radixTree;
+  constructor(){
+    this.radixTree = rou3.createRouter();
+  }
+
+  addRoute(route){
+    let tree = [route]
+    let routePath = route.id;
+
+    while (true) {
+      if (!tree[0].getParent()) break
+      const parentRoute = tree[0].getParent()
+      if (parentRoute) tree.unshift(parentRoute)
+    }
+
+    rou3.addRoute(this.radixTree, '', routePath, tree)
+  }
+}
+\end{minted}
+\caption{Minimal Example of How the Router Creates the Radix Tree}
+\end{figure}
+
+This code snippet shows how the router class initializes a \textbf{rou3} radix tree and adds routes by traversing their parent routes recursively to build a comprehensive route tree structure.
+
+
+
+
+
+\subsubsection{How the Router Handles Requests}
+
+When the \cc{router.handleRequest(request)} method is called, the router follows a systematic process to find and handle the appropriate route. Here is how the process works:
+
+\begin{enumerate}
+  \item \textbf{Request Matching}: The handleRequest() method uses the radix tree to match the incoming request path to a specific sequence of routes. This is done by calling \cc{rou3.findRoute(this.radixTree, '', String(request.url.pathname))}
+
+  \item \textbf{Load Routes}: Once a route tree is matched, the routes should be loaded based on the incoming request. The middlewares and the loader of each route will be called in order from the parent to the child sequentially. The middlewares and loaders can intercept the request, and prevent it from proceeding by returning an early response using the \cc{abort} or \cc{redirect} util method defined in the \cc{ziro/router}.
+
+  \item \textbf{Store the loaded data in the cache}: After calling each loader or middleware the returned data will be cached in a Cache object to be used in the rendering process and prevent data loss.
+
+\end{enumerate}
+
+After router find and loads a route tree, it's ready to be rendered on the page using a rendering library. In this project we have the \cc{ziro/react} to render the router in the React environment.
+
+
+\subsubsection{Loaders}
+Loaders are essential functions for building dynamic and data-driven applications with Ziro. They help manage data fetching and preparation before a route’s main content is rendered. Understanding how to use loaders is key to building applications that are both efficient and maintainable.
+
+\subsubsection*{What are Loaders in Ziro?}
+Loaders in Ziro are functions associated with routes that handle data fetching and preparation. They are especially valuable for server-side data loading, enabling data to be fetched from external APIs, databases, or other sources. Loaders are executed after the middlewares registered on the route and before starting the process of loading the nested routes.
+
+\pagebreak
+\subsubsection*{Example of a Simple Loader}
+Here is a simplified example to illustrate how a loader function works in Ziro:
+\begin{figure}[h!]
+\begin{minted}{javascript}
+import { Router, Route } from 'ziro/router';
+
+const router = new Router()
+
+const usersRoute = new Route('/users/:userId', {
+  loader: async ({ params }) => {
+    // Fetch user data from an API
+    const response = await fetch(`https://api.com/users/${params.userId}`);
+    if (!response.ok) {
+      throw new Error('Failed to load user data');
+    }
+    const userData = await response.json();
+
+    // Return the user data to store in the cache
+    return {
+      name: userData.name,
+      email: userData.email,
+      avatar: userData.avatar,
+    };
+  };
+});
+
+router.addRoute(router);
+\end{minted}
+\caption{Example of a Simple Loader}
+\end{figure}
+
+
+\subsubsection{Middlewares}
+Ziro middleware is a powerful tool used to handle various tasks before or after a route's request and response cycle. Middleware functions run in sequence and can be used to modify requests, handle authentication, log information, or perform other pre- and post-processing actions. Here, we will discuss the purpose of middleware and present a simple example to illustrate how it works.
+
+\subsubsection*{What is Middleware in Ziro?}
+Middleware in Ziro is a function that can intercept and modify requests and responses at different points in the lifecycle of a request. It allows for reusable logic that can be shared across multiple routes or endpoints. Middleware can be executed at various stages, such as before a request is processed (\cc{onRequest}) or before a response is sent (\cc{onBeforeResponse}).
+
+\subsubsection*{Simple Middleware Example}
+To understand how middleware works in Ziro, let’s look at a simplified example:
+\begin{figure}[h!]
+\begin{minted}{javascript}
+import { Middleware } from 'ziro/router';
+
+// Simple middleware that logs the request URL and method
+export const simpleLogger = new Middleware('simple-logger', {
+  async onRequest({ request }) {
+    console.log(`Request received: ${request.method} ${request.url}`);
+  },
+  async onBeforeResponse({ response }) {
+    console.log(`Response status: ${response.status}`);
+  },
+});
+\end{minted}
+\caption{Simple Middleware Example}
+\end{figure}
+
+\subsubsection*{Explanation:}
+
+\begin{itemize}
+  \item \textbf{Import Statement}: We import Middleware from the \cc{ziro/router} module.
+  \item \textbf{Middleware Creation}: We create a new instance of Middleware, passing in a name ('simple-logger') and an object containing the \cc{onRequest} and \cc{onBeforeResponse} functions.
+  \item \textbf{\cc{onRequest} Function}: This function runs before the request is processed. In this case, it logs the HTTP method and the request URL to the console.
+  \item \textbf{\cc{onBeforeResponse} Function}: This function runs before the response is sent. It logs the status code of the response.
+\end{itemize}
+
+\subsubsection*{How Middleware Fits into the Router Lifecycle?}
+Middleware functions in Ziro can be attached to routes and are executed in the order they are added. When a request is made, the following sequence occurs:
+\begin{enumerate}
+  \item The \cc{onRequest} method of each middleware is executed in the order they are defined.
+  \item The route’s handler (the loader or action) is executed to process the request and prepare a response. During this step, the current route's handler (the loader or action) runs, followed by any handler from nested routes. Middleware functions that are defined for these routes are also executed, running in sequence as per the route's configuration. This ensures that all necessary data is fetched and any pre-processing needed for the request is completed before generating the final response.
+  \item The \cc{onBeforeResponse} method of each middleware runs in the reverse order before the response is sent to the client.
+\end{enumerate}
+This enables developers to control and modify both the incoming request and outgoing response with ease.
+
+\pagebreak
+\subsubsection*{More Complex Middleware Example}
+For more advanced use cases, middleware can be used to implement features such as logging, authentication, or performance tracking. Here is a more detailed example:
+\begin{figure}[h!]
+\begin{minted}{javascript}
+import { Middleware } from 'ziro/router';
+
+// Middleware that logs request details and response time
+export const requestLogger = new Middleware('request-logger', {
+  async onRequest({ dataContext }) {
+    dataContext.responseTime = Date.now();
+  },
+  async onBeforeResponse({ request, dataContext }) {
+    const responseTime = Date.now() - dataContext.responseTime;
+    const pathname = new URL(request.url).pathname;
+    console.log(`Request to ${pathname} took ${responseTime}ms`);
+  },
+});
+\end{minted}
+\caption{More Complex Middleware Example}
+\end{figure}
+
+In this example, the response time of the request will be logged by storing the current time on the \cc{dataContext} (in the \cc{onRequest} method) and will be logged right after the child routes loading completed (the \cc{onBeforeResponse} method). The \cc{dataContext} object is used to be a shared data layer through the loading the routes sequentially.
+
+\pagebreak
+\subsubsection*{Example of Integrating Loader and Middlewares in a route}
+Here is an integrated example of how loaders and middlewares can be used in a route definition:
+
+\begin{figure}[h!]
+\begin{minted}{javascript}
+import { Router, Route } from 'ziro/router';
+import { requestLogger } from './middlewares/request-logger'
+
+const router = new Router()
+
+const usersRoute = new Route('/users/:userId', {
+  middlewares: [requestLogger],
+  loader: async ({ params }) => {
+    // Fetch user data from an API
+    const response = await fetch(`https://api.com/users/${params.userId}`);
+    if (!response.ok) {
+      throw new Error('Failed to load user data');
+    }
+    const userData = await response.json();
+
+    // Return the user data to store in the cache
+    return {
+      name: userData.name,
+      email: userData.email,
+      avatar: userData.avatar,
+    };
+  };
+});
+
+router.addRoute(router);
+\end{minted}
+\caption{Example of Integrating Loader and Middlewares in a route}
+\end{figure}
+
+This example demonstrates how to use middleware on a route that has a loader. The middleware, named \cc{requestLogger} (Figure 5), logs the request details and calculates the time taken by the loader to fetch data from the API. This is achieved by defining an \cc{onRequest} function that stores the start time and an \cc{onBeforeResponse} function that logs the request URL, method, and the total response time.
+
+
+\subsubsection{Actions}
+Ziro actions are an essential part of building dynamic applications, allowing developers to handle complex logic that goes beyond simple data fetching or rendering. Actions in Ziro provide a mechanism to handle server-side operations, such as form submissions, data updates, and other tasks that require request handling and processing. By using actions, developers can create robust, interactive applications that manage data more efficiently and ensure that certain operations are secure and well-structured.
+
+\subsubsection*{What are Actions in Ziro?}
+Actions in Ziro are special functions that can be associated with specific routes and used to handle mutation requests like POST HTTP requests. These functions are designed to handle tasks such as modifying data, performing validations, or managing interactions that involve user input. An action can be defined with an input validation schema and a handler function to process the request body.
+
+
+\subsubsection*{Benefits of Using Actions}
+\begin{itemize}
+  \item \textbf{Input Validation}: Actions use schemas to validate the input data before processing. This ensures that only valid data is handled, preventing errors and enhancing security.
+
+  \item \textbf{Centralized Logic}: Actions help in maintaining clear and modular code by placing related logic in one place, making the codebase easier to understand and maintain.
+
+  \item \textbf{Customizable Behavior}: Each action can be customized to handle different types of requests and data, providing flexibility in how data is managed and manipulated.
+
+\end{itemize}
+
+\subsubsection*{What is a Schema in Actions?}
+A schema in actions is a data validation structure that defines the shape and constraints of the input data for actions. Schemas are crucial for ensuring that only valid data is processed, which helps prevent errors and enhances the security and reliability of the application. In Actions, schemas should be defined using \textbf{Zod}\footnote{\url{https://zod.dev}}, a TypeScript-first schema declaration and validation library.
+
+\subsubsection*{What is Zod?}
+\textbf{Zod} is a TypeScript-first schema validation library that allows developers to define and validate data structures in a type-safe manner. With Zod, developers can create complex validation logic that is easy to read and maintain. It supports various data types and provides built-in methods for validating strings, numbers, arrays, objects, and more. The integration of Zod in actions makes it easier to enforce data integrity and ensure that actions receive correctly formatted input.
+
+\subsubsection*{Benefits of Using Schemas in Actions}
+
+\begin{itemize}
+  \item \textbf{Type Safety}: Schemas are defined in TypeScript, providing strong type checking at compile time, which helps catch errors early in the development process.
+
+  \item \textbf{Input Validation}: Using Zod schemas, actions can validate incoming data to make sure it meets the required conditions before processing.
+
+  \item \textbf{Error Handling}: Schemas can specify detailed error messages, making it easier to understand why an input is invalid and guiding developers to fix issues efficiently.
+
+  \item \textbf{Consistency}: Schemas ensure that data structures are consistent across different parts of the application, enhancing code maintainability.
+\end{itemize}
+
+You can find an example of actions in the figure 7
+
+\begin{figure}[h!]
+\begin{minted}{javascript}
+import { Route, Action } from 'ziro/router';
+import { z } from 'zod';
+
+let todos = [];
+
+export const actions = {
+  addTodo: new Action({
+    input: z.object({
+      title: z.string().min(3, 'Title must be at least 3 characters'),
+    }),
+    async handler(body, ctx) {
+      todos.push({
+        ...body,
+        isDone: false,
+      });
+      return {
+        ok: true,
+      };
+    },
+  }),
+  toggleTodo: new Action({
+    input: z.object({
+      index: z.coerce.number().min(0, 'This field is required'),
+    }),
+    async handler(body) {
+      todos[body.index].isDone = !todos[body.index].isDone;
+      return {
+        ok: true,
+      };
+    },
+  }),
+  deleteTodo: new Action({
+    input: z.object({
+      index: z.coerce.number().min(0, 'This field is required'),
+    }),
+    async handler(body) {
+      todos.splice(body.index, 1);
+      return { ok: true };
+    },
+  }),
+};
+
+export const todoRoute = new Route("/todo", {
+  loader: async () => todos,
+  actions: actions
+})
+\end{minted}
+\caption{Example of Actions in a To-Do List App}
+\end{figure}
+\pagebreak
+
+\subsubsection{Meta Functions}
+Meta functions are an important part of creating well-rounded web applications with Ziro. They help manage the meta-information of routes, such as page titles, descriptions, and other SEO-related data. By defining meta functions for routes, developers can enhance the discoverability and ranking of their web pages, improve social media sharing, and provide a better overall user experience.
+
+\subsubsection*{What are Meta Functions in Ziro?}
+Meta functions in Ziro are functions that are associated with specific routes and are responsible for setting metadata in the HTML head. These functions receive data from the route’s loader, allowing them to dynamically generate metadata based on the content of the page. Meta functions can be defined to return various pieces of meta-information, such as the page title, description, and other elements needed for SEO and social sharing.
+
+Ziro’s integration with the \textbf{unhead}\footnote{\url{https://unhead.unjs.io/}} library makes it possible to manage meta tags in a reactive and dynamic manner, ensuring that the content in the HTML head is always up-to-date with the current route.
+
+
+\subsubsection*{Benefits of Using Meta Functions}
+\begin{itemize}
+  \item \textbf{Improved SEO}: Properly configured meta functions ensure that search engines can better understand the content of each page, improving search rankings.
+
+  \item \textbf{Enhanced Social Sharing}: Meta tags help generate rich previews on social media platforms when links are shared.
+
+  \item \textbf{Dynamic and Context-Aware}: Meta functions can use data loaded by route loaders to generate context-specific metadata.
+
+  \item \textbf{Consistency}: Using meta functions ensures that each route has consistent and up-to-date metadata.
+\end{itemize}
+
+\pagebreak
+\subsubsection*{Example of a Meta Function}
+\begin{figure}[h!]
+\begin{minted}{javascript}
+import { Route, Action } from 'ziro/router';
+import z from 'zod'
+
+const todos = []
+
+const meta = async ({ loaderData }) => {
+  return {
+    title: `${loaderData.todos.length} items in list | To-Do App`,
+    description: `Track your tasks for free!`,
+  };
+};
+
+const loader = async () => {
+  return { todos };
+}
+
+const actions = {
+    addTodo: new Action({
+      input: z.object({
+        title: z.string().min(1, 'Title is required')
+      }),
+      async handler(body){
+        todos.push(body);
+      }
+    })
+}
+
+const todoRoute = new Route("/todo", {
+  meta,
+  loader,
+  actions
+})
+\end{minted}
+\caption{Example of a Meta Function}
+\end{figure}
+
+\pagebreak
+
+\subsubsection{Transitioning to Framework Development}
+
+While Ziro's core libraries provide powerful capabilities for handling routing, data loading, and meta management, building a complete framework requires integrating these functionalities within a \hl{cohesive} development environment. This is where a modern bundler like \textbf{Vite} comes into play. Vite allows Ziro to efficiently handle dynamic module loading, and streamline development workflows. One of the key advantages of using Vite is the ability to implement a file-based routing system, \hl{eliminating} the need to define routes manually. This approach simplifies the development process by allowing routes to be automatically generated based on the directory structure of route files. By \hl{leveraging} Vite, Ziro evolves from a routing libary  into a comprehensive framework capable of delivering web applications.
+
+
+\subsection{Vite Overview}
+
+Explanation of what Vite is and its key features, including fast build times and Hot Module Replacement (HMR).
+
+\subsection{Vite Plugins}
+
+Description of what Vite plugins can do and how Ziro leverages them for tasks like route generation, file transformation, and plugin integration.
+
+\subsection{Manifest Generation}
+
+How Ziro gathers route information, such as middlewares, loaders, and other properties, to create manifest.json and how it's used to ensure consistency in generating router files.
+
+\subsection{File Generation}
+
+How Ziro generates key files like router.server.ts, router.client.ts, and routes.d.ts for server, client, and type safety integration.
+
+\subsection{TypeScript Integration and Generic Types}
+
+TypeScript type definitions and generic types support route type safety.
+
+Explanation of how the routes.d.ts file is generated and used to create a type-aware development experience.
+
+The benefits of leveraging TypeScript's generic types to maintain consistent type relationships between routes and their data, enhancing developer productivity and reducing potential errors.
+
+\subsection{Benefits of ESM (ES Modules)}
+
+How ESM simplifies dynamic imports, route generation, and the modular design of Ziro.
+
+\subsection{Middleware Functionality}
+
+How middlewares can intercept requests and stack during the request handling process.
+
+\subsection{Data Loading in the Router}
+
+Importance of server-side data loading for performance, SEO, and streamlined development workflows.
+
+\subsection{Request Handling on the Server}
+
+How the server processes incoming requests and utilizes generated route files.
+
+\subsection{Why H3 as the Web Server?}
+
+Reasons for selecting H3 as Ziro's web server, including its runtime agnosticism and compatibility with Vite.
+
+\subsection{The client entry point.}
+
+How Ziro generates and injects the main JavaScript file into the HTML sent to users.
+
+\subsection{Client JavaScript  Transformation}
+
+Transformation of chunked JS files using Vite and Babel to control code exposing.
+
+\subsection{Route Modes in Ziro}
+
+Explanation of SSR, CSR, and partially-SSR modes, and their impact on performance and rendering.
+
+\subsection{React integrations}
+
+Usage of React's Suspense for managing asynchronous rendering and why each route has ErrorBoundary, Loading, and Component. How do we handle these properties in the router while these details are React-related data.
+
+\subsection{React Streaming in Partially-SSR}
+
+How React streaming works and its role in Ziro's partially-SSR mode for faster responses and progressive data rendering.
+
+
+\subsection{Challenges and Technical Solutions}
+
+Addressing issues like server-only code handling, hybrid rendering, file transformation, and scaling complexities.
+
+
+
+
+
+
+
+
 \pagebreak

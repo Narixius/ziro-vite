@@ -1,0 +1,23 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{import}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{k+kr}{as}\PYG{+w}{ }\PYG{n+nx}{rou3}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}rou3\PYGZsq{}}
+
+\PYG{k+kd}{class}\PYG{+w}{ }\PYG{n+nx}{Router}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{n+nx}{radixTree}\PYG{p}{;}
+\PYG{+w}{  }\PYG{k+kr}{constructor}\PYG{p}{(}\PYG{p}{)}\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{this}\PYG{p}{.}\PYG{n+nx}{radixTree}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{rou3}\PYG{p}{.}\PYG{n+nx}{createRouter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{  }\PYG{n+nx}{addRoute}\PYG{p}{(}\PYG{n+nx}{route}\PYG{p}{)}\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n+nx}{tree}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{route}\PYG{p}{]}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n+nx}{routePath}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{route}\PYG{p}{.}\PYG{n+nx}{id}\PYG{p}{;}
+
+\PYG{+w}{    }\PYG{k}{while}\PYG{+w}{ }\PYG{p}{(}\PYG{k+kc}{true}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{      }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{!}\PYG{n+nx}{tree}\PYG{p}{[}\PYG{l+m+mf}{0}\PYG{p}{]}\PYG{p}{.}\PYG{n+nx}{getParent}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{break}
+\PYG{+w}{      }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{parentRoute}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{tree}\PYG{p}{[}\PYG{l+m+mf}{0}\PYG{p}{]}\PYG{p}{.}\PYG{n+nx}{getParent}\PYG{p}{(}\PYG{p}{)}
+\PYG{+w}{      }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{parentRoute}\PYG{p}{)}\PYG{+w}{ }\PYG{n+nx}{tree}\PYG{p}{.}\PYG{n+nx}{unshift}\PYG{p}{(}\PYG{n+nx}{parentRoute}\PYG{p}{)}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{n+nx}{rou3}\PYG{p}{.}\PYG{n+nx}{addRoute}\PYG{p}{(}\PYG{k}{this}\PYG{p}{.}\PYG{n+nx}{radixTree}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{routePath}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{tree}\PYG{p}{)}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}

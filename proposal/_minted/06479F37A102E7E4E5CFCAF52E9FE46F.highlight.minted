@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{Middleware}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/router\PYGZsq{}}\PYG{p}{;}
+
+\PYG{c+c1}{// Middleware that logs request details and response time}
+\PYG{k}{export}\PYG{+w}{ }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{requestLogger}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Middleware}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}request\PYGZhy{}logger\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{k}{async}\PYG{+w}{ }\PYG{n+nx}{onRequest}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{dataContext}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nx}{dataContext}\PYG{p}{.}\PYG{n+nx}{responseTime}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{Date}\PYG{p}{.}\PYG{n+nx}{now}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{+w}{  }\PYG{k}{async}\PYG{+w}{ }\PYG{n+nx}{onBeforeResponse}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{request}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{dataContext}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{responseTime}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{Date}\PYG{p}{.}\PYG{n+nx}{now}\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n+nx}{dataContext}\PYG{p}{.}\PYG{n+nx}{responseTime}\PYG{p}{;}
+\PYG{+w}{    }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{pathname}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{URL}\PYG{p}{(}\PYG{n+nx}{request}\PYG{p}{.}\PYG{n+nx}{url}\PYG{p}{)}\PYG{p}{.}\PYG{n+nx}{pathname}\PYG{p}{;}
+\PYG{+w}{    }\PYG{n+nx}{console}\PYG{p}{.}\PYG{n+nx}{log}\PYG{p}{(}\PYG{l+s+sb}{`}\PYG{l+s+sb}{Request to }\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{pathname}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{ took }\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{responseTime}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{ms}\PYG{l+s+sb}{`}\PYG{p}{)}\PYG{p}{;}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\end{MintedVerbatim}
