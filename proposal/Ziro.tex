@@ -11,10 +11,20 @@
 \usepackage[colorlinks=true, linkcolor=black, citecolor=blue, urlcolor=blue]{hyperref}
 \usepackage{listings}
 \usepackage{tikz}
-\usepackage{tcolorbox}
 \usepackage{caption}
-
+\usepackage[most]{tcolorbox}
 \newcommand{\cc}[1]{\colorbox{gray!20}{\texttt{\small #1}}}
+
+\newtcolorbox[auto counter, number within=section]{hintbox}[2][]{
+  colback=black!10!white,   % Background color
+  colframe=gray!150!black,  % Border color
+  fonttitle=\bfseries,      % Title font style
+  coltitle=black,           % Title color
+  title=Hint~\thetcbcounter: #2, % Auto-numbering with counter
+  boxrule=0.5mm,            % Border thickness
+  arc=1mm,                  % Rounded corners
+  #1                        % Allow user-defined options
+}
 
 \captionsetup[figure]{font=small, skip=2pt}
 

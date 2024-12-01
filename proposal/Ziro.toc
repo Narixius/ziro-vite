@@ -11,9 +11,9 @@
 \contentsline {subsection}{\numberline {3.8}Conclusion}{16}{subsection.3.8}%
 \contentsline {section}{\numberline {4}Methodology}{18}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Building the Core of Ziro}{18}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Creating \texttt {ziro/router}}{18}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.2}Creating \colorbox {gray!20}{\texttt {\small ziro/router}}}{18}{subsection.4.2}%
 \contentsline {subsection}{\numberline {4.3}Using Test-Driven Development}{18}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Moving to \texttt {ziro/react}}{19}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.4}Moving to \colorbox {gray!20}{\texttt {\small ziro/react}}}{19}{subsection.4.4}%
 \contentsline {subsection}{\numberline {4.5}Workflow for Development}{19}{subsection.4.5}%
 \contentsline {subsection}{\numberline {4.6}Improving Type Safety with TypeScript}{20}{subsection.4.6}%
 \contentsline {subsection}{\numberline {4.7}Adding Server-Side Compatibility}{20}{subsection.4.7}%
@@ -32,11 +32,12 @@
 \contentsline {subsubsection}{\numberline {6.1.4}Parent-Child Route Relationships}{27}{subsubsection.6.1.4}%
 \contentsline {subsubsection}{\numberline {6.1.5}Example of a Basic Router and Route Definition}{28}{subsubsection.6.1.5}%
 \contentsline {subsubsection}{\numberline {6.1.6}How the Router Handles Requests}{29}{subsubsection.6.1.6}%
-\contentsline {subsubsection}{\numberline {6.1.7}Loaders}{30}{subsubsection.6.1.7}%
-\contentsline {subsubsection}{\numberline {6.1.8}Middlewares}{31}{subsubsection.6.1.8}%
-\contentsline {subsubsection}{\numberline {6.1.9}Actions}{35}{subsubsection.6.1.9}%
-\contentsline {subsubsection}{\numberline {6.1.10}Meta Functions}{39}{subsubsection.6.1.10}%
-\contentsline {subsubsection}{\numberline {6.1.11}Transitioning to Framework Development}{41}{subsubsection.6.1.11}%
+\contentsline {subsubsection}{\numberline {6.1.7}Web standards}{30}{subsubsection.6.1.7}%
+\contentsline {subsubsection}{\numberline {6.1.8}Loaders}{30}{subsubsection.6.1.8}%
+\contentsline {subsubsection}{\numberline {6.1.9}Middlewares}{31}{subsubsection.6.1.9}%
+\contentsline {subsubsection}{\numberline {6.1.10}Actions}{35}{subsubsection.6.1.10}%
+\contentsline {subsubsection}{\numberline {6.1.11}Meta Functions}{39}{subsubsection.6.1.11}%
+\contentsline {subsubsection}{\numberline {6.1.12}Transitioning to Framework Development}{41}{subsubsection.6.1.12}%
 \contentsline {subsection}{\numberline {6.2}Vite Overview}{41}{subsection.6.2}%
 \contentsline {subsection}{\numberline {6.3}Vite Plugins}{41}{subsection.6.3}%
 \contentsline {subsection}{\numberline {6.4}Manifest Generation}{41}{subsection.6.4}%

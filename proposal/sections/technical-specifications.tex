@@ -95,12 +95,12 @@ This code snippet shows how the router class initializes a \textbf{rou3} radix t
 
 \subsubsection{How the Router Handles Requests}
 
-When the \cc{router.handleRequest(request)} method is called, the router follows a systematic process to find and handle the appropriate route. Here is how the process works:
+When the \cc{router.handleRequest(request)} method is called, the router follows a \hl{systematic} process to find and handle the appropriate routes. Here is how the process works:
 
 \begin{enumerate}
   \item \textbf{Request Matching}: The handleRequest() method uses the radix tree to match the incoming request path to a specific sequence of routes. This is done by calling \cc{rou3.findRoute(this.radixTree, '', String(request.url.pathname))}
 
-  \item \textbf{Load Routes}: Once a route tree is matched, the routes should be loaded based on the incoming request. The middlewares and the loader of each route will be called in order from the parent to the child sequentially. The middlewares and loaders can intercept the request, and prevent it from proceeding by returning an early response using the \cc{abort} or \cc{redirect} util method defined in the \cc{ziro/router}.
+  \item \textbf{Load Routes}: Once a route tree is matched, the routes should be start handling the incoming request. The middlewares and the route handlers (loaders or actions) of each route will be called in order from the parent to the child sequentially. The middlewares and route handles (loaders or actions) can intercept the request, and prevent it from proceeding by throwing an early response.
 
   \item \textbf{Store the loaded data in the cache}: After calling each loader or middleware the returned data will be cached in a Cache object to be used in the rendering process and prevent data loss.
 
@@ -109,11 +109,25 @@ When the \cc{router.handleRequest(request)} method is called, the router follows
 After router find and loads a route tree, it's ready to be rendered on the page using a rendering library. In this project we have the \cc{ziro/react} to render the router in the React environment.
 
 
+\subsubsection{Web standards}
+% \begin{hintbox}[label={hint:example}]{Web standards}
+% \end{hintbox}
+
+The Ziro Router is built on top of web standards, specifically the \cc{Request} and \cc{Response} objects. These objects are part of the Fetch API, which is a standard way to handle HTTP requests and responses in JavaScript. By leveraging these web standards, Ziro ensures compatibility and consistency across different environments, whether it's running on the client-side in a browser or server-side in a Node.js environment. Every loader, action or middleware described bellow has access to the request/response objects (based on their responsibility) to handle the incoming request and the response object to intercept the generated response and do proper action if needed.
+
+% \subsubsection*{Benefits of Using Web Standards}
+% \begin{itemize}
+%   \item \textbf{Consistency}: Using \cc{Request} and \cc{Response} objects ensures that the same code can handle HTTP requests and responses in a consistent \hl{manner} across different environments.
+%   \item \textbf{Interoperability}: Web standards are widely supported, making it easier to integrate with other libraries and frameworks that also \hl{adhere} to these standards.
+%   \item \textbf{Future-Proofing}: As web standards evolve, Ziro can take advantage of new features and improvements without needing significant changes to its core architecture.
+% \end{itemize}
+
+
 \subsubsection{Loaders}
 Loaders are essential functions for building dynamic and data-driven applications with Ziro. They help manage data fetching and preparation before a route’s main content is rendered. Understanding how to use loaders is key to building applications that are both efficient and maintainable.
 
 \subsubsection*{What are Loaders in Ziro?}
-Loaders in Ziro are functions associated with routes that handle data fetching and preparation. They are especially valuable for server-side data loading, enabling data to be fetched from external APIs, databases, or other sources. Loaders are executed after the middlewares registered on the route and before starting the process of loading the nested routes.
+Loaders in Ziro are functions \hl{associated} with routes that handle data fetching and preparation. They are especially valuable for server-side data loading, enabling data to be fetched from external APIs, databases, or other sources. Loaders are executed after the middlewares registered on the route and before starting the process of loading the nested routes.
 
 \pagebreak
 \subsubsection*{Example of a Simple Loader}
