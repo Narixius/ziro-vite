@@ -1,0 +1,27 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{Plugin}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/generator\PYGZsq{}}\PYG{p}{;}
+
+\PYG{k+kr}{type}\PYG{+w}{ }\PYG{n+nx}{Config}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{n+nx}{dashboardPath}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{string}\PYG{p}{;}\PYG{+w}{ }\PYG{c+c1}{// The route path for the dashboard page}
+\PYG{p}{\PYGZcb{}}\PYG{p}{;}
+
+\PYG{k}{export}\PYG{+w}{ }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{dashboardPlugin}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Plugin}\PYG{o}{\PYGZlt{}}\PYG{n+nx}{Config}\PYG{o}{\PYGZgt{}}\PYG{p}{(}
+\PYG{+w}{  }\PYG{l+s+s1}{\PYGZsq{}dashboard\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{c+c1}{// Plugin name}
+\PYG{+w}{  }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nx}{registerRoutes}\PYG{p}{(}\PYG{n+nx}{config}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{      }\PYG{k}{return}\PYG{+w}{ }\PYG{p}{[}
+\PYG{+w}{        }\PYG{p}{\PYGZob{}}
+\PYG{+w}{          }\PYG{n+nx}{routeId}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{config.dashboardPath}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}/dashboard\PYGZsq{}}\PYG{p}{,}
+\PYG{+w}{          }\PYG{n+nx}{filePath}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{new}\PYG{+w}{ }\PYG{n+nx}{URL}\PYG{p}{(}
+\PYG{+w}{            }\PYG{l+s+s1}{\PYGZsq{}./dashboard.tsx\PYGZsq{}}\PYG{p}{,}
+\PYG{+w}{            }\PYG{k}{import}\PYG{p}{.}\PYG{n+nx}{meta}\PYG{p}{.}\PYG{n+nx}{url}
+\PYG{+w}{          }\PYG{p}{)}\PYG{p}{.}\PYG{n+nx}{pathname}\PYG{p}{,}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{+w}{      }\PYG{p}{]}\PYG{p}{;}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{+w}{  }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nx}{configPath}\PYG{o}{:}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}configs/dashboard.ts\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{c+c1}{// Path to the plugin\PYGZsq{}s configuration file}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{p}{)}\PYG{p}{;}
+\end{MintedVerbatim}

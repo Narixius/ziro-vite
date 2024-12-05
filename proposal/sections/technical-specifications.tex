@@ -426,78 +426,673 @@ While Ziro's core libraries provide powerful capabilities for handling routing, 
 
 \subsection{Vite Overview}
 
-Explanation of what Vite is and its key features, including fast build times and Hot Module Replacement (HMR).
+Vite is a next-generation frontend tooling system that provides a fast and efficient development environment for modern web applications. By leveraging features like on-demand module loading, hot module replacement (HMR), and support for server-side rendering (SSR), Vite creates a seamless experience for developers building frameworks like Ziro.
 
-\subsection{Vite Plugins}
+\subsubsection*{Why Vite Enables Framework Development}
+\begin{itemize}
+	\item \textbf{Dynamic Module Loading}: Vite’s \cc{ssrLoadModule} method is a game-changer for frameworks. It allows modules to be dynamically loaded during SSR, making it possible to execute Javascript on-demand and generate updated values on the server based on latest file changes.
+	\item \textbf{Hot Module Replacement (HMR)}: HMR drastically reduces development time by enabling instant updates to modules without requiring a full page reload. This feature is invaluable when working on a project, where frequent changes to files need immediate feedback.
+	\item \textbf{File Watching and Auto Reload}: Vite’s built-in file-watching mechanism ensures that any changes to the project’s codebase are automatically detected. Combined with its optimized reload system, Vite provides a smooth development experience even for large-scale applications.
+	\item \textbf{Enhanced SSR Capabilities}: Vite simplifies the implementation of server-side rendering by providing tools to manage server and client-side modules separately. This separation ensures that Ziro’s SSR functionality remains maintainable.
+	\item \textbf{Plugin System}: Vite’s extensible plugin system allows Ziro to integrate additional functionality, such as generating route-related files (\cc{ziro/generator}) and handling file-based routing.
+	\item \textbf{Vite is Fast}: By utilizing native ES modules (ESM), Vite removes the need for traditional bundling during development. This results in lightning-fast startup times, even for complex projects.
+\end{itemize}
 
-Description of what Vite plugins can do and how Ziro leverages them for tasks like route generation, file transformation, and plugin integration.
+In summary, Vite’s robust feature set and modern approach to tooling make it an ideal choice for bootstrapping a development server for Ziro. It not only accelerates the development process but also ensures that the resulting framework is scalable and maintainable.
+
+\subsection{Vite Plugins and Their Role in Ziro}
+
+Vite plugins are essential tools that extend the functionality of Vite, allowing developers to customize and automate parts of the development and build process. In the context of Ziro, Vite plugins play an important role in detecting file changes, generating route-related files and generating server-side rendered pages.
+
+\subsubsection{How Vite Plugins Work}
+A Vite plugin is essentially a JavaScript function or object that hooks into various stages of the Vite lifecycle\footnote{\url{https://vite.dev/guide/api-plugin}}, such as server startup, file changes, and builds. These plugins use Vite's robust API to perform tasks like file processing, module transformation, and custom behavior during development or production builds.
+
+\subsubsection{File Watching and Route Detection}
+Vite comes with a file-watching system based on the chokidar\footnote{\url{https://github.com/paulmillr/chokidar}} library, which monitors the file system for changes. This feature allows Ziro’s Vite plugin to:
+\begin{itemize}
+	\item \textbf{Track Route Files}: By watching specific directories (like \cc{pages/}), the plugin can detect when a new route file is added, modified, or removed.
+	\item \textbf{Trigger Updates}: When changes are detected, the plugin triggers the generation of files necessary for the router to work correctly.
+\end{itemize}
+
+\subsubsection{Generating Route-Related Files}
+When a change is detected in the route files, Ziro’s Vite plugin takes the following steps to ensure the router remains up to date:
+
+\begin{enumerate}
+	\item \textbf{Manifest Generation}: A \cc{manifest.json} file is created, containing information about each route, such as its path, associated middleware, loaders, actions, etc...
+	\item \textbf{Server and Client Router Files}: Separate router files are generated for server-side (\cc{router.server.ts}) and client-side(\cc{router.client.ts}) usage. The server router handles SSR-specific logic, while the client router is optimized for browser execution, including lazy loading\footnote{\url{https://react.dev/reference/react/lazy}} for route components.
+	\item \textbf{TypeScript Definitions (\cc{routes.d.ts})}: The plugin generates a TypeScript file that defines types for all routes. This ensures type safety, making it easier for developers to work with route data in a consistent way.
+\end{enumerate}
+
+\subsubsection{Benefits of Vite Plugins in Ziro}
+\begin{itemize}
+	\item \textbf{Automation}: Developers don’t need to manually update route configurations or related files when they add or modify routes. The plugin handles everything automatically. It generates the route objects (\cc{new Router(...)}) based on the exports of the route files.
+	\item \textbf{Efficiency}: By using Vite's built-in file watching and caching mechanisms, updates are fast and incremental, meaning only the affected files are regenerated.
+	\item \textbf{Consistency}: The plugin ensures that all generated files, such as \cc{routes.d.ts}, are always in sync with the file system. This reduces the risk of bugs caused by mismatched configurations.
+	\item \textbf{Dynamic File Transformation}: During the build or development process, the plugin can modify or transform route modules to exclude server-only logic or optimize for the client environment.
+\end{itemize}
 
 \subsection{Manifest Generation}
 
-How Ziro gathers route information, such as middlewares, loaders, and other properties, to create manifest.json and how it's used to ensure consistency in generating router files.
+To maintain a single source of truth and support server/client-specific routers, Ziro generates a manifest file that encapsulates all route-related information. This manifest serves as a centralized repository, containing details about each route and its associated exports. It simplifies route management, type generations, and ensures that both server-side and client-side routers built on single source of truth.
 
-\subsection{File Generation}
+\subsubsection{Why a Manifest is Necessary}
 
-How Ziro generates key files like router.server.ts, router.client.ts, and routes.d.ts for server, client, and type safety integration.
+In file-based routing systems, routes are defined dynamically based on the structure of route files and their exported variables. The manifest acts as the backbone of this system by:
 
-\subsection{TypeScript Integration and Generic Types}
+\begin{itemize}
+	\item Storing metadata about each route file, including its path and exported properties.
+	\item Facilitating the generation of server and client router files with consistent data.
+\end{itemize}
 
-TypeScript type definitions and generic types support route type safety.
+\subsubsection{Structure of the Manifest}
+A manifest is represented as a \textbf{JSON} object. Below is an example of a manifest for a simple application with a root, layout and a single page at \cc{/}:
 
-Explanation of how the routes.d.ts file is generated and used to create a type-aware development experience.
+\pagebreak
+\begin{figure}[H]
+\begin{minted}{json}
+{
+  "/_root": {
+    "id": "/_root",
+    "routeInfo": {
+      "filepath": "pages/_root.tsx",
+      "index": false,
+      "hasActions": false,
+      "hasComponent": true,
+      "hasErrorBoundary": true,
+      "hasLoader": true,
+      "hasLoadingComponent": true,
+      "hasMeta": true,
+      "hasMiddleware": true,
+      "hasLayout": true
+    }
+  },
+  "/_layout": {
+    "id": "/_layout",
+    "routeInfo": {
+      "filepath": "pages/_layout.tsx",
+      "index": false,
+      "hasActions": false,
+      "hasComponent": true,
+      "hasErrorBoundary": true,
+      "hasLoader": true,
+      "hasLoadingComponent": true,
+      "hasMeta": true,
+      "hasMiddleware": false,
+      "hasLayout": true
+    },
+    "parentId": "/_root"
+  },
+  "/": {
+    "id": "/",
+    "routeInfo": {
+      "filepath": "pages/index.tsx",
+      "index": true,
+      "hasActions": false,
+      "hasComponent": true,
+      "hasErrorBoundary": false,
+      "hasLoader": true,
+      "hasLoadingComponent": true,
+      "hasMeta": true,
+      "hasMiddleware": false,
+      "hasLayout": false
+    },
+    "parentId": "/_layout"
+  }
+}
+\end{minted}
+\caption{Example of manifest with 1 route at \cc{/}}
+\end{figure}
 
-The benefits of leveraging TypeScript's generic types to maintain consistent type relationships between routes and their data, enhancing developer productivity and reducing potential errors.
+\pagebreak
 
-\subsection{Benefits of ESM (ES Modules)}
+\subsubsection{Components of the Manifest}
+\begin{enumerate}
+  \item \textbf{Route ID (\cc{id})}: A unique identifier for the route, corresponding to its path.
+  \item \textbf{Route Information (\cc{routeInfo})}: Details about the route file, such as:
+  \begin{itemize}
+    \item \cc{filepath}: The relative path to the file in the project structure.
+    \item \cc{index}: Indicates if the route is an index route.
+    \item \cc{hasComponent}: Indicates if the file has a default export.
+    \item \cc{hasLayout}: Indicates if the file has a export called 'layout'.
+    \item \cc{hasErrorBoundary}: Indicates if the file exports a variable called \cc{ErrorBoundary} (a React specific rule).
+    \item \cc{hasLoader}: Indicates if the file exports a variable called \cc{Loading} (a React specific rule).
+    \item \cc{hasLoader},\cc{hasActions} \cc{hasMeta}, \cc{hasMiddleware}: Flags for other exported properties like loaders, actions, meta functions, and middleware.
+  \end{itemize}
 
-How ESM simplifies dynamic imports, route generation, and the modular design of Ziro.
+  \item  \textbf{Parent ID (\cc{parentId})}: Specifies the parent route for nested routes, enabling hierarchical routing.
+\end{enumerate}
 
-\subsection{Middleware Functionality}
+\subsubsection{How the Manifest is Generated}
+\begin{enumerate}
+  \item \textbf{File System Analysis}: During the development server's startup, Ziro uses Vite's file system watcher and the \cc{es-module-lexer}\footnote{\url{https://github.com/guybedford/es-module-lexer}} library to scan the project directory for route files.
+  \item \textbf{Export Inspection}: For each route file, \cc{es-module-lexer} identifies the exported variables (e.g., \cc{loader}, \cc{meta}, \cc{actions}, \cc{middleware}, \cc{Loading}, \cc{ErrorBoundary}, and the \cc{default} component).
+  \item \textbf{Manifest Construction}: The gathered data is structured into a JSON object following the manifest format.
+\end{enumerate}
 
-How middlewares can intercept requests and stack during the request handling process.
+\subsubsection{Output of Manifest Generation}
+Once the manifest is created, it serves as the input for generating \cc{router.server.ts} and \cc{router.client.ts}. These files contain optimized routing logic tailored for the server and client environments, respectively.
 
-\subsection{Data Loading in the Router}
+For example:
+\begin{itemize}
+  \item \cc{router.server.ts} runs only on the server and handles server-side routing, including loaders, actions and middleware.
+  \item \cc{router.client.ts} runs on the browser and focuses on client-side navigation and lazy loading components.
+\end{itemize}
+The manifest ensures that both files are generated consistently, reflecting the same route structure.
 
-Importance of server-side data loading for performance, SEO, and streamlined development workflows.
+
+\subsubsection{Why This Approach Works}
+By using a manifest file, Ziro achieves:
+\begin{itemize}
+  \item Both server and client routers share a single source of truth.
+  \item The manifest is generated automatically during development, reducing manual configuration.
+  \item New routes and modifications are detected dynamically, updating the manifest and routers in real time.
+\end{itemize}
+
+This process forms the foundation of Ziro’s file-based routing system, enabling seamless integration of server and client functionality.
+
+\textbf{Hint}: By extending the \cc{manifest.json} we can add custom pages or layouts out of the project directory to our app. It happens because the server/client router will be generated based on this manifest file. This is actually the basis of the Ziro Plugin which will be discussed further in the next sections.
+
+\subsubsection{Example of a route serves at \cc{/}}
+\begin{figure}[H]
+\begin{minted}{javascript}
+// pages/index.tsx
+
+import { MetaFn } from 'ziro/router'
+
+export const loader = async () => {
+  return fetch('https://api.example.com/data').then(r => r.json())
+}
+
+export const meta: MetaFn<'/'> = async () => {
+  return {
+    title: 'Homepage',
+  }
+}
+
+export default function Index() {
+  return (
+    <div>
+      <h1>Home page</h1>
+    </div>
+  )
+}
+
+export const Loading = () => {
+  return <span>Loading...</span>
+}
+
+export const ErrorBoundary = () => {
+  return <span>Something went wrong, please reload the page.</span>
+}
+\end{minted}
+\end{figure}
+In this example, when this route is going to to be rendered on the browser, it shows the \cc{Loading} component while the data is being fetched and the \cc{ErrorBoundary} component if an error occurs during the loading process. The \cc{meta} function is used to set the page title to "Homepage" when the route is rendered on the browser. The \cc{loader} function fetches data from an API endpoint and returns it to be used in the component. The \cc{default} export is the main component that will be rendered when the route is loaded successfully.
+\pagebreak
+
+\subsection{Router Generation}
+
+As described in the previous section, to ensure a seamless routing experience tailored for both client and server environments, Ziro generates two distinct router files based on the manifest: \cc{router.client.ts} and \cc{router.server.ts}. These files contain the necessary routing logic optimized for their respective environments.
+
+\subsubsection{Client-Side Router (\cc{router.client.ts})}
+The client-side router is designed to handle navigation and dynamic component loading in the browser. It leverages React’s \cc{lazy} for code splitting and ensures that components, meta functions, and loading/error boundaries are loaded only when needed.
+
+\begin{figure}[H]
+\begin{minted}{javascript}
+import { Router, Route } from 'ziro/router';
+import { lazy } from 'react';
+
+const router = new Router({ "mode": "csr" });
+
+const dynImport = () => import("../pages/index")
+
+const pages_indexRoute = new Route("/", {
+  meta: (...args) => dynImport().then(m => m.meta(...args)),
+  loader: (...args) => dynImport().then(m => m.loader(...args)),
+  props: {
+    component: lazy(dynImport),
+    ErrorBoundary: lazy(() => dynImport().then(m => ({ default: m.ErrorBoundary }))),
+    LoadingComponent: lazy(() => dynImport().then(m => ({ default: m.Loading }))),
+    Layout: lazy(() => dynImport().then(m => ({ default: m.Layout }))),
+  },
+});
+router.addroute(pages_indexRoute);
+
+// Similar logic for other routes...
+
+export router;
+\end{minted}
+\caption{Example of router.client.ts}
+\end{figure}
+
+\textbf{Details}:
+\begin{itemize}
+  \item Components and route parts (\cc{meta}, \cc{loader}) are lazily loaded using \cc{import()} to optimize performance so only the required parts of the app are downloaded as users navigate between routes.
+  \item Props defines the Component, Loading, and ErrorBoundary for each route.
+\end{itemize}
+
+\subsubsection{Server-Side Router (\cc{router.server.ts})}
+
+The server-side router focuses on server-specific logic, such as loaders and middleware. This file is responsible for handling requests and preparing the data needed for server-side rendering.
+
+\begin{figure}[H]
+\begin{minted}{javascript}
+import { Router, Route } from 'ziro/router';
+import * as pagesIndex from '../pages/index';
+
+const router = new Router({ "mode": "csr" });
+
+const pagesIndexRoute = new Route("/", {
+  meta: pagesIndex.meta,
+  loader: pagesIndex.loader,
+  props: {
+    component: pagesIndex.default,
+    ErrorBoundary: pagesIndex.ErrorBoundary,
+    LoadingComponent: pagesIndex.Loading,
+    Layout: pagesIndex.Layout,
+  },
+});
+router.addroute(pages_indexRoute);
+
+// Similar logic for other routes...
+
+export router;
+\end{minted}
+\caption{Example of router.server.ts}
+\end{figure}
+
+\textbf{Details}:
+\begin{itemize}
+  \item All components and metadata are directly imported, as the server does not benefit from lazy loading.
+  \item When router mode has set to \cc{ssr} or \cc{partially-ssr}, the server router file includes server-only logic like loaders for data fetching and middleware for request handling. In this case, the \cc{router.client.ts} doesn't include the server methods (loaders, middlewares or actions).
+\end{itemize}
+
+\subsubsection{Why Two Separate Router Files?}
+The client router needs to be optimized for browser environment by importing the route modules dynamically, while the server router focuses on loading all required resources to handle SSR in a single file. To achieve this, we need to have 2 seperated files with totally different syntaxes. Also server and client have different requirements for resource loading and routing logic. Separating these concerns ensures a safer architecture as the server-logic code doesn't get leaked to the browser. For example, when the router mode is set to \cc{ssr}, the client router file doesn't include server-only logic like \cc{loaders} and \cc{middlewares}, which should be run on the server.
+
+\subsection{TypeScript Integration}
+During file generation chain of Ziro, a typescript declaration file will be generated called \cc{routes.d.ts}. It acts as the type declaration file for all routes in the application, ensuring that developers can rely on accurate type information for each route.
+
+Here’s a sample of a generated routes.d.ts file:
+
+\begin{figure}[H]
+\begin{minted}{typescript}
+import {
+  Route,
+  LoaderReturnType,
+  IntersectionOfMiddlewaresResult,
+  GetRouteDataContext
+  } from 'ziro/router';
+import * as pages_root from '../pages/_root';
+import * as pagesIndex from '../pages/index';
+
+declare module 'ziro/router' {
+  interface RouteFilesByRouteId {
+    "/_root": {
+      route: Route<
+        "/_root",
+        LoaderReturnType<typeof pages_root.loader>,
+        {},
+        typeof pages_root.middlewares,
+        undefined
+      >;
+      dataContext: {} & IntersectionOfMiddlewaresResult<
+        typeof pages_root.middlewares
+      >;
+    };
+    "/": {
+      route: Route<
+        "/",
+        LoaderReturnType<typeof pagesIndex.loader>,
+        {},
+        [],
+        RouteFilesByRouteId["/_root"]["route"]
+       >;
+      dataContext: GetRouteDataContext<"/_root"> &
+        IntersectionOfMiddlewaresResult<[]>;
+    };
+  }
+  interface RoutesByRouteId {
+    routes: "/";
+  }
+}
+\end{minted}
+\caption{Example of routes.d.ts}
+\end{figure}
+
+\textbf{Explanation Key Components}
+\begin{itemize}
+  \item \cc{RouteFilesByRouteId} Interface:
+  \begin{itemize}
+    \item Maps each \cc{route ID} (e.g., "\/\_root") to its corresponding route configuration.
+    \item Includes:
+    \begin{itemize}
+      \item \cc{route}: Defines the route structure using the Route type, including its loader, actions, middlewares, meta function, and parent route.
+      \item \cc{dataContext}: Specifies the combined data context derived from middlewares and parent routes.
+    \end{itemize}
+  \end{itemize}
+
+  \item \cc{RoutesByRouteId} Interface:
+  \begin{itemize}
+    \item Lists all \textbf{index-only} \cc{route IDs} in the application for quick reference.
+    \item Useful for navigating user to a destination within the app.
+
+  \end{itemize}
+
+  \item Generic Types:
+  \begin{itemize}
+    \item Route: The core generic type defining the structure of a route. Includes:
+    \begin{itemize}
+      \item Route ID.
+      \item  Return type of the loader.
+      \item Types for actions and middlewares.
+      \item Parent route structure.
+    \end{itemize}
+  \end{itemize}
+
+
+  \item \cc{LoaderReturnType}: Infers the return type of a loader, ensuring accurate typing for loaded data.
+  \item \cc{IntersectionOfMiddlewaresResult}: Merges the output of all middlewares in the route hierarchy into a single type.
+  \item \cc{GetRouteDataContext}: Retrieves the data context for a specific \cc{route ID}, combining parent and middleware data. It's added in a seperated property to avoid loop in type definition.
+\end{itemize}
+
+\subsubsection*{How This Helps in Development?}
+Having a fully typed version of the router, makes it possible to write some utility types around it to make the whole app typesafe. For example, the \cc{loader} function in each route, should be typesafe and aware of it's parent data (As explained, parent loaded data should be accessible in the child loader). But how is that possible? The \cc{routes.d.ts} file is the answer. It owns the necessary types to make the loaders typesafe. For example, the \cc{LoaderArgs} is a utility type that has been written around \cc{RouteFilesByRouteId} interface (which is overridden in the \cc{routes.d.ts} file) that provides necessary types to the loader. Here is an example of how to use it:
+\begin{minted}{typescript}
+// pages/_root.tsx
+  import { LoaderArgs } from 'ziro/router'
+
+  export const loader = (ctx: LoaderArgs<'/_root'>) => {
+    // the root's loader returns some random data like:
+    return {
+      version: '1.0'
+    }
+  }
+
+// pages/index.tsx
+  import { LoaderArgs } from 'ziro/router'
+
+  export const loader = (ctx: LoaderArgs<'/todo'>) => {
+    // ctx is fully type safe and it's parent data is accessible and typesafe
+    // here ctx.dataContext.version is available and fully typesafe.
+    return {
+      appName: `My App v${ctx.dataContext.version}`
+    }
+  }
+\end{minted}
+\pagebreak
+
+\subsection{Ziro Plugins}
+
+Ziro’s plugin system is a powerful feature that allows developers to extend their applications by adding custom routes, layouts, and functionality in a modular and reusable way. By integrating directly with the \cc{manifest.json} file, plugins can introduce new pages or layouts that seamlessly integrate with the existing application’s routing structure. This system is particularly useful for building scalable applications where features can be added or modified without directly changing the core codebase.
+
+\subsubsection{How Ziro Plugins Work}
+
+Ziro plugins are registered in the \cc{vite.config.js} file, because they have to integrate with the framework’s manifest generation process. For example:
+\begin{minted}{javascript}
+import { dashboard } from './plugins/dashboard';
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    ziro({
+      plugins: [dashboard],
+    }),
+  ],
+});
+\end{minted}
+
+When the development server starts, Ziro detects the registered plugins and triggers their \cc{registerRoutes} method during the manifest generation process. The plugins then add custom routes or layouts to the \cc{manifest.json} file. This ensures that both server and client routers include the new additions during the file generation process.
+
+\subsubsection{Simplified Example of a Ziro Plugin}
+\begin{figure}[H]
+  \begin{minted}{typescript}
+import { Plugin } from 'ziro/generator';
+
+type Config = {
+  dashboardPath: string; // The route path for the dashboard page
+};
+
+export const dashboardPlugin = new Plugin<Config>(
+  'dashboard', // Plugin name
+  {
+    registerRoutes(config) {
+      return [
+        {
+          routeId: config.dashboardPath || '/dashboard',
+          filePath: new URL(
+            './dashboard.tsx',
+            import.meta.url
+          ).pathname,
+        },
+      ];
+    },
+  },
+  {
+    configPath: 'configs/dashboard.ts', // Path to the plugin's configuration file
+  },
+);
+  \end{minted}
+  \caption{Simplified Example of a Ziro Plugin}
+\end{figure}
+
+\subsubsection{Key Components of the Plugin}
+The Ziro plugin system includes several core components that work together to extend the application's functionality. The plugin’s \cc{name}, such as dashboard, uniquely identifies it and ensures it can be reused and distinguished from other plugins. A configuration object (\cc{Config}) allows developers to type the plugin’s config. The \cc{registerRoutes} method defines the custom routes introduced by the plugin, including a unique identifier (\cc{routeId} or \cc{path}) and the location of the file that implements the route’s component (\cc{filePath}). Additionally, the \cc{configPath} provides a pointer to an external configuration file (\cc{configs/dashboard.ts}), which makes it possible to config the plugins based on project needs.
+
+\subsubsection{How Plugins Modify the Manifest}
+When a plugin is added, it extends the \cc{manifest.json} file with additional route definitions. For example:
+\begin{minted}{json}
+{
+  "/dashboard": {
+    "id": "/dashboard",
+    "routeInfo": {
+      "filepath": "./node_modules/installed-plugin/dashboard.tsx",
+      "index": true,
+      "hasActions": false,
+      "hasComponent": true,
+      "hasErrorBoundary": false,
+      "hasLoader": false,
+      "hasLoadingComponent": false,
+      "hasMeta": false,
+      "hasMiddleware": false,
+      "hasLayout": false
+    },
+    "plugin": "dashboard"
+  }
+}
+\end{minted}
+This manifest entry ensures that the server and client routers include the new \cc{/dashboard} route when they are generated. The plugin system effectively decouples feature development from the core project, making it easier to add and manage new functionality.
+
+Ziro plugins can be used to address a variety of practical needs, such as adding authentication systems, admin dashboards, or analytics tools. For example, a plugin can introduce login, registration, and authentication-related routes while also providing logic for securing specific pages. Similarly, admin dashboards can be added as pre-built pages and layouts, complete with tools like rate-limiting middleware for sensitive sections and their child routes. For e-commerce applications, plugins can enable features like shopping carts, product pages, and checkout workflows. These use cases demonstrate the flexibility and power of Ziro plugins to simplify development and enhance application functionality.
 
 \subsection{Request Handling on the Server}
 
-How the server processes incoming requests and utilizes generated route files.
+In Ziro, request handling on the server is a critical part of activating server-side rendering (SSR). When a request is made, the server must load the router and prepare a response based on the application’s routing logic and data-loading mechanisms. This process ensures that users receive the appropriate response, whether it’s a fully-rendered page or a partially-streamed HTML document.
 
-\subsection{Why H3 as the Web Server?}
+\subsubsection{SSR Activation and Router Loading}
+To handle requests in SSR mode, the server must render the router. This involves loading all routes by executing their associated middlewares and loaders sequentially, starting from the parent routes and proceeding to their children. The sequential execution ensures that:
+\begin{itemize}
+  \item \textbf{Middlewares} process the request, performing tasks such as authentication, validation, or request transformation.
+  \item \textbf{Loaders} fetch the necessary data for each route, building the context needed for rendering the page.
+\end{itemize}
+If any middleware or loader throws a response (e.g., a redirect or error response), the server immediately sends this response back to the user without further processing. This mechanism guarantees precise handling of redirects, errors, and other special cases.
 
-Reasons for selecting H3 as Ziro's web server, including its runtime agnosticism and compatibility with Vite.
+\subsubsection{Handling SSR and Partially-SSR Modes}
+\begin{itemize}
+  \item \textbf{SSR Mode}: In SSR mode, the server waits for all routes to finish their loading processes. This ensures that the full HTML document is ready before sending it to the user. While this approach ensures a complete response, it may increase the initial response time.
+  \item \textbf{Partially-SSR Mode}: In partially-SSR mode, the server begins streaming the HTML to the user as soon as possible. Instead of waiting for all routes to complete their loaders, it sends the initial HTML structure and streams additional content as it becomes available. This approach significantly reduces the perceived loading time for users, improving their experience.
+\end{itemize}
+In both modes, if no error or custom response is thrown during the loading process, the server proceeds to render the router using \cc{renderToReadableStream} (from React library). This method generates a stream of HTML that is sent to the user incrementally.
 
-\subsection{The client entry point.}
+\subsubsection{Integration with the Web Server}
+To manage these processes, Ziro integrates with a web server. The chosen server framework, \textbf{H3}, handles the HTTP requests and responses while coordinating with Ziro’s router logic. This integration ensures smooth and efficient delivery of server-rendered pages and guarantees that the server works regardless of the Vite's development server as in the production environment, the server is responsible for handling all requests and responses without Vite.
 
-How Ziro generates and injects the main JavaScript file into the HTML sent to users.
+\subsubsection{Why H3 as the Web Server?}
 
-\subsection{Client JavaScript  Transformation}
+H3 was chosen as the web server for Ziro due to its modern and lightweight design, making it an ideal fit for handling the needs of a high-performance SSR framework. H3 is a runtime-agnostic web framework built on top of popular technologies that offer both flexibility and performance.
 
-Transformation of chunked JS files using Vite and Babel to control code exposing.
+A key feature of H3 is its runtime-agnostic nature, which provides support for different types of request handlers. In Ziro, this means that H3 can operate seamlessly on top of the standard Web \cc{Request} and \cc{Response} interfaces, ensuring full compatibility and a consistent handling experience. This allows Ziro to process HTTP requests and responses efficiently while supporting SSR logic, middleware execution, and data loading in a streamlined manner.
 
-\subsection{Route Modes in Ziro}
+Another significant advantage of using H3 is its capability to deploy applications across different runtimes without the need for multiple adapters. Whether deploying on \cc{Cloudflare workers/pages}, \cc{Bun}, or \cc{Deno}, H3 handles the compatibility, simplifying the deployment process and making it easier to maintain cross-runtime consistency.
 
-Explanation of SSR, CSR, and partially-SSR modes, and their impact on performance and rendering.
+Overall, H3's efficient handling of HTTP requests, runtime flexibility, and compatibility with modern web standards make it the perfect choice for supporting Ziro’s request handling and server-side rendering capabilities.
 
 \subsection{React integrations}
 
-Usage of React's Suspense for managing asynchronous rendering and why each route has ErrorBoundary, Loading, and Component. How do we handle these properties in the router while these details are React-related data.
+Ziro’s core router library, \cc{ziro/router}, is designed as a headless routing solution, which means it handles routing logic without any built-in user interface (UI). To bring this routing logic to life in a web application, a UI integration is necessary. This is where \cc{ziro/react} comes into play, making it possible to connect Ziro’s routing capabilities with React applications.
 
-\subsection{React Streaming in Partially-SSR}
+\subsubsection{Setting Up React Integration}
+To integrate Ziro with React, the client-side entry point of the application is typically a JSX file that renders the router to the DOM. Here is an example of how the main entry file might look:
+\begin{minted}{javascript}
+import { hydrateRoot } from 'react-dom/client';
+import { Router } from 'ziro/react';
+import router from '/.ziro/router.client.ts';
 
-How React streaming works and its role in Ziro's partially-SSR mode for faster responses and progressive data rendering.
+hydrateRoot(document, <Router router={router} />);
+\end{minted}
+
+In this setup, the \cc{hydrateRoot} method from React is used to render the router into the existing HTML structure. The Router component from \cc{ziro/react} takes the router prop, which is imported from the generated \cc{router.client.ts} file. Once the router is loaded and ready, it will handle the rendering of the route components on the page, making the application fully interactive.
+
+\subsubsection{Key Utilities for React Integration}
+To make Ziro compatible with the React ecosystem, \cc{ziro/react} provides several utilities that enhance its integration:
+\begin{itemize}
+  \item \textbf{\cc{Link} Component}: This component allows for seamless navigation between pages within the application. It functions similarly to the Link component from \textbf{React Router}\footnote{\url{https://reactrouter.com/start/library/navigating\#link}}, making it intuitive for developers familiar with React.
+  \item \textbf{\cc{useAction} Method}: The useAction method provides a way to call route actions directly from React components. This utility helps handle user interactions that need to trigger route-based actions, such as form submissions or other state-changing events fully type-safe.
+\end{itemize}
+
+\subsection{Client-Only Server-Only Transformation}
+
+When using SSR (Server-Side Rendering) in Ziro, it's essential to ensure that server-only code, such as database connections and private API calls, is not exposed to the client-side JavaScript. Ziro achieves this by integrating Vite and \textbf{Babel}\footnote{\url{https://babeljs.io/}} to transform route modules and control what is sent to the client.
+
+Vite, which is based on ECMAScript modules (ESM), provides a fast and efficient development server by transforming modules on demand. This means that Vite only processes code when a module is requested by the browser, leading to quicker development and optimized builds. Ziro's Vite plugin takes advantage of this by adding a custom step to the transformation process. When a route module is requested, the plugin uses Babel to scan and remove any server-specific code, such as loaders, actions, and middlewares, ensuring that only client-compatible code remains.
+
+This approach protects sensitive server-side operations, such as database queries or internal API interactions, from being exposed in the client-side bundle. It maintains the security of the application while delivering an optimized, lightweight JavaScript bundle for the browser. By leveraging Vite's ESM-based transformation and adding custom filtering logic with the Ziro plugin, this method enhances both performance and security.
 
 
-\subsection{Challenges and Technical Solutions}
+\subsubsection{Caching, the Shared Layer Between Server and Client}
 
-Addressing issues like server-only code handling, hybrid rendering, file transformation, and scaling complexities.
+Data caching plays a crucial role in synchronizing server-side rendered (SSR) routes with the client to ensure efficient data transfer and rendering. In Ziro, this mechanism is designed to optimize data flow between the server and client, providing a seamless and fast user experience.
+
+In SSR mode, the server is responsible for running the middlewares, loaders and actions to load data. When a client makes a request for a route, the client router sends a request to the server to retreive the necessary data. The server processes this request, executes the necessary middlewares and loaders and loads the relevant data using the route loaders. During this data loading phase, the server generates a cache object containing the route data and responses. This cache object is then serialized as JSON and sent back to the client router. The client router receives this cached data and directly loads it into its own router cache. The client router can then use the data stored in its cache to render the components.
+
+In contrast, in Client-Side Rendering (CSR) mode, data handling is managed entirely on the client. Since the server only serves a minimal HTML shell and static assets, all loaders, middlewares, and data-fetching operations are executed within the client's browser. The client fetches data as needed using JavaScript running in the browser, so there is no need for a data synchronization process from the server. This approach simplifies the interaction and reduces server load but may result in longer initial load times compared to SSR.
+
+This data caching strategy in SSR mode ensures consistency between the server-rendered output and the client's rendered state, providing a smooth transition when the page is loaded. By reusing the data already fetched and processed by the server, the client can render routes quickly without additional network requests.
 
 
+\subsection{How to setup a project using Ziro}
+
+Setting up a project with Ziro involves creating a React-based Vite project, installing the Ziro package, and configuring both Vite and TypeScript to integrate Ziro's routing and rendering system. Below, we'll walk you through the necessary steps to get your Ziro project up and running.
+
+\begin{enumerate}
+  \item \textbf{Create a React-Vite Project} First, create a new Vite project with the React template using the following command:
+  \begin{minted}{bash}
+    npm create vite@latest my-ziro-app -- --template react-ts
+  \end{minted}
+  This command will create a new React project with TypeScript support.
+
+  \item \textbf{Install the Ziro Package} Navigate to your project directory and install the Ziro package:
+  \begin{minted}{bash}
+    npm i ziro
+  \end{minted}
+  \item \textbf{Configure vite.config.ts} Set up your \cc{vite.config.ts} file to include Ziro as a plugin:
+  \begin{minted}{typescript}
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import ziro from 'ziro/vite';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    ziro(),
+  ],
+});
+\end{minted}
+This configuration ensures that Vite runs with Ziro’s plugin.
+
+\item \textbf{Update tsconfig.json} To make sure TypeScript recognizes Ziro's type declarations, modify your \cc{tsconfig.json} to include the Ziro type definitions:
+\begin{minted}{json}
+  {
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "types": [
+      "vite/client",
+      "./.ziro/routes.d.ts"
+    ],
+    "moduleResolution": "Bundler"
+  }
+}
+\end{minted}
+
+\item \textbf{Create Route Files}: Create the pages directory and add the following route files.
+  \begin{minted}{typescript}
+// _root.tsx
+import { FC, PropsWithChildren } from 'react';
+import { Body, Head, Html, Outlet, RouteProps } from 'ziro/react';
+import baseStyle from './styles.css?url';
+
+export default function Root(props: RouteProps<'/_root'>) {
+  return <Outlet />;
+}
+
+export const Layout: FC<PropsWithChildren> = ({ children }) => {
+  return (
+    <Html>
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link href={baseStyle} rel="stylesheet" />
+      </Head>
+      <Body>{children}</Body>
+    </Html>
+  );
+};
+  \end{minted}
+
+  \begin{minted}{typescript}
+    // index.tsx
+import { MetaFn } from 'ziro/router';
+
+export const loader = async () => {
+  return {};
+};
+
+export const Loading = () => {
+  return <span>Loading home page...</span>;
+};
+
+export const meta: MetaFn<'/'> = async () => {
+  return {
+    title: 'Homepage',
+  };
+};
+
+export default function Index() {
+  return (
+    <div>
+      <h1>Hello World!</h1>
+    </div>
+  );
+}
+      \end{minted}
+      These files define the main route layout and the homepage, including components and metadata.
 
 
+      \item \textbf{Update package.json} Scripts Modify the scripts section in your package.json to run the project with Ziro:
+\begin{minted}{json}
+"scripts": {
+  "dev": "ziro dev",
+  "build": "ziro build",
+  "preview": "vite preview"
+}
+\end{minted}
+This configuration ensures that running \cc{npm run dev} starts the development server with Ziro, \cc{npm run build} generates a production build, and \cc{npm run preview} previews the built application.
 
 
+\end{enumerate}
 
+With these steps, you now have a React-Vite project set up to work with Ziro, enabling server-side rendering, routing, and type safety out of the box. This setup provides an efficient development experience with modern tools and seamless server-client interactions.
 
 \pagebreak

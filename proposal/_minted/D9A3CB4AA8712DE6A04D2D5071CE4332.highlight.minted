@@ -1,0 +1,24 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{Router}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Route}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/router\PYGZsq{}}\PYG{p}{;}
+\PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{lazy}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}react\PYGZsq{}}\PYG{p}{;}
+
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{router}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Router}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}mode\PYGZdq{}}\PYG{o}{:}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}csr\PYGZdq{}}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{dynImport}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{k}{import}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}../pages/index\PYGZdq{}}\PYG{p}{)}
+
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{pages\PYGZus{}indexRoute}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Route}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{n+nx}{meta}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{...}\PYG{n+nx}{args}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{dynImport}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n+nx}{then}\PYG{p}{(}\PYG{n+nx}{m}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{m}\PYG{p}{.}\PYG{n+nx}{meta}\PYG{p}{(}\PYG{p}{...}\PYG{n+nx}{args}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nx}{loader}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{...}\PYG{n+nx}{args}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{dynImport}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n+nx}{then}\PYG{p}{(}\PYG{n+nx}{m}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{m}\PYG{p}{.}\PYG{n+nx}{loader}\PYG{p}{(}\PYG{p}{...}\PYG{n+nx}{args}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nx}{props}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nx}{component}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{lazy}\PYG{p}{(}\PYG{n+nx}{dynImport}\PYG{p}{)}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n+nx}{ErrorBoundary}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{lazy}\PYG{p}{(}\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{dynImport}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n+nx}{then}\PYG{p}{(}\PYG{n+nx}{m}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{default}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{m}\PYG{p}{.}\PYG{n+nx}{ErrorBoundary}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n+nx}{LoadingComponent}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{lazy}\PYG{p}{(}\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{dynImport}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n+nx}{then}\PYG{p}{(}\PYG{n+nx}{m}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{default}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{m}\PYG{p}{.}\PYG{n+nx}{Loading}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,}
+\PYG{+w}{    }\PYG{n+nx}{Layout}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{lazy}\PYG{p}{(}\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{dynImport}\PYG{p}{(}\PYG{p}{)}\PYG{p}{.}\PYG{n+nx}{then}\PYG{p}{(}\PYG{n+nx}{m}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{default}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{m}\PYG{p}{.}\PYG{n+nx}{Layout}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{)}\PYG{p}{)}\PYG{p}{,}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{n+nx}{router}\PYG{p}{.}\PYG{n+nx}{addroute}\PYG{p}{(}\PYG{n+nx}{pages\PYGZus{}indexRoute}\PYG{p}{)}\PYG{p}{;}
+
+\PYG{c+c1}{// Similar logic for other routes...}
+
+\PYG{k}{export}\PYG{+w}{ }\PYG{n+nx}{router}\PYG{p}{;}
+\end{MintedVerbatim}

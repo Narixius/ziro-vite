@@ -1,0 +1,23 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{// \PYGZus{}root.tsx}
+\PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{FC}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{PropsWithChildren}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}react\PYGZsq{}}\PYG{p}{;}
+\PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{Body}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Head}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Html}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Outlet}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{RouteProps}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/react\PYGZsq{}}\PYG{p}{;}
+\PYG{k}{import}\PYG{+w}{ }\PYG{n+nx}{baseStyle}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}./styles.css?url\PYGZsq{}}\PYG{p}{;}
+
+\PYG{k}{export}\PYG{+w}{ }\PYG{k}{default}\PYG{+w}{ }\PYG{k+kd}{function}\PYG{+w}{ }\PYG{n+nx}{Root}\PYG{p}{(}\PYG{n+nx}{props}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{RouteProps}\PYG{o}{\PYGZlt{}}\PYG{l+s+s1}{\PYGZsq{}/\PYGZus{}root\PYGZsq{}}\PYG{o}{\PYGZgt{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{k}{return}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{n+nx}{Outlet}\PYG{+w}{ }\PYG{o}{/}\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k}{export}\PYG{+w}{ }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{Layout}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{FC}\PYG{o}{\PYGZlt{}}\PYG{n+nx}{PropsWithChildren}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{children}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{k}{return}\PYG{+w}{ }\PYG{p}{(}
+\PYG{+w}{    }\PYG{o}{\PYGZlt{}}\PYG{n+nx}{Html}\PYG{o}{\PYGZgt{}}
+\PYG{+w}{      }\PYG{o}{\PYGZlt{}}\PYG{n+nx}{Head}\PYG{o}{\PYGZgt{}}
+\PYG{+w}{        }\PYG{o}{\PYGZlt{}}\PYG{n+nx}{meta}\PYG{+w}{ }\PYG{n+nx}{charSet}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}utf\PYGZhy{}8\PYGZdq{}}\PYG{+w}{ }\PYG{o}{/}\PYG{o}{\PYGZgt{}}
+\PYG{+w}{        }\PYG{o}{\PYGZlt{}}\PYG{n+nx}{meta}\PYG{+w}{ }\PYG{n+nx}{name}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}viewport\PYGZdq{}}\PYG{+w}{ }\PYG{n+nx}{content}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}width=device\PYGZhy{}width, initial\PYGZhy{}scale=1\PYGZdq{}}\PYG{+w}{ }\PYG{o}{/}\PYG{o}{\PYGZgt{}}
+\PYG{+w}{        }\PYG{o}{\PYGZlt{}}\PYG{n+nx}{link}\PYG{+w}{ }\PYG{n+nx}{href}\PYG{o}{=}\PYG{p}{\PYGZob{}}\PYG{n+nx}{baseStyle}\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{n+nx}{rel}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}stylesheet\PYGZdq{}}\PYG{+w}{ }\PYG{o}{/}\PYG{o}{\PYGZgt{}}
+\PYG{+w}{      }\PYG{o}{\PYGZlt{}}\PYG{err}{/}\PYG{err}{H}\PYG{err}{e}\PYG{err}{a}\PYG{err}{d}\PYG{err}{\PYGZgt{}}
+\PYG{+w}{      }\PYG{o}{\PYGZlt{}}\PYG{n+nx}{Body}\PYG{o}{\PYGZgt{}}\PYG{p}{\PYGZob{}}\PYG{n+nx}{children}\PYG{p}{\PYGZcb{}}\PYG{o}{\PYGZlt{}}\PYG{err}{/}\PYG{err}{B}\PYG{err}{o}\PYG{err}{d}\PYG{err}{y}\PYG{err}{\PYGZgt{}}
+\PYG{+w}{    }\PYG{o}{\PYGZlt{}}\PYG{err}{/}\PYG{err}{H}\PYG{err}{t}\PYG{err}{m}\PYG{err}{l}\PYG{err}{\PYGZgt{}}
+\PYG{+w}{  }\PYG{p}{)}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}\PYG{p}{;}
+\end{MintedVerbatim}

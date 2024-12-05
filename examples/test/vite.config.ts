@@ -10,7 +10,7 @@ export default defineConfig({
     react(),
     ziro({
       routerOptions: {
-        mode: 'partially-ssr',
+        mode: 'csr',
       },
       plugins: [dashboard],
     }),

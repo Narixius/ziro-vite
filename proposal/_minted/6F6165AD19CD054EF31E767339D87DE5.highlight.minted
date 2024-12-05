@@ -1,0 +1,41 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{n+nx}{Route}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nx}{LoaderReturnType}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nx}{IntersectionOfMiddlewaresResult}\PYG{p}{,}
+\PYG{+w}{  }\PYG{n+nx}{GetRouteDataContext}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/router\PYGZsq{}}\PYG{p}{;}
+\PYG{k}{import}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{k+kr}{as}\PYG{+w}{ }\PYG{n+nx}{pages\PYGZus{}root}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}../pages/\PYGZus{}root\PYGZsq{}}\PYG{p}{;}
+\PYG{k}{import}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{k+kr}{as}\PYG{+w}{ }\PYG{n+nx}{pagesIndex}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}../pages/index\PYGZsq{}}\PYG{p}{;}
+
+\PYG{k+kr}{declare}\PYG{+w}{ }\PYG{n+nx}{module}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/router\PYGZsq{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{  }\PYG{k+kd}{interface}\PYG{+w}{ }\PYG{n+nx}{RouteFilesByRouteId}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{l+s+s2}{\PYGZdq{}/\PYGZus{}root\PYGZdq{}}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{      }\PYG{n+nx}{route}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{Route}\PYG{o}{\PYGZlt{}}
+\PYG{+w}{        }\PYG{l+s+s2}{\PYGZdq{}/\PYGZus{}root\PYGZdq{}}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n+nx}{LoaderReturnType}\PYG{o}{\PYGZlt{}}\PYG{o+ow}{typeof}\PYG{+w}{ }\PYG{n+nx}{pages\PYGZus{}root}\PYG{p}{.}\PYG{n+nx}{loader}\PYG{o}{\PYGZgt{}}\PYG{p}{,}
+\PYG{+w}{        }\PYG{p}{\PYGZob{}}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{+w}{        }\PYG{o+ow}{typeof}\PYG{+w}{ }\PYG{n+nx}{pages\PYGZus{}root}\PYG{p}{.}\PYG{n+nx}{middlewares}\PYG{p}{,}
+\PYG{+w}{        }\PYG{k+kc}{undefined}
+\PYG{+w}{      }\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\PYG{+w}{      }\PYG{n+nx}{dataContext}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{+w}{ }\PYG{n+nx}{IntersectionOfMiddlewaresResult}\PYG{o}{\PYGZlt{}}
+\PYG{+w}{        }\PYG{o+ow}{typeof}\PYG{+w}{ }\PYG{n+nx}{pages\PYGZus{}root}\PYG{p}{.}\PYG{n+nx}{middlewares}
+\PYG{+w}{      }\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}\PYG{p}{;}
+\PYG{+w}{    }\PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{      }\PYG{n+nx}{route}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{Route}\PYG{o}{\PYGZlt{}}
+\PYG{+w}{        }\PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n+nx}{LoaderReturnType}\PYG{o}{\PYGZlt{}}\PYG{o+ow}{typeof}\PYG{+w}{ }\PYG{n+nx}{pagesIndex}\PYG{p}{.}\PYG{n+nx}{loader}\PYG{o}{\PYGZgt{}}\PYG{p}{,}
+\PYG{+w}{        }\PYG{p}{\PYGZob{}}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+\PYG{+w}{        }\PYG{p}{[}\PYG{p}{]}\PYG{p}{,}
+\PYG{+w}{        }\PYG{n+nx}{RouteFilesByRouteId}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}/\PYGZus{}root\PYGZdq{}}\PYG{p}{]}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}route\PYGZdq{}}\PYG{p}{]}
+\PYG{+w}{       }\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\PYG{+w}{      }\PYG{n+nx}{dataContext}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{GetRouteDataContext}\PYG{o}{\PYGZlt{}}\PYG{l+s+s2}{\PYGZdq{}/\PYGZus{}root\PYGZdq{}}\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{o}{\PYGZam{}}
+\PYG{+w}{        }\PYG{n+nx}{IntersectionOfMiddlewaresResult}\PYG{o}{\PYGZlt{}}\PYG{p}{[}\PYG{p}{]}\PYG{o}{\PYGZgt{}}\PYG{p}{;}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}\PYG{p}{;}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{  }\PYG{k+kd}{interface}\PYG{+w}{ }\PYG{n+nx}{RoutesByRouteId}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nx}{routes}\PYG{o}{:}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}}\PYG{p}{;}
+\PYG{+w}{  }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}
