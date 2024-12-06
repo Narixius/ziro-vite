@@ -115,12 +115,6 @@ After router find and loads a route tree, it's ready to be rendered on the page 
 
 The Ziro Router is built on top of web standards, specifically the \cc{Request} and \cc{Response} objects. These objects are part of the Fetch API, which is a standard way to handle HTTP requests and responses in JavaScript. By leveraging these web standards, Ziro ensures compatibility and consistency across different environments, whether it's running on the client-side in a browser or server-side in a Node.js environment. Every loader, action or middleware described bellow has access to the request/response objects (based on their responsibility) to handle the incoming request and the response object to intercept the generated response and do proper action if needed.
 
-% \subsubsection*{Benefits of Using Web Standards}
-% \begin{itemize}
-%   \item \textbf{Consistency}: Using \cc{Request} and \cc{Response} objects ensures that the same code can handle HTTP requests and responses in a consistent \hl{manner} across different environments.
-%   \item \textbf{Interoperability}: Web standards are widely supported, making it easier to integrate with other libraries and frameworks that also \hl{adhere} to these standards.
-%   \item \textbf{Future-Proofing}: As web standards evolve, Ziro can take advantage of new features and improvements without needing significant changes to its core architecture.
-% \end{itemize}
 
 
 \subsubsection{Loaders}
