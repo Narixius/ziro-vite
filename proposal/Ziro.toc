@@ -6,7 +6,7 @@
 \contentsline {subsection}{\numberline {3.3}Review of Key SSR Frameworks}{11}{subsection.3.3}%
 \contentsline {subsection}{\numberline {3.4}The Market Landscape of SSR Frameworks}{12}{subsection.3.4}%
 \contentsline {subsection}{\numberline {3.5}Why Market Metrics Matter}{13}{subsection.3.5}%
-\contentsline {subsection}{\numberline {3.6}Evolution of Hosting Solutions and Their Impact on SSR}{13}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.6}Evolution of Hosting Solutions and Their Impact on SSR-based Projects}{13}{subsection.3.6}%
 \contentsline {subsection}{\numberline {3.7}Ziro’s Position: A Foundation for Modern Web Development}{14}{subsection.3.7}%
 \contentsline {subsection}{\numberline {3.8}Conclusion}{17}{subsection.3.8}%
 \contentsline {section}{\numberline {4}Methodology}{19}{section.4}%
