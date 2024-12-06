@@ -633,6 +633,41 @@ In this example, when this route is going to to be rendered on the browser, it s
 
 As described in the previous section, to ensure a seamless routing experience tailored for both client and server environments, Ziro generates two distinct router files based on the manifest: \cc{router.client.ts} and \cc{router.server.ts}. These files contain the necessary routing logic optimized for their respective environments.
 
+\subsubsection{Route Naming Conventions}
+The naming conventions for the route files in the pages directory determine how routes are generated and how layouts and contexts are applied. This structured convention is important on generating the routers. Below are the key conventions:
+
+\textbf{Special Files}
+\begin{itemize}
+	\item \cc{\_root.tsx}: This file represents the root of the application. It is used to define the top-level contexts and layouts that will wrap the entire app. All routes in the application will inherit from the contexts or layouts defined here.
+	\item \cc{\_layout.tsx}: This file acts as a layout wrapper for every route within the specific directory and its child directories. It is useful for defining shared components like headers, footers, or navigation menus that need to appear across multiple routes in the directory.
+	\item \cc{index.tex}: This file represents the index route of the directory. It serves as the default route for the directory when no specific route is provided.
+	\item \textbf{Dynamic routes}: Any file that begins with a colon (\cc{:}) generates a dynamic named route. For example, \cc{:slug.tsx} defines a route that matches URLs like \cc{/blog/post-slug}, where \cc{post-slug} can be any dynamic value. Dynamic routes are particularly useful for handling paths based on unique identifiers or variables in the URL.
+\end{itemize}
+
+\subsubsection{Example File Structure and Generated Routes}
+Consider the following directory structure:
+
+\begin{minted}{bash}
+pages/
+- _layout.tsx
+- index.tsx
+- blog/
+  - _layout.tsx
+  - index.tsx
+  - :slug.tsx
+\end{minted}
+
+This structure generates the following index routes:
+\begin{enumerate}
+	\item \cc{/}: Wrapped by the root layout defined in \cc{pages/\_layout.tsx}.
+	\item \cc{/blog}: Wrapped by both \cc{pages/\_layout.tsx} and \cc{pages/blog/\_layout.tsx}.
+	\item \cc{/blog/:slug} A dynamic route where \cc{slug} is replaced with a specific value, such as \cc{post-1} or \cc{my-first-post}. Also wrapped by \cc{pages/\_layout.tsx} and \cc{pages/blog/\_layout.tsx}.
+\end{enumerate}
+
+The \cc{\_layout.tsx} files allow for nested layouts, where a directory-level layout wraps its routes and those in child directories. For instance, \cc{pages/\_layout.tsx} serves as the outermost layout for the app (after \cc{\_root.tsx} file, if defined), while \cc{pages/blog/\_layout.tsx} defines a layout for routes within the \cc{blog} directory, inheriting the root layout. This modular and scalable approach makes it easy to handle shared components, manage complex route hierarchies, and implement reusable layouts, ensuring a clean and predictable structure for building applications. Dynamic routes further enhance flexibility by allowing URL patterns to adapt to varying data.
+
+
+
 \subsubsection{Client-Side Router (\cc{router.client.ts})}
 The client-side router is designed to handle navigation and dynamic component loading in the browser. It leverages React’s \cc{lazy} for code splitting and ensures that components, meta functions, and loading/error boundaries are loaded only when needed.
 
@@ -770,6 +805,7 @@ declare module 'ziro/router' {
       \item \cc{dataContext}: Specifies the combined data context derived from middlewares and parent routes.
     \end{itemize}
   \end{itemize}
+
 
   \item \cc{RoutesByRouteId} Interface:
   \begin{itemize}
@@ -957,6 +993,7 @@ To make Ziro compatible with the React ecosystem, \cc{ziro/react} provides sever
 \begin{itemize}
   \item \textbf{\cc{Link} Component}: This component allows for seamless navigation between pages within the application. It functions similarly to the Link component from \textbf{React Router}\footnote{\url{https://reactrouter.com/start/library/navigating\#link}}, making it intuitive for developers familiar with React.
   \item \textbf{\cc{useAction} Method}: The useAction method provides a way to call route actions directly from React components. This utility helps handle user interactions that need to trigger route-based actions, such as form submissions or other state-changing events fully type-safe.
+  \item \cc{Outlet} Component: To render a child route within its parent route, Ziro uses the \cc{<Outlet />} component, similar to React Router's implementation. When a request is made, the framework identifies the route tree, which includes all parent and child routes from the top-level (\_root.tsx or \_layout.tsx) to the specific leaf route. The \cc{<Outlet />} component determines where the child routes should be rendered within the parent route’s layout. This ensures a seamless rendering hierarchy, allowing developers to define layouts and nest routes effectively.
 \end{itemize}
 
 \subsection{Client-Only Server-Only Transformation}

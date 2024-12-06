@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+pages/
+\PYGZhy{}\PYG{+w}{ }\PYGZus{}layout.tsx
+\PYGZhy{}\PYG{+w}{ }index.tsx
+\PYGZhy{}\PYG{+w}{ }blog/
+\PYG{+w}{  }\PYGZhy{}\PYG{+w}{ }\PYGZus{}layout.tsx
+\PYG{+w}{  }\PYGZhy{}\PYG{+w}{ }index.tsx
+\PYG{+w}{  }\PYGZhy{}\PYG{+w}{ }:slug.tsx
+\end{MintedVerbatim}
