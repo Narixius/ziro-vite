@@ -1,28 +1,27 @@
 \section{Methodology} % 7 pages
 
 \subsection{Building the Core of Ziro}
-The development of Ziro started with a focus on its most important part—the router. This main component, called \texttt{ziro/router}, forms the base of the framework and takes care of handling routes and interacting with browser events. The initial step of creating a solid and reliable router was crucial \hl{for setting the groundwork for the rest of the framework, ensuring a strong and consistent foundation for future development.}
+The development of Ziro started with a focus on its most important part, the router. This main package, called \texttt{ziro/router}, forms the base of the framework and takes care of handling routes and interacting with browser events. The initial step of creating a solid and reliable router was crucial for setting the groundwork for the rest of the framework, ensuring a strong and consistent foundation for future development.
 
 \subsection{Creating \cc{ziro/router}}
-The \texttt{ziro/router} package was designed to be as independent as possible from specific frameworks and was built entirely in JavaScript to ensure compatibility with different environments and libraries. Its main goal is to offer an API that can handle browser events smoothly, such as updating the route when a user clicks on a link or adjusting the router state when they use the back and forward buttons on the browser. This independence also ensured that the package could be reused and extended for different UI libraries like React, Vue, etc, making Ziro \hl{versatile} and adaptable.
+The \cc{ziro/router} package was designed to be as independent as possible from UI layer (Like React) and was built entirely in JavaScript to ensure compatibility with different environments and libraries. Its main goal is to offer an API that can handle browser events smoothly, such as loading a route when a user clicks on a link. This independence also ensured that the package could be reused and extended for different UI libraries like React, Vue, etc, making Ziro adaptable.
 
 \subsection{Using Test-Driven Development}
-The development of \texttt{ziro/router} began with a focus on rigorous testing, although it did not follow a formal test-driven development (TDD) approach. Without a fully operational environment to test the router's performance in action, Vitest\footnote{\url{https://vitest.dev}} was used as a critical tool for writing and running tests. These tests helped verify that the code functioned correctly and covered edge cases, contributing to a more robust codebase and preventing potential issues. Vitest, known for its speed and ease of use in JavaScript and TypeScript projects, played an essential role in ensuring the reliability of the router's functionality and streamlining the verification process. The use of Vitest, a fast and user-friendly testing tool for JavaScript and TypeScript, contributed greatly to the reliability of the codebase and streamlined the process of verifying the router's functionality.
+The development of \cc{ziro/router} began with a focus on careful testing, although it did not follow a formal test-driven development (TDD) approach. Without a fully operational environment to test the router's performance in action, Vitest\footnote{\url{https://vitest.dev}} was used as a critical tool for writing and running tests. These tests helped verify that the code functioned correctly and covered edge cases, contributing to a more robust codebase and preventing potential issues. Vitest, known for its speed and ease of use in JavaScript projects, played an essential role in ensuring the reliability of the router's functionality and streamlining the verification process. The use of Vitest, a fast and user-friendly testing tool for JavaScript ecosystem, contributed greatly to the reliability of the codebase and streamlined the process of verifying the router's functionality.
 
-This rigorous testing approach was especially crucial because \cc{ziro/router} was initially developed as a client-only router. Achieving comprehensive code coverage was a top priority, given the absence of a user interface (UI) for visual confirmation of features. Consequently, testing became the primary method for verifying the robustness and dependability of the router’s functionality, ensuring it could handle real-world scenarios reliably. This part will be moved to the ‘Theses’ section to support the idea of Ziro’s reliability and commitment to high-quality development.
+This testing approach described, was especially crucial because \cc{ziro/router} was initially developed as a client-only router. Achieving comprehensive code coverage was a top priority, given the absence of a user interface (UI) for visual confirmation of features. Consequently, testing became the primary method for verifying the robustness and dependability of the router’s functionality, ensuring it could handle real-world scenarios reliably. This part will be moved to the ‘Theses’ section to support the idea of Ziro’s reliability and commitment to high-quality development.
 
 \subsection{Moving to \cc{ziro/react}}
-After establishing a stable \texttt{ziro/router}, the next step was developing a version for React applications, called \texttt{ziro/react}. This transition allowed developers to integrate the router seamlessly within React projects, providing the benefits of Ziro’s routing capabilities while maintaining the ease of use that React developers expect.
+After establishing a stable \cc{ziro/router} package, the next step was developing a version for React applications, called \cc{ziro/react}. This transition allowed developers to integrate the router seamlessly within React projects, providing the benefits of Ziro’s routing capabilities while maintaining the ease of use that React developers expect.
 
 \subsection{Workflow for Development}
 The project was structured as a monorepo, meaning that the \cc{ziro/react} package could share dependencies and directly use the development version of \texttt{ziro/router}. This monorepo approach not only made it easier to manage dependencies but also facilitated synchronized development across packages. Any changes made to \texttt{ziro/router} could be tested and updated alongside \texttt{ziro/react}, ensuring consistency and reducing the risk of compatibility issues.
 
-While building \texttt{ziro/react}, new needs \hl{arose} that required adjustments to the \texttt{ziro/router} core. This back-and-forth process of refining both packages together was crucial for the evolution of Ziro. It ensured that enhancements and new APIs were added in a way that supported the overall goal of creating a cohesive and powerful framework.
+While building \texttt{ziro/react}, new needs came to light that required adjustments to the \texttt{ziro/router} package. This back-and-forth process of refining both packages together was crucial for the evolution of Ziro. It ensured that enhancements and new APIs were added in a way that supported the overall goal of creating a comprehensive and powerful framework.
 
-The in-depth discussion about the benefits of using a monorepo will be moved to the ‘\hl{Technical Specifications}’ section to provide a more detailed look at this technical setup.
 
 \subsection{Improving Type Safety with TypeScript}
-A detailed explanation of the \cc{ziro/generator} package and how it worked with Vite is better suited for the ‘\hl{Technical Specifications}’ section. This package was developed to create type-safe routes by automatically generating TypeScript types, which greatly improved code safety and developer confidence.
+A detailed explanation of the \cc{ziro/generator} package and how it worked with Vite is better suited for the ‘\hl{Technical Specifications}’ section. This package was developed to create type-safe routes by automatically generating TypeScript types, which greatly improved code type safety and developer experience.
 
 \subsection{Adding Server-Side Compatibility}
 Once \cc{ziro/router}, \cc{ziro/react}, and \cc{ziro/generator} were working smoothly on the client side, the next challenge was adding server-side compatibility. This involved integrating the client-side router with a server-side version to facilitate data sharing between the two. This feature was crucial for enabling Ziro to support both server-side rendering (SSR) and client-side rendering (CSR) within a unified framework. This integration allowed developers to build applications that could leverage the strengths of both rendering types, providing a seamless experience and better performance for end-users.
@@ -30,19 +29,7 @@ Once \cc{ziro/router}, \cc{ziro/react}, and \cc{ziro/generator} were working smo
 
 \subsection{Improving and Refining the Framework}
 
-The process of developing \cc{ziro/router}, followed by \cc{ziro/react}, \cc{ziro/generator}, and adding server-side support, was carried out in a step-by-step manner. Each phase played an important role in refining the framework and ensuring its core components remained strong, flexible, and aligned with the overall goals. The iterative development approach meant that as new challenges \hl{arose}, the framework could be adapted to meet them, ensuring long-term robustness and scalability.
+The process of developing \cc{ziro/router}, followed by \cc{ziro/react}, \cc{ziro/generator}, and adding server-side support, was carried out in a step-by-step manner. Each phase played an important role in refining the framework and ensuring its core components remained strong, flexible, and aligned with the overall goals. The iterative development approach meant that as new challenges arose, the framework could be adapted to meet them.
 
-
-\subsection{Results of the Development Process}
-This careful and step-by-step approach led to the development of Ziro’s main packages with:
-\begin{itemize}
-	\item Stability: The use of rigorous testing and TDD created a dependable codebase that can be trusted for reliable performance.
-
-	\item Flexibility: The \cc{ziro/router} package was built to be adaptable and can be used across different projects and environments, not just React.
-
-	\item Scalability: The modular architecture allows for easy additions of new features and plugins, making it straightforward to expand Ziro’s capabilities.
-
-	\item Type Safety: The integration of TypeScript and automated type generation minimized errors and boosted developer confidence in building and maintaining applications.
-\end{itemize}
 
 \pagebreak

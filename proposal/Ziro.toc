@@ -15,66 +15,65 @@
 \contentsline {subsection}{\numberline {4.3}Using Test-Driven Development}{19}{subsection.4.3}%
 \contentsline {subsection}{\numberline {4.4}Moving to \colorbox {gray!20}{\texttt {\small ziro/react}}}{20}{subsection.4.4}%
 \contentsline {subsection}{\numberline {4.5}Workflow for Development}{20}{subsection.4.5}%
-\contentsline {subsection}{\numberline {4.6}Improving Type Safety with TypeScript}{21}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.6}Improving Type Safety with TypeScript}{20}{subsection.4.6}%
 \contentsline {subsection}{\numberline {4.7}Adding Server-Side Compatibility}{21}{subsection.4.7}%
 \contentsline {subsection}{\numberline {4.8}Improving and Refining the Framework}{21}{subsection.4.8}%
-\contentsline {subsection}{\numberline {4.9}Results of the Development Process}{21}{subsection.4.9}%
-\contentsline {section}{\numberline {5}Theses}{23}{section.5}%
-\contentsline {subsection}{\numberline {5.1}The Problem: Repetitive and Time-Consuming Tasks}{23}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Modularity and Plugin-Driven Design}{24}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Addressing Today’s Web Development Needs}{24}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Ziro’s Contribution to Web Development}{25}{subsection.5.4}%
-\contentsline {section}{\numberline {6}Technical Specifications}{27}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Understanding the Router and Route Structure}{27}{subsection.6.1}%
-\contentsline {subsubsection}{\numberline {6.1.1}Overview of the Router's Role and Structure}{27}{subsubsection.6.1.1}%
-\contentsline {subsubsection}{\numberline {6.1.2}What is a Radix Tree?}{27}{subsubsection.6.1.2}%
-\contentsline {subsubsection}{\numberline {6.1.3}Main Properties of a Route}{27}{subsubsection.6.1.3}%
-\contentsline {subsubsection}{\numberline {6.1.4}Parent-Child Route Relationships}{28}{subsubsection.6.1.4}%
-\contentsline {subsubsection}{\numberline {6.1.5}Example of a Basic Router and Route Definition}{29}{subsubsection.6.1.5}%
-\contentsline {subsubsection}{\numberline {6.1.6}How the Router Handles Requests}{30}{subsubsection.6.1.6}%
-\contentsline {subsubsection}{\numberline {6.1.7}Web standards}{31}{subsubsection.6.1.7}%
-\contentsline {subsubsection}{\numberline {6.1.8}Loaders}{31}{subsubsection.6.1.8}%
-\contentsline {subsubsection}{\numberline {6.1.9}Middlewares}{32}{subsubsection.6.1.9}%
-\contentsline {subsubsection}{\numberline {6.1.10}Actions}{36}{subsubsection.6.1.10}%
-\contentsline {subsubsection}{\numberline {6.1.11}Meta Functions}{40}{subsubsection.6.1.11}%
-\contentsline {subsubsection}{\numberline {6.1.12}Transitioning to Framework Development}{42}{subsubsection.6.1.12}%
-\contentsline {subsection}{\numberline {6.2}Vite Overview}{42}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Vite Plugins and Their Role in Ziro}{43}{subsection.6.3}%
-\contentsline {subsubsection}{\numberline {6.3.1}How Vite Plugins Work}{43}{subsubsection.6.3.1}%
-\contentsline {subsubsection}{\numberline {6.3.2}File Watching and Route Detection}{43}{subsubsection.6.3.2}%
-\contentsline {subsubsection}{\numberline {6.3.3}Generating Route-Related Files}{44}{subsubsection.6.3.3}%
-\contentsline {subsubsection}{\numberline {6.3.4}Benefits of Vite Plugins in Ziro}{44}{subsubsection.6.3.4}%
-\contentsline {subsection}{\numberline {6.4}Manifest Generation}{45}{subsection.6.4}%
-\contentsline {subsubsection}{\numberline {6.4.1}Why a Manifest is Necessary}{45}{subsubsection.6.4.1}%
-\contentsline {subsubsection}{\numberline {6.4.2}Structure of the Manifest}{45}{subsubsection.6.4.2}%
-\contentsline {subsubsection}{\numberline {6.4.3}Components of the Manifest}{47}{subsubsection.6.4.3}%
-\contentsline {subsubsection}{\numberline {6.4.4}How the Manifest is Generated}{47}{subsubsection.6.4.4}%
-\contentsline {subsubsection}{\numberline {6.4.5}Output of Manifest Generation}{48}{subsubsection.6.4.5}%
-\contentsline {subsubsection}{\numberline {6.4.6}Why This Approach Works}{48}{subsubsection.6.4.6}%
-\contentsline {subsubsection}{\numberline {6.4.7}Example of a route serves at \colorbox {gray!20}{\texttt {\small /}}}{49}{subsubsection.6.4.7}%
-\contentsline {subsection}{\numberline {6.5}Router Generation}{50}{subsection.6.5}%
-\contentsline {subsubsection}{\numberline {6.5.1}Route Naming Conventions}{50}{subsubsection.6.5.1}%
-\contentsline {subsubsection}{\numberline {6.5.2}Example File Structure and Generated Routes}{50}{subsubsection.6.5.2}%
-\contentsline {subsubsection}{\numberline {6.5.3}Client-Side Router (\colorbox {gray!20}{\texttt {\small router.client.ts}})}{51}{subsubsection.6.5.3}%
-\contentsline {subsubsection}{\numberline {6.5.4}Server-Side Router (\colorbox {gray!20}{\texttt {\small router.server.ts}})}{52}{subsubsection.6.5.4}%
-\contentsline {subsubsection}{\numberline {6.5.5}Why Two Separate Router Files?}{53}{subsubsection.6.5.5}%
-\contentsline {subsection}{\numberline {6.6}TypeScript Integration}{54}{subsection.6.6}%
-\contentsline {subsection}{\numberline {6.7}Ziro Plugins}{58}{subsection.6.7}%
-\contentsline {subsubsection}{\numberline {6.7.1}How Ziro Plugins Work}{58}{subsubsection.6.7.1}%
-\contentsline {subsubsection}{\numberline {6.7.2}Simplified Example of a Ziro Plugin}{59}{subsubsection.6.7.2}%
-\contentsline {subsubsection}{\numberline {6.7.3}Key Components of the Plugin}{59}{subsubsection.6.7.3}%
-\contentsline {subsubsection}{\numberline {6.7.4}How Plugins Modify the Manifest}{60}{subsubsection.6.7.4}%
-\contentsline {subsection}{\numberline {6.8}Request Handling on the Server}{61}{subsection.6.8}%
-\contentsline {subsubsection}{\numberline {6.8.1}SSR Activation and Router Loading}{61}{subsubsection.6.8.1}%
-\contentsline {subsubsection}{\numberline {6.8.2}Handling SSR and Partially-SSR Modes}{61}{subsubsection.6.8.2}%
-\contentsline {subsubsection}{\numberline {6.8.3}Integration with the Web Server}{62}{subsubsection.6.8.3}%
-\contentsline {subsubsection}{\numberline {6.8.4}Why H3 as the Web Server?}{62}{subsubsection.6.8.4}%
-\contentsline {subsection}{\numberline {6.9}React integrations}{63}{subsection.6.9}%
-\contentsline {subsubsection}{\numberline {6.9.1}Setting Up React Integration}{63}{subsubsection.6.9.1}%
-\contentsline {subsubsection}{\numberline {6.9.2}Key Utilities for React Integration}{63}{subsubsection.6.9.2}%
-\contentsline {subsection}{\numberline {6.10}Client-Only Server-Only Transformation}{64}{subsection.6.10}%
-\contentsline {subsubsection}{\numberline {6.10.1}Caching, the Shared Layer Between Server and Client}{65}{subsubsection.6.10.1}%
-\contentsline {subsection}{\numberline {6.11}How to setup a project using Ziro}{65}{subsection.6.11}%
-\contentsline {section}{\numberline {7}Results}{69}{section.7}%
-\contentsline {section}{\numberline {8}Future Works}{71}{section.8}%
-\contentsline {section}{\numberline {9}Acknowledgements}{73}{section.9}%
+\contentsline {section}{\numberline {5}Theses}{22}{section.5}%
+\contentsline {subsection}{\numberline {5.1}The Problem: Repetitive and Time-Consuming Tasks}{22}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Modularity and Plugin-Driven Design}{23}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Addressing Today’s Web Development Needs}{23}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Ziro’s Contribution to Web Development}{24}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Technical Specifications}{25}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Understanding the Router and Route Structure}{25}{subsection.6.1}%
+\contentsline {subsubsection}{\numberline {6.1.1}Overview of the Router's Role and Structure}{25}{subsubsection.6.1.1}%
+\contentsline {subsubsection}{\numberline {6.1.2}What is a Radix Tree?}{25}{subsubsection.6.1.2}%
+\contentsline {subsubsection}{\numberline {6.1.3}Main Properties of a Route}{25}{subsubsection.6.1.3}%
+\contentsline {subsubsection}{\numberline {6.1.4}Parent-Child Route Relationships}{26}{subsubsection.6.1.4}%
+\contentsline {subsubsection}{\numberline {6.1.5}Example of a Basic Router and Route Definition}{27}{subsubsection.6.1.5}%
+\contentsline {subsubsection}{\numberline {6.1.6}How the Router Handles Requests}{28}{subsubsection.6.1.6}%
+\contentsline {subsubsection}{\numberline {6.1.7}Web standards}{29}{subsubsection.6.1.7}%
+\contentsline {subsubsection}{\numberline {6.1.8}Loaders}{29}{subsubsection.6.1.8}%
+\contentsline {subsubsection}{\numberline {6.1.9}Middlewares}{30}{subsubsection.6.1.9}%
+\contentsline {subsubsection}{\numberline {6.1.10}Actions}{34}{subsubsection.6.1.10}%
+\contentsline {subsubsection}{\numberline {6.1.11}Meta Functions}{38}{subsubsection.6.1.11}%
+\contentsline {subsubsection}{\numberline {6.1.12}Transitioning to Framework Development}{40}{subsubsection.6.1.12}%
+\contentsline {subsection}{\numberline {6.2}Vite Overview}{40}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Vite Plugins and Their Role in Ziro}{41}{subsection.6.3}%
+\contentsline {subsubsection}{\numberline {6.3.1}How Vite Plugins Work}{41}{subsubsection.6.3.1}%
+\contentsline {subsubsection}{\numberline {6.3.2}File Watching and Route Detection}{41}{subsubsection.6.3.2}%
+\contentsline {subsubsection}{\numberline {6.3.3}Generating Route-Related Files}{42}{subsubsection.6.3.3}%
+\contentsline {subsubsection}{\numberline {6.3.4}Benefits of Vite Plugins in Ziro}{42}{subsubsection.6.3.4}%
+\contentsline {subsection}{\numberline {6.4}Manifest Generation}{43}{subsection.6.4}%
+\contentsline {subsubsection}{\numberline {6.4.1}Why a Manifest is Necessary}{43}{subsubsection.6.4.1}%
+\contentsline {subsubsection}{\numberline {6.4.2}Structure of the Manifest}{43}{subsubsection.6.4.2}%
+\contentsline {subsubsection}{\numberline {6.4.3}Components of the Manifest}{45}{subsubsection.6.4.3}%
+\contentsline {subsubsection}{\numberline {6.4.4}How the Manifest is Generated}{45}{subsubsection.6.4.4}%
+\contentsline {subsubsection}{\numberline {6.4.5}Output of Manifest Generation}{46}{subsubsection.6.4.5}%
+\contentsline {subsubsection}{\numberline {6.4.6}Why This Approach Works}{46}{subsubsection.6.4.6}%
+\contentsline {subsubsection}{\numberline {6.4.7}Example of a route serves at \colorbox {gray!20}{\texttt {\small /}}}{47}{subsubsection.6.4.7}%
+\contentsline {subsection}{\numberline {6.5}Router Generation}{48}{subsection.6.5}%
+\contentsline {subsubsection}{\numberline {6.5.1}Route Naming Conventions}{48}{subsubsection.6.5.1}%
+\contentsline {subsubsection}{\numberline {6.5.2}Example File Structure and Generated Routes}{48}{subsubsection.6.5.2}%
+\contentsline {subsubsection}{\numberline {6.5.3}Client-Side Router (\colorbox {gray!20}{\texttt {\small router.client.ts}})}{49}{subsubsection.6.5.3}%
+\contentsline {subsubsection}{\numberline {6.5.4}Server-Side Router (\colorbox {gray!20}{\texttt {\small router.server.ts}})}{50}{subsubsection.6.5.4}%
+\contentsline {subsubsection}{\numberline {6.5.5}Why Two Separate Router Files?}{51}{subsubsection.6.5.5}%
+\contentsline {subsection}{\numberline {6.6}TypeScript Integration}{52}{subsection.6.6}%
+\contentsline {subsection}{\numberline {6.7}Ziro Plugins}{56}{subsection.6.7}%
+\contentsline {subsubsection}{\numberline {6.7.1}How Ziro Plugins Work}{56}{subsubsection.6.7.1}%
+\contentsline {subsubsection}{\numberline {6.7.2}Simplified Example of a Ziro Plugin}{57}{subsubsection.6.7.2}%
+\contentsline {subsubsection}{\numberline {6.7.3}Key Components of the Plugin}{57}{subsubsection.6.7.3}%
+\contentsline {subsubsection}{\numberline {6.7.4}How Plugins Modify the Manifest}{58}{subsubsection.6.7.4}%
+\contentsline {subsection}{\numberline {6.8}Request Handling on the Server}{59}{subsection.6.8}%
+\contentsline {subsubsection}{\numberline {6.8.1}SSR Activation and Router Loading}{59}{subsubsection.6.8.1}%
+\contentsline {subsubsection}{\numberline {6.8.2}Handling SSR and Partially-SSR Modes}{59}{subsubsection.6.8.2}%
+\contentsline {subsubsection}{\numberline {6.8.3}Integration with the Web Server}{60}{subsubsection.6.8.3}%
+\contentsline {subsubsection}{\numberline {6.8.4}Why H3 as the Web Server?}{60}{subsubsection.6.8.4}%
+\contentsline {subsection}{\numberline {6.9}React integrations}{61}{subsection.6.9}%
+\contentsline {subsubsection}{\numberline {6.9.1}Setting Up React Integration}{61}{subsubsection.6.9.1}%
+\contentsline {subsubsection}{\numberline {6.9.2}Key Utilities for React Integration}{61}{subsubsection.6.9.2}%
+\contentsline {subsection}{\numberline {6.10}Client-Only Server-Only Transformation}{62}{subsection.6.10}%
+\contentsline {subsubsection}{\numberline {6.10.1}Caching, the Shared Layer Between Server and Client}{63}{subsubsection.6.10.1}%
+\contentsline {subsection}{\numberline {6.11}How to setup a project using Ziro}{63}{subsection.6.11}%
+\contentsline {section}{\numberline {7}Results}{67}{section.7}%
+\contentsline {section}{\numberline {8}Future Works}{69}{section.8}%
+\contentsline {section}{\numberline {9}Acknowledgements}{71}{section.9}%

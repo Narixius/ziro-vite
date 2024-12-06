@@ -6,38 +6,24 @@ Web development frameworks have evolved significantly, yet they often fall short
 
 In the modern era of software-as-a-service (SaaS) hosting and deployment platforms, JavaScript frameworks have become the backbone of scalable and efficient web applications. However, developers often find themselves repeatedly implementing features like authentication systems, dashboards, and layouts—components that are essential but not central to the unique value of their projects.
 
-For example, in an e-commerce application, the storefront design and functionality are critical, while elements like the dashboard or role-based authentication system are secondary but necessary. Building these repetitive components from scratch can consume valuable time and resources, diverting focus from the core features that define the application. Existing frameworks like Next.js and Remix address general development needs but lack the flexibility to add such components as pre-built, easily configurable plugins. This gap leads to inefficiencies and a steeper learning curve for developers who need to create these features repeatedly.
+For example, In an e-commerce application, the storefront's design and functionality are the most important, while features like the dashboard or role-based authentication are secondary but still essential. Creating these common components from scratch takes time and resources, which can distract developers from focusing on the application's main features. Frameworks like Next.js and Remix help with general development but don’t offer flexible, pre-built, and easy-to-configure plugins for these components. As a result, developers often face inefficiencies and extra effort when building these features repeatedly.
 
-Moreover, this challenge extends to projects like personal websites or smaller-scale applications where the goal is to have basic functionality without spending excessive time on implementation. For instance, a developer creating a blog or portfolio website may need a dashboard for managing content but does not require a highly customized or unique design. Ziro seeks to address these gaps by enabling developers to focus on what matters most—the unique aspects of their projects—while reducing time spent on repetitive tasks.
+
+Moreover, this challenge extends to projects like personal websites or smaller-scale applications where the goal is to have basic functionality without spending excessive time on implementation. For instance, a developer creating a blog or portfolio website may need a dashboard for managing content but does not require a highly customized or unique design. Ziro seeks to address these gaps by enabling developers to focus on what matters most, while reducing time spent on repetitive tasks.
 
 \subsection{Modularity and Plugin-Driven Design}
 
 Ziro introduces a new paradigm by prioritizing modularity and a plugin-based architecture. Developers can use plugins to integrate features like authentication pages, dashboards, or layouts directly into their applications with minimal configuration. These plugins not only save time but also allow customization, enabling developers to tailor the functionality to their specific needs. This approach mirrors the extendability of systems like WordPress, where plugins provide essential functionality while maintaining flexibility for user-defined customization.
 
-The framework is designed to work standalone, meaning it does not rely heavily on external dependencies for its core functionality. Instead, Ziro offers developers a lightweight, adaptable system that can be extended as needed. For example, by simply installing a plugin, developers can add a fully functional authentication system or a dashboard layout to their applications without building these components from scratch. This reduces development time while ensuring that core functionality remains intact.
+The framework is designed to work standalone, meaning it does not rely heavily on external dependencies for its core functionality. Instead, Ziro offers developers a lightweight, adaptable system that can be extended as needed. For example, by simply installing a plugin, developers can add a fully functional authentication system or a dashboard layout to their applications without building these components from scratch. This reduces development time while ensuring that core functionality remains unhurt.
 
-In addition, Ziro leverages TypeScript\footnote{\url{https://www.typescriptlang.org/}} to ensure type safety across the entire development process. TypeScript has become an essential tool in modern development, providing better data management, accurate IDE suggestions, and minimizing runtime errors. By making type safety a central feature, Ziro enhances developer productivity and reduces common pitfalls associated with dynamic JavaScript programming. This ensures that plugins and core functionalities integrate seamlessly without introducing unexpected behaviors or breaking existing code.
+In addition, Ziro leverages TypeScript\footnote{\url{https://www.typescriptlang.org/}} to ensure type safety across the entire development process. TypeScript has become an essential tool in modern development, providing better data management, accurate IDE suggestions, and minimizing runtime errors. By making type safety a central feature, Ziro enhances developer productivity and reduces common issues associated with dynamic JavaScript programming. This ensures that plugins and core functionalities integrate seamlessly without introducing unexpected behaviors or breaking existing code.
 
 \subsection{Addressing Today’s Web Development Needs}
 
 Modern frameworks like Next.js and Remix are excellent for general-purpose applications but do not offer native solutions for repetitive tasks. For instance, creating a personal website often involves building a dashboard for managing content. While the dashboard’s design might not be critical, implementing it from scratch is unnecessarily time-consuming. Ziro’s plugin system allows developers to quickly add such components, freeing them to focus on unique features that make their applications stand out. This approach reduces development overhead and enables faster project delivery without compromising flexibility.
 
-Ziro’s hybrid rendering model—combining server-side rendering (SSR) and client-side rendering (CSR)—further supports the needs of modern web applications. Hybrid rendering enhances performance by improving initial page load times, which is crucial for search engine optimization (SEO) and user experience. By adopting a partially on-demand streaming approach, Ziro ensures that both developers and end-users benefit from optimized performance without sacrificing interactivity or responsiveness.
-
-\subsubsection*{Demonstrating Plugin Integration and Flexibility}
-
-The goal of Ziro is to achieve a level of extensibility comparable to platforms like WordPress, where plugins play a central role in extending functionality. Ziro’s plugin architecture enables developers to:
-
-\begin{itemize}
-	\item Add custom pages and routes to their applications.
-	\item Extend existing features with minimal configuration.
-	\item Build modular and reusable components that align with their specific requirements.
-\end{itemize}
-
-
-For example, a developer building an e-commerce platform could use a plugin to integrate a role-based authentication system and a dashboard for order management. The developer could then customize the dashboard by adding specific pages, such as sales analytics or customer feedback, without disrupting the overall application structure. This level of flexibility ensures that plugins provide a solid foundation while allowing developers to make adjustments that fit their needs.
-
-By supporting a hybrid rendering model, Ziro further enhances the performance and SEO of applications, improving initial page load times and user experience. This combination of modularity, flexibility, and performance optimization provides developers with a framework that adapts to their needs while minimizing repetitive work.
+Ziro’s hybrid rendering model, combining server-side rendering (SSR) and client-side rendering (CSR), further supports the needs of modern web applications. Hybrid rendering enhances performance by improving initial page load times, which is crucial for search engine optimization (SEO) and user experience. By adopting a partially on-demand streaming approach, Ziro ensures that both developers and end-users benefit from optimized performance without sacrificing interactivity or responsiveness.
 
 \subsection{Ziro’s Contribution to Web Development}
 
@@ -45,8 +31,6 @@ Ziro contributes to the web development ecosystem by filling a gap between gener
 
 Additionally, Ziro’s architecture promotes collaboration and innovation within the developer community. The ability to create, share, and reuse plugins fosters a collaborative ecosystem where developers can build upon each other’s work. This approach not only accelerates development but also encourages the creation of high-quality, standardized components that benefit the entire community.
 
-Ultimately, Ziro seeks to redefine how developers approach repetitive tasks, offering a framework that prioritizes ease of use, extensibility, and flexibility. This makes it an ideal choice for developers looking to streamline their workflows while maintaining the freedom to innovate and customize. Through its modular design and focus on modern web development needs, Ziro aims to establish itself as a valuable tool for building dynamic, scalable applications efficiently.
-
-
+Ultimately, Ziro seeks to redefine how developers approach repetitive tasks, offering a framework that prioritizes ease of use, extensibility, and flexibility. This makes it an ideal choice for developers looking to streamline their workflows while maintaining the freedom to innovate and customize. Through its modular design and focus on modern web development needs, Ziro aims to establish itself as a valuable tool for building dynamic applications efficiently.
 
 \pagebreak
