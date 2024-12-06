@@ -2,7 +2,9 @@
 \PYG{k}{import}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{k+kr}{as}\PYG{+w}{ }\PYG{n+nx}{rou3}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}rou3\PYGZsq{}}
 
 \PYG{k+kd}{class}\PYG{+w}{ }\PYG{n+nx}{Router}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+
 \PYG{+w}{  }\PYG{n+nx}{radixTree}\PYG{p}{;}
+
 \PYG{+w}{  }\PYG{k+kr}{constructor}\PYG{p}{(}\PYG{p}{)}\PYG{p}{\PYGZob{}}
 \PYG{+w}{    }\PYG{k}{this}\PYG{p}{.}\PYG{n+nx}{radixTree}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{rou3}\PYG{p}{.}\PYG{n+nx}{createRouter}\PYG{p}{(}\PYG{p}{)}\PYG{p}{;}
 \PYG{+w}{  }\PYG{p}{\PYGZcb{}}

@@ -34,7 +34,7 @@
 \contentsline {subsubsection}{\numberline {6.1.7}Web standards}{29}{subsubsection.6.1.7}%
 \contentsline {subsubsection}{\numberline {6.1.8}Loaders}{29}{subsubsection.6.1.8}%
 \contentsline {subsubsection}{\numberline {6.1.9}Middlewares}{30}{subsubsection.6.1.9}%
-\contentsline {subsubsection}{\numberline {6.1.10}Actions}{34}{subsubsection.6.1.10}%
+\contentsline {subsubsection}{\numberline {6.1.10}Actions}{35}{subsubsection.6.1.10}%
 \contentsline {subsubsection}{\numberline {6.1.11}Meta Functions}{38}{subsubsection.6.1.11}%
 \contentsline {subsubsection}{\numberline {6.1.12}Transitioning to Framework Development}{40}{subsubsection.6.1.12}%
 \contentsline {subsection}{\numberline {6.2}Vite Overview}{40}{subsection.6.2}%
@@ -44,13 +44,11 @@
 \contentsline {subsubsection}{\numberline {6.3.3}Generating Route-Related Files}{42}{subsubsection.6.3.3}%
 \contentsline {subsubsection}{\numberline {6.3.4}Benefits of Vite Plugins in Ziro}{42}{subsubsection.6.3.4}%
 \contentsline {subsection}{\numberline {6.4}Manifest Generation}{43}{subsection.6.4}%
-\contentsline {subsubsection}{\numberline {6.4.1}Why a Manifest is Necessary}{43}{subsubsection.6.4.1}%
-\contentsline {subsubsection}{\numberline {6.4.2}Structure of the Manifest}{43}{subsubsection.6.4.2}%
-\contentsline {subsubsection}{\numberline {6.4.3}Components of the Manifest}{45}{subsubsection.6.4.3}%
-\contentsline {subsubsection}{\numberline {6.4.4}How the Manifest is Generated}{45}{subsubsection.6.4.4}%
-\contentsline {subsubsection}{\numberline {6.4.5}Output of Manifest Generation}{46}{subsubsection.6.4.5}%
-\contentsline {subsubsection}{\numberline {6.4.6}Why This Approach Works}{46}{subsubsection.6.4.6}%
-\contentsline {subsubsection}{\numberline {6.4.7}Example of a route serves at \colorbox {gray!20}{\texttt {\small /}}}{47}{subsubsection.6.4.7}%
+\contentsline {subsubsection}{\numberline {6.4.1}Structure of the Manifest}{43}{subsubsection.6.4.1}%
+\contentsline {subsubsection}{\numberline {6.4.2}Components of the Manifest}{45}{subsubsection.6.4.2}%
+\contentsline {subsubsection}{\numberline {6.4.3}How the Manifest is Generated}{45}{subsubsection.6.4.3}%
+\contentsline {subsubsection}{\numberline {6.4.4}Output of Manifest Generation}{45}{subsubsection.6.4.4}%
+\contentsline {subsubsection}{\numberline {6.4.5}Example of a route serves at \colorbox {gray!20}{\texttt {\small /}}}{47}{subsubsection.6.4.5}%
 \contentsline {subsection}{\numberline {6.5}Router Generation}{48}{subsection.6.5}%
 \contentsline {subsubsection}{\numberline {6.5.1}Route Naming Conventions}{48}{subsubsection.6.5.1}%
 \contentsline {subsubsection}{\numberline {6.5.2}Example File Structure and Generated Routes}{48}{subsubsection.6.5.2}%
@@ -71,7 +69,7 @@
 \contentsline {subsection}{\numberline {6.9}React integrations}{61}{subsection.6.9}%
 \contentsline {subsubsection}{\numberline {6.9.1}Setting Up React Integration}{61}{subsubsection.6.9.1}%
 \contentsline {subsubsection}{\numberline {6.9.2}Key Utilities for React Integration}{61}{subsubsection.6.9.2}%
-\contentsline {subsection}{\numberline {6.10}Client-Only Server-Only Transformation}{62}{subsection.6.10}%
+\contentsline {subsection}{\numberline {6.10}Client-Only / Server-Only Transformation}{62}{subsection.6.10}%
 \contentsline {subsubsection}{\numberline {6.10.1}Caching, the Shared Layer Between Server and Client}{63}{subsubsection.6.10.1}%
 \contentsline {subsection}{\numberline {6.11}How to setup a project using Ziro}{63}{subsection.6.11}%
 \contentsline {section}{\numberline {7}Results}{67}{section.7}%

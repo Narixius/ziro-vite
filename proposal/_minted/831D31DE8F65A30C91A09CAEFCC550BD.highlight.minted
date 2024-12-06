@@ -14,7 +14,7 @@
 
 \PYG{+w}{  }\PYG{k}{export}\PYG{+w}{ }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{loader}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{ctx}\PYG{o}{:}\PYG{+w}{ }\PYG{k+kt}{LoaderArgs}\PYG{o}{\PYGZlt{}}\PYG{l+s+s1}{\PYGZsq{}/todo\PYGZsq{}}\PYG{o}{\PYGZgt{}}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
 \PYG{+w}{    }\PYG{c+c1}{// ctx is fully type safe and it\PYGZsq{}s parent data is accessible and typesafe}
-\PYG{+w}{    }\PYG{c+c1}{// here ctx.dataContext.version is available and fully typesafe.}
+\PYG{+w}{    }\PYG{c+c1}{// here, ctx.dataContext.version is available and fully typed.}
 \PYG{+w}{    }\PYG{k}{return}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
 \PYG{+w}{      }\PYG{n+nx}{appName}\PYG{o}{:}\PYG{+w}{ }\PYG{l+s+sb}{`}\PYG{l+s+sb}{My App v}\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{ctx}\PYG{p}{.}\PYG{n+nx}{dataContext}\PYG{p}{.}\PYG{n+nx}{version}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{`}
 \PYG{+w}{    }\PYG{p}{\PYGZcb{}}

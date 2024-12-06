@@ -2,7 +2,7 @@
 \PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{Router}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Route}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/router\PYGZsq{}}\PYG{p}{;}
 \PYG{k}{import}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{k+kr}{as}\PYG{+w}{ }\PYG{n+nx}{pagesIndex}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}../pages/index\PYGZsq{}}\PYG{p}{;}
 
-\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{router}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Router}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}mode\PYGZdq{}}\PYG{o}{:}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}csr\PYGZdq{}}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
+\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{router}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Router}\PYG{p}{(}\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}mode\PYGZdq{}}\PYG{o}{:}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}partially\PYGZhy{}ssr\PYGZdq{}}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{p}{)}\PYG{p}{;}
 
 \PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{pagesIndexRoute}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{o+ow}{new}\PYG{+w}{ }\PYG{n+nx}{Route}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}/\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
 \PYG{+w}{  }\PYG{n+nx}{meta}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{pagesIndex}\PYG{p}{.}\PYG{n+nx}{meta}\PYG{p}{,}

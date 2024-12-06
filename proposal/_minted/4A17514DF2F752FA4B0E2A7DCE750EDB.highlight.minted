@@ -1,5 +1,5 @@
 \begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{+w}{    }\PYG{c+c1}{// index.tsx}
+\PYG{c+c1}{// index.tsx}
 \PYG{k}{import}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{n+nx}{MetaFn}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k+kr}{from}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ziro/router\PYGZsq{}}\PYG{p}{;}
 
 \PYG{k}{export}\PYG{+w}{ }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{loader}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k}{async}\PYG{+w}{ }\PYG{p}{(}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
