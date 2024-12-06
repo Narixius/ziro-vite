@@ -95,7 +95,7 @@ This code snippet shows how the router class initializes a \textbf{rou3} radix t
 
 \subsubsection{How the Router Handles Requests}
 
-When the \cc{router.handleRequest(request)} method is called, the router follows a \hl{systematic} process to find and handle the appropriate routes. Here is how the process works:
+When the \cc{router.handleRequest(request)} method is called, the router follows an organized process to find and handle the appropriate routes. Here is how the process works:
 
 \begin{enumerate}
   \item \textbf{Request Matching}: The handleRequest() method uses the radix tree to match the incoming request path to a specific sequence of routes. This is done by calling \cc{rou3.findRoute(this.radixTree, '', String(request.url.pathname))}
@@ -127,7 +127,7 @@ The Ziro Router is built on top of web standards, specifically the \cc{Request} 
 Loaders are essential functions for building dynamic and data-driven applications with Ziro. They help manage data fetching and preparation before a route’s main content is rendered. Understanding how to use loaders is key to building applications that are both efficient and maintainable.
 
 \subsubsection*{What are Loaders in Ziro?}
-Loaders in Ziro are functions \hl{associated} with routes that handle data fetching and preparation. They are especially valuable for server-side data loading, enabling data to be fetched from external APIs, databases, or other sources. Loaders are executed after the middlewares registered on the route and before starting the process of loading the nested routes.
+Loaders in Ziro are functions associated with routes that handle data fetching and preparation. They are especially valuable for server-side data loading, enabling data to be fetched from external APIs, databases, or other sources. Loaders are executed after the middlewares registered on the route and before starting the process of loading the nested routes.
 
 \pagebreak
 \subsubsection*{Example of a Simple Loader}
@@ -421,7 +421,7 @@ const todoRoute = new Route("/todo", {
 
 \subsubsection{Transitioning to Framework Development}
 
-While Ziro's core libraries provide powerful capabilities for handling routing, data loading, and meta management, building a complete framework requires integrating these functionalities within a \hl{cohesive} development environment. This is where a modern bundler like \textbf{Vite} comes into play. Vite allows Ziro to efficiently handle dynamic module loading, and streamline development workflows. One of the key advantages of using Vite is the ability to implement a file-based routing system, \hl{eliminating} the need to define routes manually. This approach simplifies the development process by allowing routes to be automatically generated based on the directory structure of route files. By \hl{leveraging} Vite, Ziro evolves from a routing libary  into a comprehensive framework capable of delivering web applications.
+While Ziro's core libraries provide powerful capabilities for handling routing, data loading, and meta management, building a complete framework requires integrating these functionalities within a cohesive development environment. This is where a modern bundler like \textbf{Vite} comes into play. Vite allows Ziro to efficiently handle dynamic module loading, and streamline development workflows. One of the key advantages of using Vite is the ability to implement a file-based routing system, eliminating the need to define routes manually. This approach simplifies the development process by allowing routes to be automatically generated based on the directory structure of route files. By using Vite, Ziro evolves from a routing library into a comprehensive framework capable of delivering complex but robust web applications.
 
 
 \subsection{Vite Overview}
