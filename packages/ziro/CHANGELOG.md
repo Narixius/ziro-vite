@@ -1,6 +1,49 @@
 # Changelog
 
 
+## v0.0.17
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.16...v0.0.17)
+
+### 🚀 Enhancements
+
+- Basic support for plugins ([c912c9c](https://github.com/narixius/ziro-vite/commit/c912c9c))
+- Plugins fundamentals ([490b640](https://github.com/narixius/ziro-vite/commit/490b640))
+- Enhance plugin context and server router code generation ([3d52319](https://github.com/narixius/ziro-vite/commit/3d52319))
+- Add initial proposal document and sections for Ziro framework ([37139d6](https://github.com/narixius/ziro-vite/commit/37139d6))
+- Literature review ([38027d3](https://github.com/narixius/ziro-vite/commit/38027d3))
+- Update proposal document with new sections for Ziro framework methodology ([954d7df](https://github.com/narixius/ziro-vite/commit/954d7df))
+- Revise abstract section to clarify Ziro framework's purpose and features ([712e4ef](https://github.com/narixius/ziro-vite/commit/712e4ef))
+- Update proposal document structure with new subsections and bookmarks for Ziro framework ([91318a7](https://github.com/narixius/ziro-vite/commit/91318a7))
+- Update Ziro proposal document with new middleware examples and improved formatting ([871c501](https://github.com/narixius/ziro-vite/commit/871c501))
+- Enhance Ziro proposal document with new hintbox feature and improved route handling descriptions ([e5e097c](https://github.com/narixius/ziro-vite/commit/e5e097c))
+- Update future works section with improved plugin system and new CLI tool proposal ([9eee045](https://github.com/narixius/ziro-vite/commit/9eee045))
+- Add route naming conventions and example file structure to technical specifications ([6a7a6ca](https://github.com/narixius/ziro-vite/commit/6a7a6ca))
+- Update Ziro proposal with improved section titles and enhanced abstract for clarity ([fa499ba](https://github.com/narixius/ziro-vite/commit/fa499ba))
+- Refine theses section for clarity and conciseness, enhancing overall readability ([8ec4bb3](https://github.com/narixius/ziro-vite/commit/8ec4bb3))
+- Enhance future works and results sections for clarity and conciseness ([03ed8cf](https://github.com/narixius/ziro-vite/commit/03ed8cf))
+- Enhance acknowledgements section for clarity and express gratitude to the open-source community ([4246478](https://github.com/narixius/ziro-vite/commit/4246478))
+- Improve clarity in technical specifications by refining language and removing unnecessary emphasis ([a87204b](https://github.com/narixius/ziro-vite/commit/a87204b))
+- Remove redundant benefits section from technical specifications for clarity and conciseness ([011f434](https://github.com/narixius/ziro-vite/commit/011f434))
+- Refine language in methodology section for clarity and consistency ([2cb96d2](https://github.com/narixius/ziro-vite/commit/2cb96d2))
+- Enhance acknowledgements section for clarity and specificity ([d7a1341](https://github.com/narixius/ziro-vite/commit/d7a1341))
+
+### 🩹 Fixes
+
+- Error boundary unnecessary rerenders ([7fc3ae0](https://github.com/narixius/ziro-vite/commit/7fc3ae0))
+
+### 💅 Refactors
+
+- Technical specifications revised ([58fa222](https://github.com/narixius/ziro-vite/commit/58fa222))
+
+### 🏡 Chore
+
+- React-tailwind-4 template ([96a0ac3](https://github.com/narixius/ziro-vite/commit/96a0ac3))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.16
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.15...v0.0.16)
