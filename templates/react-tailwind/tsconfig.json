@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"esModuleInterop": true,
+		"jsx": "react-jsx",
+		"module": "esnext",
+		"types": [
+			"vite/client",
+			"./.ziro/routes.d.ts"
+		],
+		"moduleResolution": "Bundler",
+		"baseUrl": ".",
+		"paths": {
+			"~/*": [
+				"./*"
+			],
+			"@/*": [
+				"./*"
+			]
+		},
+	}
+}
