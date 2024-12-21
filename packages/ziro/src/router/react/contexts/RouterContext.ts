@@ -10,4 +10,5 @@ export const RouterContext = createContext<{
     head?: ReactNode
     body?: ReactNode
   }
+  url: string
 }>(null!)

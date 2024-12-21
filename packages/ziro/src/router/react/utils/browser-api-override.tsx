@@ -5,7 +5,6 @@ export const proxyHistoryApi = (onUrlChanges: (url: string) => void) => {
     apply: (target, thisArg, argArray) => {
       // trigger here what you need
       startTransition(() => {
-        console.log('setting url 1')
         onUrlChanges(argArray[2])
       })
       return target.apply(thisArg, argArray as [any, string, string?])
@@ -15,7 +14,6 @@ export const proxyHistoryApi = (onUrlChanges: (url: string) => void) => {
     apply: (target, thisArg, argArray) => {
       // trigger here what you need
       startTransition(() => {
-        console.log('setting url 2')
         onUrlChanges(argArray[2])
       })
       return target.apply(thisArg, argArray as [any, string, string?])
@@ -23,7 +21,6 @@ export const proxyHistoryApi = (onUrlChanges: (url: string) => void) => {
   })
   window.addEventListener('popstate', e => {
     startTransition(() => {
-      console.log('setting url 3')
       onUrlChanges(window.location.pathname)
     })
   })

@@ -1,6 +1,9 @@
 import { FC, PropsWithChildren } from 'react'
 import { Body, Head, Html, Outlet, RouteProps } from 'ziro/react'
+import { requestLogger } from '~/middlewares/logger'
 import baseStyle from './styles.css?url'
+
+export const middlewares = [requestLogger]
 
 export default function Root(props: RouteProps<'/_root'>) {
   return <Outlet />

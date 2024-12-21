@@ -9,9 +9,6 @@ export default defineConfig({
     tsconfigPaths(),
     react(),
     ziro({
-      routerOptions: {
-        mode: 'csr',
-      },
       plugins: [dashboard],
     }),
   ],

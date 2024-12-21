@@ -76,7 +76,7 @@ export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => 
   const dataContext = useRef(props.dataContext || localDataContext)
   const cache = useRef(props.cache || localCache)
 
-  const url = props.initialUrl ? parseURL(props.initialUrl).pathname : typeof window !== 'undefined' ? window.location.pathname : ''
+  const [url, setUrl] = useState(props.initialUrl ? parseURL(props.initialUrl).pathname : typeof window !== 'undefined' ? window.location.pathname : '')
 
   const [treeInfo, setTreeInfo] = useState(router.findRouteTree(url))
 
@@ -87,10 +87,12 @@ export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => 
   const onUrlChanges = async (url: string) => {
     const currentUrlTreeInfo = router.findRouteTree(url)
     if (isRouterCompatibleUrl(url)) {
+      routerHook.callHook('onUrlChange')
       try {
         await loadClientRouter(router, dataContext.current, cache.current, navigate, new URL(url, window.location.origin).href)
       } catch (e) {}
       dataContext.current.suspensePromiseStore = {}
+      setUrl(url)
       setTreeInfo(currentUrlTreeInfo)
     }
   }
@@ -109,7 +111,6 @@ export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => 
   }, [router])
 
   const outletContextValue = useMemo(() => {
-    routerHook.callHook('onUrlChange')
     return {
       tree: treeInfo.tree!,
       params: treeInfo.params || {},
@@ -120,8 +121,8 @@ export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => 
   }, [treeInfo.tree, treeInfo.params])
 
   const routerContextValue = useMemo(() => {
-    return { router, navigate, revalidateTree, layoutOptions }
-  }, [revalidateTree, layoutOptions])
+    return { router, navigate, revalidateTree, layoutOptions, url }
+  }, [revalidateTree, layoutOptions, url])
 
   return (
     <RouterContext.Provider value={routerContextValue}>
@@ -178,7 +179,6 @@ export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, 
   }
 
   if (promiseMaps[promiseKey].status !== 'fetched' || (canUseDOM && !cachedData.processed)) {
-    // console.log(matchedUrl, 'suspended', promiseMaps[promiseKey].resolved)
     throw promiseMaps[promiseKey].promise
   }
 
@@ -192,7 +192,6 @@ export function routeLoaderSuspense<T>(route: AnyRoute<any, any, any, any, any, 
     }
 
     if (cachedData) {
-      //   console.log(matchedUrl, 'fetched', promiseKey)
       return cachedData.value
     }
   }
@@ -202,9 +201,10 @@ export const Outlet: FC = () => {
   const { tree } = useContext(OutletContext)
   const route = tree[0]!
   if (!route) return null
-
   const routeProps = route.getProps()
   const Layout = routeProps?.Layout || Fragment
+  const router = useContext(RouterContext)
+
   // wrap route with suspense before load the route
   return (
     <Suspense>
@@ -216,7 +216,7 @@ export const Outlet: FC = () => {
             </Suspense>
           }
         >
-          <ErrorBoundary FallbackComponent={ErrorBoundaryFallback}>
+          <ErrorBoundary FallbackComponent={ErrorBoundaryFallback} key={router.url}>
             <RouteRenderer />
           </ErrorBoundary>
         </Suspense>
@@ -239,19 +239,12 @@ const ErrorBoundaryFallback: FC<FallbackProps> = props => {
   if (!route) return null
   const routeProps = route!.getProps()
 
-  useLayoutEffect(() => {
-    routerHook.hookOnce('onUrlChange', props.resetErrorBoundary)
-    return () => routerHook.removeHook('onUrlChange', props.resetErrorBoundary)
-  }, [tree])
-
-  // TODO: create default error boundary
   if (routeProps?.ErrorBoundary)
     return (
       <Suspense>
         <routeProps.ErrorBoundary {...props} />
       </Suspense>
     )
-
   throw props.error
 }
 
