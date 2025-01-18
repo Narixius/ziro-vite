@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.20
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.19...v0.0.20)
+
+### 💅 Refactors
+
+- Migrate to pnpm ([9534709](https://github.com/narixius/ziro-vite/commit/9534709))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.19
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.17...v0.0.19)
