@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nitro build",
+    "dev": "nitro dev",
+    "prepare": "nitro prepare",
+    "preview": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "ziro": "workspace:*"
+  },
+  "devDependencies": {
+    "@analogjs/vite-plugin-nitro": "^1.12.1",
+    "@vitejs/plugin-react": "^4.2.1",
+    "nitropack": "latest",
+    "vite-tsconfig-paths": "^4.3.2"
+  }
+}

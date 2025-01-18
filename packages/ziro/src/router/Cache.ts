@@ -73,7 +73,7 @@ export class Cache {
   }
 
   clear(): void {
-    const tmpCache = this.cache.keys()
+    const tmpCache = Array.from(this.cache.keys())
     this.cache.clear()
     tmpCache.forEach(key => {
       this.hooks.callHook(key)

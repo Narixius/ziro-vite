@@ -13,7 +13,7 @@
     "postbuild": "tsc-alias && ./post-build.sh",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "pre-publish": "pnpm build && pnpx changelogen --release --push",
+    "pre-publish": "pnpx changelogen --release --push && pnpm build",
     "publish-package": "pnpm run pre-publish && pnpm publish"
   },
   "bin": {
