@@ -77,7 +77,6 @@ export const Router: FC<RouterProps> = ({ router, layoutOptions, ...props }) => 
   const cache = useRef(props.cache || localCache)
 
   const [url, setUrl] = useState(props.initialUrl ? parseURL(props.initialUrl).pathname : typeof window !== 'undefined' ? window.location.pathname : '')
-
   const [treeInfo, setTreeInfo] = useState(router.findRouteTree(url))
 
   if (!canUseDOM) {
@@ -205,9 +204,12 @@ export const Outlet: FC = () => {
   const Layout = routeProps?.Layout || Fragment
   const router = useContext(RouterContext)
 
+  // the root route should not be wrapped with suspense as it contains the base html layout
+  const isRoot = route.getId() === '/_root'
+  const Wrapper = isRoot ? Fragment : Suspense
   // wrap route with suspense before load the route
   return (
-    <Suspense>
+    <Wrapper>
       <Layout>
         <Suspense
           fallback={
@@ -221,7 +223,7 @@ export const Outlet: FC = () => {
           </ErrorBoundary>
         </Suspense>
       </Layout>
-    </Suspense>
+    </Wrapper>
   )
 }
 

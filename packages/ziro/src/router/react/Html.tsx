@@ -9,7 +9,7 @@ import { routeLoaderSuspense } from './Router'
 const isBrowser = !!(typeof window !== 'undefined' && window.document && window.document.createElement)
 
 export const Html: FC<HTMLProps<HTMLHtmlElement>> = props => {
-  return <html {...props} />
+  return <html {...props} suppressHydrationWarning />
 }
 
 export const Body: FC<HTMLProps<HTMLBodyElement>> = ({ children, ...props }) => {
