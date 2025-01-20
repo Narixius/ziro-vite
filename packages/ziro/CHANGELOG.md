@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.21
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.20...v0.0.21)
+
+### 🩹 Fixes
+
+- Disable root layout suspense to prevent hydration client rendering ([f41e05b](https://github.com/narixius/ziro-vite/commit/f41e05b))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.20
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.19...v0.0.20)
