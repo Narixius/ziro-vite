@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.24
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.23...v0.0.24)
+
+### 🩹 Fixes
+
+- Use single promise map to store unhead promises ([24f96d9](https://github.com/narixius/ziro-vite/commit/24f96d9))
+
+### ❤️ Contributors
+
+- Narixius <nariman.movaffaghi@gmail.com>
+
 ## v0.0.23
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.22...v0.0.23)
