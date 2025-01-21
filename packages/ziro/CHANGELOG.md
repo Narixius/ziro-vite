@@ -1,6 +1,10 @@
 # Changelog
 
 
+## v0.0.29
+
+[compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.26...v0.0.29)
+
 ## v0.0.26
 
 [compare changes](https://github.com/narixius/ziro-vite/compare/v0.0.25...v0.0.26)
