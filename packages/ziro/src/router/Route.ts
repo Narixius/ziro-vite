@@ -121,7 +121,6 @@ export class Route<
           head: dataContext.head,
         })
         .then(head => {
-          //   console.log('rendering meta', this.getId(), head)
           dataContext.head.push(head)
         })
     }

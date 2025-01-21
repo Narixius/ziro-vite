@@ -2,14 +2,15 @@ import { createServerHead } from 'unhead'
 import { Middleware } from './Middleware'
 
 export type DataContextMode = 'client' | 'server' | 'partially'
-
+// Need a comprehensive solution to use this on load router data and also load header tags
 export type SuspensePromiseStore = Record<
   string,
   {
     promise: Promise<any>
-    status: 'pending' | 'fetched'
+    status: 'pending' | 'fetched' | 'error'
     resolve: (value: any) => void
     reject: (reason: unknown) => void
+    result?: any
     errorData?: any
     resolved: boolean
   }

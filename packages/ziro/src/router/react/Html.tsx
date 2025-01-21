@@ -5,6 +5,7 @@ import { createElement, FC, HTMLProps, PropsWithChildren, Suspense, useContext, 
 import { OutletContext } from './contexts/OutletContext'
 import { RouterContext } from './contexts/RouterContext'
 import { routeLoaderSuspense } from './Router'
+import { SuspensePromiseStore } from '../RouteDataContext'
 
 const isBrowser = !!(typeof window !== 'undefined' && window.document && window.document.createElement)
 
@@ -62,29 +63,31 @@ const promiseStore: Record<
   }
 > = {}
 
-function createResource<T>(key: string, promise: Promise<T>) {
+function createResource<T>(key: string, promise: Promise<T>, suspensePromiseStore: SuspensePromiseStore) {
   return {
     read() {
-      if (!promiseStore[key]) {
-        promiseStore[key] = {
+      if (!suspensePromiseStore[key]) {
+        suspensePromiseStore[key] = {
           status: 'pending',
-          result: null,
-          error: null,
+          resolve() {},
+          reject() {},
+          resolved: false,
+          errorData: null,
           promise: promise.then(
             res => {
-              promiseStore[key].status = 'success'
-              promiseStore[key].result = res
+              suspensePromiseStore[key].status = 'fetched'
+              suspensePromiseStore[key].result = res
             },
             err => {
-              promiseStore[key].status = 'error'
-              promiseStore[key].error = err
+              suspensePromiseStore[key].status = 'error'
+              suspensePromiseStore[key].errorData = err
             },
           ),
         }
       }
-      if (promiseStore[key].status === 'pending') throw promiseStore[key].promise
-      if (promiseStore[key].status === 'error') throw promiseStore[key].error
-      return promiseStore[key].result
+      if (suspensePromiseStore[key].status === 'pending') throw suspensePromiseStore[key].promise
+      if (suspensePromiseStore[key].status === 'error') throw suspensePromiseStore[key].errorData
+      return suspensePromiseStore[key].result
     },
   }
 }
@@ -129,7 +132,7 @@ const Meta: FC<PropsWithChildren<{}>> = () => {
   }
 
   const tagsResource = useMemo(() => {
-    return createResource(`${route.getId()}-${route.parsePath(params).url}`, renderSSRHead(dataContext.head))
+    return createResource(`head-${route.getId()}-${route.parsePath(params).url}`, renderSSRHead(dataContext.head), dataContext.suspensePromiseStore)
   }, [route.getId(), params])
 
   return (
