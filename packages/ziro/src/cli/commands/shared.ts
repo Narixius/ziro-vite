@@ -4,7 +4,8 @@ import { Listener } from 'listhen'
 import { ViteDevServer } from 'vite'
 import { ziroTitleText } from '../../../constraints.js'
 import { Router } from '../../router/Router.js'
-import { ZiroOptions } from '../../vite/plugin.js'
+import { PluginContext, ZiroOptions } from '../../vite/plugin.js'
+import { Import } from 'unimport'
 
 export const sharedContext = {
   version: 'N/A',
@@ -23,6 +24,7 @@ interface IAppContext {
   options: Required<ZiroOptions>
   loadServerRouter: () => Promise<void>
   generateRouteFiles: () => Promise<void>
+  registerPlugins: () => Promise<readonly [PluginContext, Import[]]>
 }
 
 export class AppContext {

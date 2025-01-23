@@ -1,6 +1,4 @@
 export const loader = async (ctx: any, pluginConfig: any) => {
-  console.log(ctx)
-  console.log(pluginConfig)
   return {
     foo: 'bar',
   }

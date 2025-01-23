@@ -1,5 +1,8 @@
+import { Import } from 'unimport'
+
 type PluginOptions<TConfig> = {
   registerRoutes?: (config: TConfig) => { routeId: string; filePath: string }[]
+  registerImports?: (config: TConfig) => Import[]
 }
 
 type PluginBootstrapConfig = {

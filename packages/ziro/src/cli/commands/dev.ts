@@ -13,6 +13,8 @@ import yoctoSpinner from 'yocto-spinner'
 import { Cache, DataContext, Middleware } from '../../router'
 import { Router } from '../../router/react'
 import { AppContext, printZiroHeader } from './shared.js'
+import UnImportPlugin from 'unimport/unplugin'
+import { Import } from 'unimport'
 
 const devCommand = defineCommand({
   meta: {
@@ -62,7 +64,7 @@ const devCommand = defineCommand({
       autoClose: true,
     }).then(async server => {
       AppContext.getContext().listener = server
-      console.log(`  ${colors.green(`⦿`)} ${colors.dim(`Server is running at:`)}`)
+      console.log(`  ${colors.green(`⦿`)} ${colors.dim(`Server is up!`)}`)
       const maxTypeLength = Math.max(...(await server.getURLs()).map(serverUrl => serverUrl.type.length), 'network'.length) + 1
       ;(await server.getURLs()).forEach(serverUrl => {
         const paddedType = serverUrl.type.padEnd(maxTypeLength)
@@ -89,6 +91,7 @@ export const configureDevServer = async (port: number) => {
     clearScreen: false,
     appType: 'custom',
   })
+
   AppContext.getContext().vite = vite
   await AppContext.getContext().generateRouteFiles()
   await AppContext.getContext().loadServerRouter()

@@ -1,4 +1,6 @@
 import { Plugin } from 'ziro/generator'
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 type User = {
   id: number | string
@@ -30,6 +32,15 @@ export const dashboard = new Plugin<Config>(
         {
           routeId: config.dashboardPath || '/x-dashboard',
           filePath: new URL('./dashboard-pages/dashboard.tsx', import.meta.url).pathname,
+        },
+      ]
+    },
+    registerImports() {
+      const __dirname = dirname(fileURLToPath(import.meta.url))
+      return [
+        {
+          from: __dirname + '/imports.ts',
+          name: 'useDashboard',
         },
       ]
     },

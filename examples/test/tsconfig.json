@@ -1,22 +1,23 @@
 {
-	"compilerOptions": {
-		"strict": true,
-		"esModuleInterop": true,
-		"jsx": "react-jsx",
-		"module": "esnext",
-		"types": [
-			"vite/client",
-			"./.ziro/routes.d.ts"
-		],
-		"moduleResolution": "Bundler",
-		"baseUrl": ".",
-		"paths": {
-			"~/*": [
-				"./*"
-			],
-			"@/*": [
-				"./*"
-			]
-		},
-	}
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "types": [
+      "vite/client",
+      "./.ziro/routes.d.ts",
+      "./.ziro/auto-imports.d.ts",
+    ],
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "~/*": [
+        "./*"
+      ],
+      "@/*": [
+        "./*"
+      ]
+    },
+  }
 }
