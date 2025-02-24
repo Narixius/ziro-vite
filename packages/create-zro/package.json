@@ -1,0 +1,16 @@
+{
+  "name": "create-zro",
+  "version": "0.0.1",
+  "keywords": [],
+  "author": "Nariman Movaffaghi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/narixius/ziro-vite.git",
+    "directory": "packages/create-zro"
+  },
+  "bugs": {
+    "url": "https://github.com/narixius/ziro-vite/issues"
+  },
+  "homepage": "https://github.com/narixius/ziro-vite/tree/main/packages/create-zro#readme"
+}
